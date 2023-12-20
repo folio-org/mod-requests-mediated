@@ -1,0 +1,41 @@
+openapi: 3.0.0
+info:
+  title: Mediated Request API
+  version: v1
+paths:
+  /requests-mediated/{id}:
+    get:
+      description: Retrieve dummy request by id
+      operationId: retrieveMediatedRequestById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: Request id
+      responses:
+        '200':
+          $ref: '#/components/responses/MediatedRequest'
+        '400':
+          description: Bad request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Bad request
+        '404':
+          description: Not found
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Not found
+components:
+  responses:
+    MediatedRequest:
+        description: MediatedRequest object
+        content:
+          application/json:
+            schema:
+              $ref: 'schemas/MediatedRequest.yaml#/MediatedRequest'

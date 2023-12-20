@@ -4,4 +4,19 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
 
+<!--    Changeset for creating table mediated-requests with columns id, created_by, updated_by -->
+    <changeSet id="mediated-requests" author="magzhanArtykov">
+        <comment>
+            Create mediated_requests table
+        </comment>
+        <createTable tableName="mediated_requests">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true"/>
+            </column>
+          <column name="created_date" type="timestamp without time zone" defaultValueComputed="now()">
+            <constraints nullable="false"/>
+          </column>
+          <column name="updated_date" type="timestamp without time zone"/>
+        </createTable>
+    </changeSet>
 </databaseChangeLog>

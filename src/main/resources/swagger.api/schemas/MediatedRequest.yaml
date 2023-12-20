@@ -1,0 +1,7 @@
+MediatedRequest:
+  description: Request to automatic check in an item
+  type: "object"
+  properties:
+    id:
+      type: string
+      description: the system assigned unique ID of the mediated request record
