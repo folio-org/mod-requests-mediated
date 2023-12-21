@@ -15,7 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class RequestControllerTest {
+class SecureRequestsControllerTest {
   @Mock
   private SecureRequestsService requestsService;
 
@@ -23,16 +23,16 @@ class RequestControllerTest {
   private SecureRequestsController requestsController;
 
   @Test
-  void retrieveRequestByIdNotFoundWhenNullTest() {
-    when(requestsService.retrieveMediatedRequestById(any())).thenReturn(null);
+  void retrieveSecureRequestByIdNotFoundWhenNullTest() {
+    when(requestsService.retrieveSecureRequestById(any())).thenReturn(null);
     var response = requestsController.retrieveSecureRequestById(any());
-    verify(requestsService).retrieveMediatedRequestById(any());
+    verify(requestsService).retrieveSecureRequestById(any());
     Assertions.assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(404));
   }
 
   @Test
-  void retrieveRequestByIdTest() {
-    when(requestsService.retrieveMediatedRequestById(any())).thenReturn(new SecureRequest());
+  void retrieveSecureRequestByIdTest() {
+    when(requestsService.retrieveSecureRequestById(any())).thenReturn(new SecureRequest());
     var response = requestsController.retrieveSecureRequestById(any());
     Assertions.assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(200));
   }

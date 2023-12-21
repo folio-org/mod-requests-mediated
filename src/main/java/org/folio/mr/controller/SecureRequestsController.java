@@ -19,8 +19,8 @@ public class SecureRequestsController implements SecureRequestsApi {
 
   @Override
   public ResponseEntity<SecureRequest> retrieveSecureRequestById(String id) {
-    log.info("retrieveMediatedRequestById: by id= {}", id);
-    var request = secureRequestsService.retrieveMediatedRequestById(id);
+    log.info("retrieveSecureRequestById: by id= {}", id);
+    var request = secureRequestsService.retrieveSecureRequestById(id);
     return isNull(request) ?
       ResponseEntity.notFound().build() :
       ResponseEntity.status(HttpStatus.OK)

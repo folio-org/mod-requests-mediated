@@ -18,11 +18,11 @@ public class SecureRequestsServiceImpl implements SecureRequestsService {
   private final SecureRequestMapper requestsMapper;
 
   @Override
-  public SecureRequest retrieveMediatedRequestById(String id) {
-    return requestsMapper.mapEntityToDto(findRequestByIdOrNull(id));
+  public SecureRequest retrieveSecureRequestById(String id) {
+    return requestsMapper.mapEntityToDto(findSecureRequestByIdOrNull(id));
   }
 
-  private SecureRequestEntity findRequestByIdOrNull(String id) {
+  private SecureRequestEntity findSecureRequestByIdOrNull(String id) {
     return secureRequestsRepository.findById(id).orElse(null);
   }
 }
