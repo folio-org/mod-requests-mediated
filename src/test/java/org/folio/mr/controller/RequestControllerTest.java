@@ -1,21 +1,29 @@
 package org.folio.mr.controller;
 
+import org.folio.mr.domain.dto.Request;
+import org.folio.mr.service.RequestsService;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.UUID;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+@ExtendWith(MockitoExtension.class)
+public class RequestControllerTest {
+  @Mock
+  private RequestsService requestsService;
 
-public class RequestControllerTest extends BaseIT {
-  private static final String URI_TEMPLATE_REQUESTS = "/requests-mediated/";
+  @InjectMocks
+  private RequestsController requestsController;
+
   @Test
-  void getRequestByIdNotFoundTest() throws Exception {
-    mockMvc.perform(
-        get(URI_TEMPLATE_REQUESTS + "/" + UUID.randomUUID())
-          .headers(defaultHeaders())
-          .contentType(MediaType.APPLICATION_JSON))
-      .andExpect(status().isNotFound());
+  void retrieveRequestByIdTest() {
+    when(requestsService.retrieveMediatedRequestById(any())).thenReturn(new Request());
+    requestsController.retrieveRequestById(any());
+    verify(requestsService).retrieveMediatedRequestById(any());
   }
 }

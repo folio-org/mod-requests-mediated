@@ -1,4 +1,4 @@
-package org.folio.mr.controller;
+package org.folio.mr.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
