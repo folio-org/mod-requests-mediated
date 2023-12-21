@@ -2,11 +2,13 @@ package org.folio.mr.controller;
 
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.service.RequestsService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatusCode;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -22,8 +24,9 @@ public class RequestControllerTest {
 
   @Test
   void retrieveRequestByIdTest() {
-    when(requestsService.retrieveMediatedRequestById(any())).thenReturn(new Request());
-    requestsController.retrieveRequestById(any());
+    when(requestsService.retrieveMediatedRequestById(any())).thenReturn(null);
+    var response = requestsController.retrieveRequestById(any());
     verify(requestsService).retrieveMediatedRequestById(any());
+    Assertions.assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(404));
   }
 }
