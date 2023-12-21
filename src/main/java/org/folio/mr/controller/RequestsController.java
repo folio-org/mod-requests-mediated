@@ -3,7 +3,7 @@ package org.folio.mr.controller;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.mr.domain.dto.Request;
-import org.folio.mr.rest.resource.RequestsMediatedApi;
+import org.folio.mr.rest.resource.RequestsApi;
 import org.folio.mr.service.RequestsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +13,7 @@ import static java.util.Objects.isNull;
 @RestController
 @Log4j2
 @AllArgsConstructor
-public class RequestsController implements RequestsMediatedApi {
+public class RequestsController implements RequestsApi {
 
   private final RequestsService requestsService;
 
