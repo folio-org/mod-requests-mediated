@@ -23,10 +23,17 @@ public class RequestControllerTest {
   private RequestsController requestsController;
 
   @Test
-  void retrieveRequestByIdTest() {
+  void retrieveRequestByIdNotFoundWhenNullTest() {
     when(requestsService.retrieveMediatedRequestById(any())).thenReturn(null);
     var response = requestsController.retrieveRequestById(any());
     verify(requestsService).retrieveMediatedRequestById(any());
     Assertions.assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(404));
+  }
+
+  @Test
+  void retrieveRequestByIdTest() {
+    when(requestsService.retrieveMediatedRequestById(any())).thenReturn(new Request());
+    var response = requestsController.retrieveRequestById(any());
+    Assertions.assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(200));
   }
 }
