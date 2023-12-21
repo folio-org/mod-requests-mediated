@@ -11,14 +11,14 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "requests")
+@Table(name = "secure-requests")
 @Getter
 @Setter
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RequestEntity {
+public class SecureRequestEntity {
 
   @Id
   private String id;

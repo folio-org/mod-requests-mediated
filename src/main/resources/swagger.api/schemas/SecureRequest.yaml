@@ -1,0 +1,7 @@
+SecureRequest:
+  description: Secure request
+  type: "object"
+  properties:
+    id:
+      type: string
+      description: the system assigned unique ID of the secure request

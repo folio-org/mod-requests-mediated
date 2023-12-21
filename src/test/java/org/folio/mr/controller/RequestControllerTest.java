@@ -1,7 +1,7 @@
 package org.folio.mr.controller;
 
-import org.folio.mr.domain.dto.Request;
-import org.folio.mr.service.RequestsService;
+import org.folio.mr.domain.dto.SecureRequest;
+import org.folio.mr.service.SecureRequestsService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,23 +17,23 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class RequestControllerTest {
   @Mock
-  private RequestsService requestsService;
+  private SecureRequestsService requestsService;
 
   @InjectMocks
-  private RequestsController requestsController;
+  private SecureRequestsController requestsController;
 
   @Test
   void retrieveRequestByIdNotFoundWhenNullTest() {
     when(requestsService.retrieveMediatedRequestById(any())).thenReturn(null);
-    var response = requestsController.retrieveRequestById(any());
+    var response = requestsController.retrieveSecureRequestById(any());
     verify(requestsService).retrieveMediatedRequestById(any());
     Assertions.assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(404));
   }
 
   @Test
   void retrieveRequestByIdTest() {
-    when(requestsService.retrieveMediatedRequestById(any())).thenReturn(new Request());
-    var response = requestsController.retrieveRequestById(any());
+    when(requestsService.retrieveMediatedRequestById(any())).thenReturn(new SecureRequest());
+    var response = requestsController.retrieveSecureRequestById(any());
     Assertions.assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(200));
   }
 }

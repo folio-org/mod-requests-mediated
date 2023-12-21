@@ -7,12 +7,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class RequestApiTest extends BaseIT {
-  private static final String URI_TEMPLATE_REQUESTS = "/requests-mediated/";
+  private static final String URI_TEMPLATE_REQUESTS = "/secure-requests/";
 
   @Test
   void getRequestByIdNotFoundTest() throws Exception {
     mockMvc.perform(
-        get(URI_TEMPLATE_REQUESTS + "/" + UUID.randomUUID())
+        get(URI_TEMPLATE_REQUESTS + UUID.randomUUID())
           .headers(defaultHeaders())
           .contentType(MediaType.APPLICATION_JSON))
       .andExpect(status().isNotFound());

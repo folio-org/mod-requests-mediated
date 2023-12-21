@@ -5,11 +5,11 @@
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
 
 <!--    Changeset for creating table mediated-requests with columns id, created_by, updated_by -->
-    <changeSet id="mediated-requests" author="magzhanArtykov">
+    <changeSet id="createSecureRequestsTable" author="magzhanArtykov">
         <comment>
             Create mediated_requests table
         </comment>
-        <createTable tableName="requests">
+        <createTable tableName="secure-requests">
             <column name="id" type="text">
                 <constraints primaryKey="true"/>
             </column>

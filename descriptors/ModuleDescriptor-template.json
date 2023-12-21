@@ -3,14 +3,14 @@
   "name": "Folio mod-request-mediated module",
   "provides": [
     {
-      "id": "requests",
+      "id": "secure-requests",
       "version": "1.0",
       "handlers": [
         {
           "methods": [
             "GET"
           ],
-          "pathPattern": "/requests/{id}",
+          "pathPattern": "/secure-requests/{id}",
           "permissionsRequired": [],
           "modulePermissions": []
         }
