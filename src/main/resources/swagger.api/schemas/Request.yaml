@@ -1,4 +1,4 @@
-MediatedRequest:
+Request:
   description: Request to automatic check in an item
   type: "object"
   properties:

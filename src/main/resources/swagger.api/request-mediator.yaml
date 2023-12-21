@@ -3,10 +3,10 @@ info:
   title: Mediated Request API
   version: v1
 paths:
-  /requests-mediated/{id}:
+  /requests/{id}:
     get:
       description: Retrieve dummy request by id
-      operationId: retrieveMediatedRequestById
+      operationId: retrieveRequestById
       parameters:
         - name: id
           in: path
@@ -16,7 +16,7 @@ paths:
             description: Request id
       responses:
         '200':
-          $ref: '#/components/responses/MediatedRequest'
+          $ref: '#/components/responses/Request'
         '400':
           description: Bad request
           content:
@@ -33,9 +33,9 @@ paths:
                 example: Not found
 components:
   responses:
-    MediatedRequest:
-        description: MediatedRequest object
+    Request:
+        description: Request object
         content:
           application/json:
             schema:
-              $ref: 'schemas/MediatedRequest.yaml#/MediatedRequest'
+              $ref: 'schemas/Request.yaml#/Request'

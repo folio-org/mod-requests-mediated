@@ -9,8 +9,8 @@
         <comment>
             Create mediated_requests table
         </comment>
-        <createTable tableName="mediated_requests">
-            <column name="id" type="UUID">
+        <createTable tableName="requests">
+            <column name="id" type="text">
                 <constraints primaryKey="true"/>
             </column>
           <column name="created_date" type="timestamp without time zone" defaultValueComputed="now()">

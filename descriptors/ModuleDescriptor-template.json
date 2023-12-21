@@ -1,11 +1,20 @@
 {
   "id": "@artifactId@-@version@",
-  "name": "The blueprint module that could be used as a template for folio spring based backend modules.",
+  "name": "Folio mod-request-mediated module",
   "provides": [
     {
-      "id": "spring-template",
+      "id": "requests",
       "version": "1.0",
-      "handlers": []
+      "handlers": [
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/requests/{id}",
+          "permissionsRequired": [],
+          "modulePermissions": []
+        }
+      ]
     },
     {
       "id": "_tenant",
