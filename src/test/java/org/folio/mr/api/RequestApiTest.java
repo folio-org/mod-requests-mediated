@@ -6,7 +6,7 @@ import java.util.UUID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class RequestApiTest extends BaseIT {
+class RequestApiTest extends BaseIT {
   private static final String URI_TEMPLATE_REQUESTS = "/secure-requests/";
 
   @Test
