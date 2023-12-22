@@ -229,7 +229,7 @@
               <goal>generate</goal>
             </goals>
             <configuration>
-              <inputSpec>${project.basedir}/src/main/resources/swagger.api/secure-request.yaml</inputSpec>
+              <inputSpec>${project.basedir}/src/main/resources/swagger.api/requests-mediated.yaml</inputSpec>
               <output>${project.build.directory}/generated-sources</output>
               <generatorName>spring</generatorName>
               <modelPackage>${project.groupId}.mr.domain.dto</modelPackage>

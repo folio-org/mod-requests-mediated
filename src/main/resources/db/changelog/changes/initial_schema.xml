@@ -10,7 +10,7 @@
             Create mediated_requests table
         </comment>
         <createTable tableName="secure-requests">
-            <column name="id" type="text">
+            <column name="id" type="uuid">
                 <constraints primaryKey="true"/>
             </column>
           <column name="created_date" type="timestamp without time zone" defaultValueComputed="now()">

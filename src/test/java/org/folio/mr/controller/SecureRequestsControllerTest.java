@@ -23,17 +23,17 @@ class SecureRequestsControllerTest {
   private SecureRequestsController requestsController;
 
   @Test
-  void retrieveSecureRequestByIdNotFoundWhenNullTest() {
+  void retrieveSecureRequestByIdNotFoundWhenNull() {
     when(requestsService.retrieveSecureRequestById(any())).thenReturn(null);
-    var response = requestsController.retrieveSecureRequestById(any());
+    var response = requestsController.get(any());
     verify(requestsService).retrieveSecureRequestById(any());
     Assertions.assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(404));
   }
 
   @Test
-  void retrieveSecureRequestByIdTest() {
+  void retrieveSecureRequestById() {
     when(requestsService.retrieveSecureRequestById(any())).thenReturn(new SecureRequest());
-    var response = requestsController.retrieveSecureRequestById(any());
+    var response = requestsController.get(any());
     Assertions.assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(200));
   }
 }

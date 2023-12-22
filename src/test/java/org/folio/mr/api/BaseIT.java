@@ -70,7 +70,7 @@ public class BaseIT {
   @SneakyThrows
   protected static void setUpTenant(MockMvc mockMvc) {
     mockMvc.perform(post("/_/tenant")
-      .content(asJsonString(new TenantAttributes().moduleTo("mod-dcb")))
+      .content(asJsonString(new TenantAttributes().moduleTo("mod-requests-mediated")))
       .headers(defaultHeaders())
       .contentType(APPLICATION_JSON)).andExpect(status().isNoContent());
   }

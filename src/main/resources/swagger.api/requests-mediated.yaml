@@ -1,19 +1,14 @@
 openapi: 3.0.0
 info:
-  title: Secure Request API
+  title: Request Mediated API
   version: v1
 paths:
-  /secure-requests/{id}:
+  /requests-mediated/secure-requests/{requestId}:
     get:
-      description: Retrieve dummy request by id
-      operationId: retrieveSecureRequestById
+      description: Retrieve secure request object by id
+      operationId: get
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            description: Request id
+        - $ref: '#/components/parameters/requestId'
       responses:
         '200':
           $ref: '#/components/responses/SecureRequest'
@@ -32,6 +27,14 @@ paths:
                 type: string
                 example: Not found
 components:
+  parameters:
+    requestId:
+      name: requestId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
   responses:
     SecureRequest:
         description: Secure Request object

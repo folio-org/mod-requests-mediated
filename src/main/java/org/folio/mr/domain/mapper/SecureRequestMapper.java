@@ -7,6 +7,6 @@ import org.mapstruct.NullValueCheckStrategy;
 
 @Mapper(componentModel = "spring", nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
 public interface SecureRequestMapper {
-  SecureRequest mapEntityToDto(SecureRequestEntity circulationItem);
+  SecureRequest mapEntityToDto(SecureRequestEntity requestEntity);
   SecureRequestEntity mapDtoToEntity(SecureRequest request);
 }

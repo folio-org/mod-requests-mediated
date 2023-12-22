@@ -10,7 +10,7 @@ class SecureRequestsApiTest extends BaseIT {
   private static final String URI_TEMPLATE_REQUESTS = "/secure-requests/";
 
   @Test
-  void getSecureRequestByIdNotFoundTest() throws Exception {
+  void getSecureRequestByIdNotFound() throws Exception {
     mockMvc.perform(
         get(URI_TEMPLATE_REQUESTS + UUID.randomUUID())
           .headers(defaultHeaders())

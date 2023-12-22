@@ -1,5 +1,6 @@
 package org.folio.mr.domain.entity;
 
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -9,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.folio.mr.domain.converter.UUIDConverter;
+import java.util.UUID;
 
 @Entity
 @Table(name = "secure-requests")
@@ -21,6 +24,7 @@ import lombok.ToString;
 public class SecureRequestEntity {
 
   @Id
-  private String id;
+  @Convert(converter = UUIDConverter.class)
+  private UUID id;
 
 }

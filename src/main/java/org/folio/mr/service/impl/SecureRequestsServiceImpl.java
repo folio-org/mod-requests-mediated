@@ -8,6 +8,7 @@ import org.folio.mr.domain.mapper.SecureRequestMapper;
 import org.folio.mr.repository.SecureRequestsRepository;
 import org.folio.mr.service.SecureRequestsService;
 import org.springframework.stereotype.Service;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -18,11 +19,11 @@ public class SecureRequestsServiceImpl implements SecureRequestsService {
   private final SecureRequestMapper requestsMapper;
 
   @Override
-  public SecureRequest retrieveSecureRequestById(String id) {
+  public SecureRequest retrieveSecureRequestById(UUID id) {
     return requestsMapper.mapEntityToDto(findSecureRequestByIdOrNull(id));
   }
 
-  private SecureRequestEntity findSecureRequestByIdOrNull(String id) {
+  private SecureRequestEntity findSecureRequestByIdOrNull(UUID id) {
     return secureRequestsRepository.findById(id).orElse(null);
   }
 }

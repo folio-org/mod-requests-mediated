@@ -3,5 +3,5 @@ SecureRequest:
   type: "object"
   properties:
     id:
-      type: string
-      description: the system assigned unique ID of the secure request
+      description: Id of the secure request
+      $ref: "uuid.yaml"
