@@ -1,6 +1,6 @@
 {
   "id": "@artifactId@-@version@",
-  "name": "Folio mod-request-mediated module",
+  "name": "Folio mod-requests-mediated module",
   "provides": [
     {
       "id": "secure-requests",
