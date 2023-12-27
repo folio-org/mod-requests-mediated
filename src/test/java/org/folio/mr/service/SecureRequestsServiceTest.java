@@ -24,9 +24,9 @@ class SecureRequestsServiceTest {
   private SecureRequestMapper secureRequestMapper;
 
   @Test
-  void retrieveMediatedRequestById() {
+  void getById() {
     when(secureRequestMapper.mapEntityToDto(any())).thenReturn(null);
-    secureRequestsService.retrieveSecureRequestById(any());
+    secureRequestsService.get(any());
     verify(secureRequestsRepository).findById(any());
   }
 }

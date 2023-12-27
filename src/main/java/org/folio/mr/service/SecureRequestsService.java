@@ -4,5 +4,5 @@ import org.folio.mr.domain.dto.SecureRequest;
 import java.util.UUID;
 
 public interface SecureRequestsService {
-  SecureRequest retrieveSecureRequestById(UUID id);
+  SecureRequest get(UUID requestId);
 }

@@ -19,11 +19,11 @@ public class SecureRequestsServiceImpl implements SecureRequestsService {
   private final SecureRequestMapper requestsMapper;
 
   @Override
-  public SecureRequest retrieveSecureRequestById(UUID id) {
-    return requestsMapper.mapEntityToDto(findSecureRequestByIdOrNull(id));
+  public SecureRequest get(UUID id) {
+    return requestsMapper.mapEntityToDto(getByIdOrNull(id));
   }
 
-  private SecureRequestEntity findSecureRequestByIdOrNull(UUID id) {
+  private SecureRequestEntity getByIdOrNull(UUID id) {
     return secureRequestsRepository.findById(id).orElse(null);
   }
 }

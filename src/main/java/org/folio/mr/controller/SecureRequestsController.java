@@ -22,7 +22,7 @@ public class SecureRequestsController implements RequestsMediatedApi {
   @Override
   public ResponseEntity<SecureRequest> get(UUID requestId) {
     log.debug("get:: parameters id: {}", requestId);
-    var request = secureRequestsService.retrieveSecureRequestById(requestId);
+    var request = secureRequestsService.get(requestId);
 
     return isNull(request)
       ? ResponseEntity.notFound().build()
