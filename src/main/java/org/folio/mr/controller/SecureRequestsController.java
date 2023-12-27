@@ -10,8 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
-import static java.util.Objects.isNull;
-
 @RestController
 @Log4j2
 @AllArgsConstructor
@@ -22,10 +20,8 @@ public class SecureRequestsController implements RequestsMediatedApi {
   @Override
   public ResponseEntity<SecureRequest> get(UUID requestId) {
     log.debug("get:: parameters id: {}", requestId);
-    var request = secureRequestsService.get(requestId);
-
-    return isNull(request)
-      ? ResponseEntity.notFound().build()
-      : ResponseEntity.status(HttpStatus.OK).body(request);
+    return secureRequestsService.get(requestId)
+      .map(ResponseEntity.status(HttpStatus.OK)::body)
+      .orElseGet(() -> ResponseEntity.notFound().build());
   }
 }

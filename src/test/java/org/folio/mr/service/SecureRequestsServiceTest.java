@@ -11,7 +11,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SecureRequestsServiceTest {
@@ -25,7 +24,6 @@ class SecureRequestsServiceTest {
 
   @Test
   void getById() {
-    when(secureRequestMapper.mapEntityToDto(any())).thenReturn(null);
     secureRequestsService.get(any());
     verify(secureRequestsRepository).findById(any());
   }

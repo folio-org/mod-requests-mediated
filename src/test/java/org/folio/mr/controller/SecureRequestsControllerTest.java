@@ -9,6 +9,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatusCode;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -24,7 +25,7 @@ class SecureRequestsControllerTest {
 
   @Test
   void getByIdNotFoundWhenNull() {
-    when(requestsService.get(any())).thenReturn(null);
+    when(requestsService.get(any())).thenReturn(Optional.empty());
     var response = requestsController.get(any());
     verify(requestsService).get(any());
     Assertions.assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(404));
@@ -32,7 +33,7 @@ class SecureRequestsControllerTest {
 
   @Test
   void getById() {
-    when(requestsService.get(any())).thenReturn(new SecureRequest());
+    when(requestsService.get(any())).thenReturn(Optional.of(new SecureRequest()));
     var response = requestsController.get(any());
     Assertions.assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(200));
   }
