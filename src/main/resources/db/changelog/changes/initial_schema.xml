@@ -9,7 +9,7 @@
         <comment>
             Create mediated_requests table
         </comment>
-        <createTable tableName="secure-requests">
+        <createTable tableName="secure_requests">
             <column name="id" type="uuid">
                 <constraints primaryKey="true"/>
             </column>

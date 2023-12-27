@@ -26,6 +26,13 @@ paths:
               schema:
                 type: string
                 example: Not found
+        '500':
+          description: Internal server error
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Internal server error
 components:
   parameters:
     requestId:
