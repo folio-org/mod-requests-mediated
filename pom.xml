@@ -5,8 +5,8 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.7.1</version>
-    <relativePath/> <!-- lookup parent from repository -->
+    <version>3.1.5</version>
+    <relativePath/>
   </parent>
   <groupId>org.folio</groupId>
   <artifactId>mod-requests-mediated</artifactId>
@@ -33,13 +33,13 @@
     <argLine/>
 
     <!-- runtime dependencies -->
-    <folio-spring-base.version>4.1.0</folio-spring-base.version>
-    <openapi-generator.version>5.4.0</openapi-generator.version>
-    <mapstruct.version>1.5.2.Final</mapstruct.version>
+    <folio-spring-base.version>7.2.2</folio-spring-base.version>
+    <openapi-generator.version>6.2.1</openapi-generator.version>
+    <mapstruct.version>1.5.3.Final</mapstruct.version>
 
     <!-- test dependencies -->
-    <wiremock.version>2.33.2</wiremock.version>
-    <testcontainers.version>1.17.2</testcontainers.version>
+    <wiremock.version>3.2.0</wiremock.version>
+    <testcontainers.version>1.17.6</testcontainers.version>
   </properties>
 
   <dependencies>
@@ -129,8 +129,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.github.tomakehurst</groupId>
-      <artifactId>wiremock-jre8</artifactId>
+      <groupId>org.wiremock</groupId>
+      <artifactId>wiremock-standalone</artifactId>
       <version>${wiremock.version}</version>
       <scope>test</scope>
     </dependency>
@@ -152,6 +152,8 @@
 
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>3.3.0</version>
         <executions>
           <execution>
             <id>filter-descriptor-inputs</id>
@@ -202,7 +204,6 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.3.0</version>
         <executions>
           <execution>
             <phase>generate-sources</phase>
@@ -211,75 +212,45 @@
             </goals>
             <configuration>
               <sources>
-                <source>${project.build.directory}/generated-sources</source>
+                <source>${project.build.directory}/generated-sources/src/main/java</source>
               </sources>
             </configuration>
           </execution>
         </executions>
       </plugin>
-      <!--
-            <plugin>
-              <groupId>org.openapitools</groupId>
-              <artifactId>openapi-generator-maven-plugin</artifactId>
-              <version>${openapi-generator.version}</version>
-              <executions>
-                <execution>
-                  <id>validator-registry</id>
-                  <goals>
-                    <goal>generate</goal>
-                  </goals>
-                  <configuration>
-                    <inputSpec>${validator-registry.yaml.file}</inputSpec>
-                    <output>${project.build.directory}/generated-sources</output>
-                    <generatorName>spring</generatorName>
-                    <modelPackage>${project.groupId}.pv.domain.dto</modelPackage>
-                    <apiPackage>${project.groupId}.pv.rest.resource</apiPackage>
-                    <generateApis>true</generateApis>
-                    <generateApiTests>true</generateApiTests>
-                    <generateApiDocumentation>true</generateApiDocumentation>
-                    <generateModels>true</generateModels>
-                    <modelsToGenerate>error,errors,parameter,metadata,validationRule,validationRuleCollection</modelsToGenerate>
-                    <generateModelTests>false</generateModelTests>
-                    <generateSupportingFiles>true</generateSupportingFiles>
-                    <supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
-                    <generateModelDocumentation>true</generateModelDocumentation>
-                    <configOptions>
-                      <java8>true</java8>
-                      <dateLibrary>java</dateLibrary>
-                      <interfaceOnly>true</interfaceOnly>
-                    </configOptions>
-
-                  </configuration>
-                </execution>
-                <execution>
-                  <id>validator</id>
-                  <goals>
-                    <goal>generate</goal>
-                  </goals>
-                  <configuration>
-                    <inputSpec>${password-validator.yaml.file}</inputSpec>
-                    <output>${project.build.directory}/generated-sources</output>
-                    <generatorName>spring</generatorName>
-                    <modelPackage>${project.groupId}.pv.domain.dto</modelPackage>
-                    <apiPackage>${project.groupId}.pv.rest.resource</apiPackage>
-                    <generateApis>true</generateApis>
-                    <generateApiTests>true</generateApiTests>
-                    <generateApiDocumentation>true</generateApiDocumentation>
-                    <generateModels>true</generateModels>
-                    <modelsToGenerate>password,validation_result</modelsToGenerate>
-                    <generateModelTests>false</generateModelTests>
-                    <generateSupportingFiles>false</generateSupportingFiles>
-                    <generateModelDocumentation>true</generateModelDocumentation>
-                    <configOptions>
-                      <java8>true</java8>
-                      <dateLibrary>java</dateLibrary>
-                      <interfaceOnly>true</interfaceOnly>
-                    </configOptions>
-                  </configuration>
-                </execution>
-              </executions>
-            </plugin>
-      -->
+      <plugin>
+        <groupId>org.openapitools</groupId>
+        <artifactId>openapi-generator-maven-plugin</artifactId>
+        <version>${openapi-generator.version}</version>
+        <executions>
+          <execution>
+            <id>request-mediator</id>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <inputSpec>${project.basedir}/src/main/resources/swagger.api/requests-mediated.yaml</inputSpec>
+              <output>${project.build.directory}/generated-sources</output>
+              <generatorName>spring</generatorName>
+              <modelPackage>${project.groupId}.mr.domain.dto</modelPackage>
+              <apiPackage>${project.groupId}.mr.rest.resource</apiPackage>
+              <generateApis>true</generateApis>
+              <generateApiTests>true</generateApiTests>
+              <generateApiDocumentation>true</generateApiDocumentation>
+              <generateModels>true</generateModels>
+              <generateModelTests>false</generateModelTests>
+              <generateSupportingFiles>true</generateSupportingFiles>
+              <supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
+              <generateModelDocumentation>true</generateModelDocumentation>
+              <configOptions>
+                <dateLibrary>java</dateLibrary>
+                <interfaceOnly>true</interfaceOnly>
+                <useSpringBoot3>true</useSpringBoot3>
+              </configOptions>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>

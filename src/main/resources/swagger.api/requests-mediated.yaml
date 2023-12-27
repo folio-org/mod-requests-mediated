@@ -1,0 +1,51 @@
+openapi: 3.0.0
+info:
+  title: Request Mediated API
+  version: v1
+paths:
+  /requests-mediated/secure-requests/{requestId}:
+    get:
+      description: Retrieve secure request object by id
+      operationId: get
+      parameters:
+        - $ref: '#/components/parameters/requestId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SecureRequest'
+        '400':
+          description: Bad request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Bad request
+        '404':
+          description: Not found
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Not found
+        '500':
+          description: Internal server error
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Internal server error
+components:
+  parameters:
+    requestId:
+      name: requestId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    SecureRequest:
+        description: Secure Request object
+        content:
+          application/json:
+            schema:
+              $ref: 'schemas/SecureRequest.yaml#/SecureRequest'
