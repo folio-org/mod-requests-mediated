@@ -14,7 +14,7 @@ import org.folio.mr.domain.converter.UUIDConverter;
 import java.util.UUID;
 
 @Entity
-@Table(name = "secure_requests")
+@Table(name = "secure_request")
 @Getter
 @Setter
 @ToString
