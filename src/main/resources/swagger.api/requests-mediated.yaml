@@ -49,3 +49,4 @@ components:
           application/json:
             schema:
               $ref: 'schemas/SecureRequest.yaml#/SecureRequest'
+
