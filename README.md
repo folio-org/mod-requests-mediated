@@ -8,3 +8,9 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 ## Goal
 
 FOLIO compatible mediated requests functionality, including secure requests.
+
+## Further information
+
+### Issue tracker
+
+Project [MODREQMED](https://issues.folio.org/browse/MODREQMED).
