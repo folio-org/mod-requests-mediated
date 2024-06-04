@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.1.5</version>
+    <version>3.3.0</version>
     <relativePath/>
   </parent>
   <groupId>org.folio</groupId>
@@ -33,7 +33,7 @@
     <argLine/>
 
     <!-- runtime dependencies -->
-    <folio-spring-base.version>7.2.2</folio-spring-base.version>
+    <folio-spring-support.version>8.2.0-SNAPSHOT</folio-spring-support.version>
     <openapi-generator.version>6.2.1</openapi-generator.version>
     <mapstruct.version>1.5.3.Final</mapstruct.version>
 
@@ -46,7 +46,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-spring-base</artifactId>
-      <version>${folio-spring-base.version}</version>
+      <version>${folio-spring-support.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
