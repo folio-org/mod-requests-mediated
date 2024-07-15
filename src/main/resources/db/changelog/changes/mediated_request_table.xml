@@ -1,0 +1,57 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="createMediatedRequestsTable" author="AlexanderKurash">
+        <comment>
+            Create mediated_request table
+        </comment>
+
+        <!--sql>CREATE TYPE request_level AS ENUM ('Item', 'Title')</sql>
+        <sql>CREATE TYPE request_type AS ENUM ('Hold', 'Recall', 'Page')</sql>
+        <sql>CREATE TYPE mediated_request_status AS ENUM ('Open - Not yet filled', 'Open - Awaiting pickup', 'Open - In transit', 'Open - Awaiting delivery', 'Closed - Filled', 'Closed - Cancelled', 'Closed - Unfilled', 'Closed - Pickup expired', 'New - Awaiting confirmation', 'Open - Item arrived', 'Open - Item in transit')</sql>
+        <sql>CREATE TYPE mediated_request_fulfillment_preference AS ENUM ('Hold Shelf', 'Delivery')</sql-->
+        <!--TODO: fix custom type mapping issue -->
+
+        <createTable tableName="mediated_request">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="request_level" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="request_type" type="varchar(255)"/>
+            <column name="request_date" type="timestamp without time zone" defaultValueComputed="now()"/>
+            <column name="patron_comments" type="text"/>
+            <column name="requester_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="proxy_user_id" type="uuid"/>
+            <column name="instance_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="holdings_record_id" type="uuid"/>
+            <column name="item_id" type="uuid"/>
+            <column name="status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cancellation_reason_id" type="uuid"/>
+            <column name="cancelled_by_user_id" type="uuid"/>
+            <column name="cancellation_additional_information" type="text"/>
+            <column name="cancelled_date" type="timestamp without time zone" defaultValueComputed="now()"/>
+            <column name="position" type="int"/>
+            <column name="fulfillment_preference" type="varchar(255)"/>
+            <column name="delivery_address_type_id" type="uuid"/>
+            <column name="pickup_service_point_id" type="uuid"/>
+
+            <!--TODO: searchIndex: callNumberComponents, shelvingOrder, pickupServicePointName-->
+
+            <column name="created_date" type="timestamp without time zone" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_date" type="timestamp without time zone"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

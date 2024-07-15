@@ -4,14 +4,40 @@
   "provides": [
     {
       "id": "requests-mediated",
-      "version": "1.0",
+      "version": "2.0",
       "handlers": [
         {
           "methods": [
             "GET"
           ],
-          "pathPattern": "/requests-mediated/secure-requests/{requestId}",
-          "permissionsRequired": [],
+          "pathPattern": "/requests-mediated/mediated-requests",
+          "permissionsRequired": ["requests-mediated.mediated-request.collection.get"],
+          "modulePermissions": []
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
+          "permissionsRequired": ["requests-mediated.mediated-request.item.get"],
+          "modulePermissions": []
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/requests-mediated/mediated-requests",
+          "permissionsRequired": ["requests-mediated.mediated-request.item.post"],
+          "modulePermissions": []
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
+          "permissionsRequired": ["requests-mediated.mediated-request.item.put"],
+          "modulePermissions": []
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
+          "permissionsRequired": ["requests-mediated.mediated-request.item.delete"],
           "modulePermissions": []
         }
       ]
@@ -31,7 +57,33 @@
       ]
     }
   ],
-  "permissionSets" : [],
+  "permissionSets" : [
+    {
+      "permissionName": "requests-mediated.mediated-request.collection.get",
+      "displayName": "requests-mediated - get mediated requests",
+      "description": "Get mediated requests"
+    },
+    {
+      "permissionName": "requests-mediated.mediated-request.item.get",
+      "displayName": "requests-mediated - get mediated request by ID",
+      "description": "Get mediated request"
+    },
+    {
+      "permissionName": "requests-mediated.mediated-request.item.post",
+      "displayName": "requests-mediated - create mediated request",
+      "description": "Create mediated request"
+    },
+    {
+      "permissionName": "requests-mediated.mediated-request.item.put",
+      "displayName": "requests-mediated - update mediated request",
+      "description": "Update mediated request"
+    },
+    {
+      "permissionName": "requests-mediated.mediated-request.item.delete",
+      "displayName": "requests-mediated - remove mediated request",
+      "description": "Remove mediated request"
+    }
+  ],
   "requires": [],
   "launchDescriptor": {
     "dockerImage": "@artifactId@:@version@",
