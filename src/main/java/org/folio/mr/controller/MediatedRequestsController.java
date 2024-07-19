@@ -1,6 +1,5 @@
 package org.folio.mr.controller;
 
-import java.util.Set;
 import java.util.UUID;
 
 import org.folio.mr.domain.dto.MediatedRequest;
