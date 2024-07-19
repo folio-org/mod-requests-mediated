@@ -55,7 +55,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext
 @Log4j2
 public class BaseIT {
-  private static final String FOLIO_ENVIRONMENT = "folio";
   protected static final String HEADER_TENANT = "x-okapi-tenant";
   protected static final String TOKEN = "test_token";
   public static final String TENANT_ID_DIKU = "diku";
@@ -73,7 +72,7 @@ public class BaseIT {
   public static WireMockServer wireMockServer;
   private FolioExecutionContextSetter contextSetter;
   protected static PostgreSQLContainer<?> postgreDBContainer = new PostgreSQLContainer<>("postgres:12-alpine");
-  public final static int WIRE_MOCK_PORT = TestSocketUtils.findAvailableTcpPort();
+  public static final int WIRE_MOCK_PORT = TestSocketUtils.findAvailableTcpPort();
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
