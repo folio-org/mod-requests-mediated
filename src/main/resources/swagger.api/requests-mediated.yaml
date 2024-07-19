@@ -13,11 +13,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/mediatedRequest"
+              $ref: '#/components/schemas/mediatedRequest'
         required: true
       responses:
         '201':
-          $ref: "#/components/responses/mediatedRequest"
+          $ref: '#/components/responses/mediatedRequest'
         '400':
           $ref: '#/components/responses/badRequestResponse'
         '500':
@@ -28,9 +28,9 @@ paths:
       tags:
         - mediatedRequest
       parameters:
-        - $ref: "#/components/parameters/trait_queryable_query"
-        - $ref: "#/components/parameters/trait_pageable_offset"
-        - $ref: "#/components/parameters/trait_pageable_limit"
+        - $ref: '#/components/parameters/trait_queryable_query'
+        - $ref: '#/components/parameters/trait_pageable_offset'
+        - $ref: '#/components/parameters/trait_pageable_limit'
       responses:
         '200':
           $ref: '#/components/responses/mediatedRequests'
@@ -89,7 +89,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/mediatedRequest"
+              $ref: '#/components/schemas/mediatedRequest'
         required: true
       parameters:
         - $ref: '#/components/parameters/mediatedRequestId'
@@ -184,7 +184,7 @@ components:
               - message: Request is invalid
             total_records: 1
           schema:
-            $ref: "#/components/schemas/errorResponse"
+            $ref: '#/components/schemas/errorResponse'
     notFoundResponse:
       description: Not found
       content:
@@ -194,7 +194,7 @@ components:
               - message: Request not found
             total_records: 1
           schema:
-            $ref: "#/components/schemas/errorResponse"
+            $ref: '#/components/schemas/errorResponse'
     internalServerErrorResponse:
       description: When unhandled exception occurred during code execution, e.g. NullPointerException
       content:
@@ -204,4 +204,4 @@ components:
               - message: Unexpected error
             total_records: 1
           schema:
-            $ref: "#/components/schemas/errorResponse"
+            $ref: '#/components/schemas/errorResponse'
