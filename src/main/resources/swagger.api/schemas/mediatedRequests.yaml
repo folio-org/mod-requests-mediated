@@ -6,7 +6,6 @@ MediatedRequests:
       description: A list of mediated requests
       type: array
       items:
-        type: object
         $ref: "mediatedRequest.yaml#/MediatedRequest"
     totalRecords:
       description: Total number of mediated requests
