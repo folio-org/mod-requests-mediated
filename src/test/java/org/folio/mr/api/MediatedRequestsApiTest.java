@@ -73,6 +73,18 @@ class MediatedRequestsApiTest extends BaseIT {
 
   @SneakyThrows
   @Test
+  void mediatedRequestsShouldBeRetrievedByQuery() {
+    doPost(URI_TEMPLATE, TEST_PAYLOAD)
+      .expectStatus().isEqualTo(CREATED);
+    mockMvc.perform(
+        get(URI_TEMPLATE + "?query=requestType==Hold")
+          .headers(defaultHeaders())
+          .contentType(MediaType.APPLICATION_JSON))
+      .andExpect(status().isOk());
+  }
+
+  @SneakyThrows
+  @Test
   void mediatedRequestShouldBeCreatedAndRetrievedById() {
     doPost(URI_TEMPLATE, TEST_PAYLOAD).expectStatus().isEqualTo(CREATED);
     mockMvc.perform(
