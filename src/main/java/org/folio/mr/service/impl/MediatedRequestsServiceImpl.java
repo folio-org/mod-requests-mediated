@@ -1,5 +1,6 @@
 package org.folio.mr.service.impl;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -9,6 +10,7 @@ import org.folio.mr.domain.mapper.MediatedRequestMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.MediatedRequestsService;
 import org.folio.spring.data.OffsetRequest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -41,20 +43,37 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   }
 
   @Override
+  public MediatedRequests findAll(Integer offset, Integer limit) {
+    var mediatedRequests = mediatedRequestsRepository.findAll(OffsetRequest.of(offset, limit))
+      .stream()
+        .map(requestsMapper::mapEntityToDto)
+        .toList();
+
+    var totalRecords = mediatedRequestsRepository.count();
+
+    return new MediatedRequests().mediatedRequests(mediatedRequests).totalRecords(totalRecords);
+  }
+
+  @Override
   public MediatedRequest post(MediatedRequest mediatedRequest) {
     return requestsMapper.mapEntityToDto(mediatedRequestsRepository.save(
       requestsMapper.mapDtoToEntity(mediatedRequest)));
   }
 
   @Override
-  public MediatedRequest update(MediatedRequest mediatedRequest) {
-    return requestsMapper.mapEntityToDto(mediatedRequestsRepository.save(
-      requestsMapper.mapDtoToEntity(mediatedRequest)));
+  public Optional<MediatedRequest> update(UUID requestId, MediatedRequest mediatedRequest) {
+    return mediatedRequestsRepository.findById(requestId)
+      .map(mediatedRequestEntity -> requestsMapper.mapEntityToDto(
+        mediatedRequestsRepository.save(requestsMapper.mapDtoToEntity(mediatedRequest))));
   }
 
   @Override
-  public void delete(MediatedRequest mediatedRequest) {
-    mediatedRequestsRepository.delete(requestsMapper.mapDtoToEntity(mediatedRequest));
-  }
-
+  public Optional<MediatedRequest> delete(UUID requestId) {
+    return mediatedRequestsRepository.findById(requestId)
+      .map(mediatedRequestEntity -> {
+        log.info("delete:: found mediatedRequestEntity: {}", () -> mediatedRequestEntity);
+        mediatedRequestsRepository.delete(mediatedRequestEntity);
+        return requestsMapper.mapEntityToDto(mediatedRequestEntity);
+      });
+   }
 }

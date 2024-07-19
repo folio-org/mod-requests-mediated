@@ -48,7 +48,7 @@ paths:
               schema:
                 type: string
                 example: Internal server error
-  /requests-mediated/mediated-requests/{requestId}:
+  /requests-mediated/mediated-requests/{mediatedRequestId}:
     get:
       description: Retrieve mediated request object by id
       operationId: getMediatedRequestById

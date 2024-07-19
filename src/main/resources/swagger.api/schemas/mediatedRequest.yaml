@@ -35,7 +35,9 @@ MediatedRequest:
     status:
       description: Status of the mediated request
       type: string
-      enum: [ "Open - Not yet filled", "Open - Awaiting pickup", "Open - In transit", "Open - Awaiting delivery", "Closed - Filled", "Closed - Cancelled", "Closed - Unfilled", "Closed - Pickup expired", "New - Awaiting confirmation", "Open - Item arrived", "Open - Item in transit" ]
+      enum: [ "Open - Awaiting pickup", "Open - In progress", "Open - In transit", "Open - Item arrived",
+        "Closed - Cancelled", "Closed - Declined", "Closed - Filled", "New - Awaiting confirmation"
+      ]
     cancellationReasonId:
       description: ID of the cancellation reason
       $ref: uuid.yaml

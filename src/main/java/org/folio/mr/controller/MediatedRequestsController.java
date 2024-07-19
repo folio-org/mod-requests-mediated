@@ -28,9 +28,9 @@ public class MediatedRequestsController implements RequestsMediatedApi {
   }
 
   @Override
-  public ResponseEntity<MediatedRequest> getMediatedRequestById(UUID requestId) {
-    log.debug("getMediatedRequest:: parameters id: {}", requestId);
-    return mediatedRequestsService.get(requestId)
+  public ResponseEntity<MediatedRequest> getMediatedRequestById(UUID mediatedRequestId) {
+    log.debug("getMediatedRequest:: parameters id: {}", mediatedRequestId);
+    return mediatedRequestsService.get(mediatedRequestId)
       .map(ResponseEntity.status(HttpStatus.OK)::body)
       .orElseGet(() -> ResponseEntity.notFound().build());
   }
@@ -39,18 +39,26 @@ public class MediatedRequestsController implements RequestsMediatedApi {
   public ResponseEntity<MediatedRequests> getMediatedRequestCollection(String query,
     Integer offset, Integer limit) {
 
-    var mediatedRequests = mediatedRequestsService.findBy(query, offset, limit);
+    MediatedRequests mediatedRequests;
+    if (query == null || query.isEmpty()) {
+      mediatedRequests = mediatedRequestsService.findAll(offset, limit);
+    } else {
+      mediatedRequests = mediatedRequestsService.findBy(query, offset, limit);
+    }
     return ResponseEntity.status(HttpStatus.OK).body(mediatedRequests);
   }
 
   @Override
   public ResponseEntity<Void> putMediatedRequestById(UUID requestId, MediatedRequest mediatedRequest) {
-    return RequestsMediatedApi.super.putMediatedRequestById(requestId, mediatedRequest);
+    return mediatedRequestsService.update(requestId, mediatedRequest)
+      .map(entity -> ResponseEntity.status(HttpStatus.NO_CONTENT).<Void>build())
+      .orElseGet(() -> ResponseEntity.notFound().build());
   }
 
   @Override
   public ResponseEntity<Void> deleteMediatedRequestById(UUID requestId) {
-    return RequestsMediatedApi.super.deleteMediatedRequestById(requestId);
+    return mediatedRequestsService.delete(requestId)
+      .map(entity -> ResponseEntity.status(HttpStatus.NO_CONTENT).<Void>build())
+      .orElseGet(() -> ResponseEntity.notFound().build());
   }
-
 }

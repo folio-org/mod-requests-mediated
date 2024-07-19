@@ -10,10 +10,11 @@ public interface MediatedRequestsService {
   Optional<MediatedRequest> get(UUID requestId);
 
   MediatedRequests findBy(String query, Integer offset, Integer limit);
+  MediatedRequests findAll(Integer offset, Integer limit);
 
   MediatedRequest post(MediatedRequest mediatedRequest);
 
-  MediatedRequest update(MediatedRequest mediatedRequest);
+  Optional<MediatedRequest> update(UUID requestId, MediatedRequest mediatedRequest);
 
-  void delete(MediatedRequest mediatedRequest);
+  Optional<MediatedRequest> delete(UUID requestId);
 }
