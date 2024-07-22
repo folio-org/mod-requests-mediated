@@ -7,7 +7,7 @@
 <!--    Changeset for creating table mediated-requests with columns id, created_by, updated_by -->
     <changeSet id="createSecureRequestsTable" author="magzhanArtykov">
         <comment>
-            Create mediated_requests table
+            Create secure_request table
         </comment>
         <createTable tableName="secure_request">
             <column name="id" type="uuid">

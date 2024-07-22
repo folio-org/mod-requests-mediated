@@ -1,0 +1,69 @@
+MediatedRequest:
+  description: Mediated request
+  type: object
+  properties:
+    id:
+      description: ID of the mediated request
+      $ref: 'uuid.yaml'
+    requestLevel:
+      description: Level of the request - Item or Title
+      type: string
+      enum: [ 'Item', 'Title' ]
+    requestType:
+      description: Whether the item should be held upon return, recalled or paged for
+      type: string
+      enum: [ 'Hold', 'Recall', 'Page' ]
+    requestDate:
+      description: Date when the request was placed
+      type: string
+      format: date-time
+    patronComments:
+      description: Comments made by the patron
+      type: string
+    requesterId:
+      description: ID of the requesting patron (user)
+      $ref: 'uuid.yaml'
+    proxyUserId:
+      description: ID of the proxy user
+      $ref: 'uuid.yaml'
+    instanceId:
+      description: ID of the instance
+      $ref: 'uuid.yaml'
+    holdingsRecordId:
+      description: ID of the holdings record
+      $ref: 'uuid.yaml'
+    itemId:
+      description: ID of the item
+      $ref: 'uuid.yaml'
+    status:
+      description: Status of the mediated request
+      type: string
+      enum: [ 'Open - Awaiting pickup', 'Open - In progress', 'Open - In transit', 'Open - Item arrived',
+        'Closed - Cancelled', 'Closed - Declined', 'Closed - Filled', 'New - Awaiting confirmation'
+      ]
+    cancellationReasonId:
+      description: ID of the cancellation reason
+      $ref: 'uuid.yaml'
+    cancelledByUserId:
+      description: ID of the user that cancelled mediated request
+      $ref: 'uuid.yaml'
+    cancellationAdditionalInformation:
+      description: Additional information about mediated request cancellation
+      type: string
+    cancelledDate:
+      description: Date when the request was cancelled
+      type: string
+      format: date-time
+    position:
+      description: Position of the mediated request in the queue
+      type: integer
+    fulfillmentPreference:
+      description: How should the request be fulfilled (whether the item should be kept on the hold shelf for collection or delivered to the requester)
+      type: string
+      enum: [ 'Hold Shelf', 'Delivery' ]
+    deliveryAddressTypeId:
+      description: ID of the delivery address type
+      $ref: 'uuid.yaml'
+    pickupServicePointId:
+      description: ID of the pickup service point
+      $ref: 'uuid.yaml'

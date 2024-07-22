@@ -3,15 +3,62 @@ info:
   title: Request Mediated API
   version: v1
 paths:
-  /requests-mediated/secure-requests/{requestId}:
+  /requests-mediated/mediated-requests:
+    post:
+      description: Create mediated request
+      operationId: postMediatedRequest
+      tags:
+        - mediatedRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/mediatedRequest'
+        required: true
+      responses:
+        '201':
+          $ref: '#/components/responses/mediatedRequest'
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
     get:
-      description: Retrieve secure request object by id
-      operationId: get
+      description: Retrieve a collection of mediated requests
+      operationId: getMediatedRequestCollection
+      tags:
+        - mediatedRequest
       parameters:
-        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/trait_queryable_query'
+        - $ref: '#/components/parameters/trait_pageable_offset'
+        - $ref: '#/components/parameters/trait_pageable_limit'
       responses:
         '200':
-          $ref: '#/components/responses/SecureRequest'
+          $ref: '#/components/responses/mediatedRequests'
+        '400':
+          description: Bad request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Bad request
+        '500':
+          description: Internal server error
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Internal server error
+  /requests-mediated/mediated-requests/{mediatedRequestId}:
+    get:
+      description: Retrieve mediated request object by id
+      operationId: getMediatedRequestById
+      tags:
+        - mediatedRequest
+      parameters:
+        - $ref: '#/components/parameters/mediatedRequestId'
+      responses:
+        '200':
+          $ref: '#/components/responses/mediatedRequest'
         '400':
           description: Bad request
           content:
@@ -33,20 +80,128 @@ paths:
               schema:
                 type: string
                 example: Internal server error
+    put:
+      description: Update mediated request by ID
+      operationId: putMediatedRequestById
+      tags:
+        - mediatedRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/mediatedRequest'
+        required: true
+      parameters:
+        - $ref: '#/components/parameters/mediatedRequestId'
+      responses:
+        '204':
+          description: Mediated request successfully updated
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
+    delete:
+      description: Remove mediated request by ID
+      operationId: deleteMediatedRequestById
+      tags:
+        - mediatedRequest
+      parameters:
+        - $ref: '#/components/parameters/mediatedRequestId'
+      responses:
+        '204':
+          description: Mediated request successfully removed
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
 components:
+  schemas:
+    mediatedRequest:
+      $ref: 'schemas/mediatedRequest.yaml#/MediatedRequest'
+    errorResponse:
+      $ref: 'schemas/errors.json'
   parameters:
-    requestId:
-      name: requestId
+    mediatedRequestId:
+      name: mediatedRequestId
       in: path
       required: true
       schema:
         type: string
         format: uuid
+    trait_queryable_query:
+      name: query
+      in: query
+      description: A query string to filter rules based on matching criteria in fields.
+      schema:
+        type: string
+    trait_pageable_offset:
+      name: offset
+      in: query
+      description: Skip over a number of elements by specifying an offset value for the query
+      schema:
+        default: 0
+        minimum: 0
+        maximum: 2147483647
+        type: integer
+    trait_pageable_limit:
+      name: limit
+      in: query
+      description: Limit the number of elements returned in the response
+      schema:
+        default: 10
+        minimum: 0
+        maximum: 2147483647
+        type: integer
   responses:
-    SecureRequest:
-        description: Secure Request object
+    mediatedRequest:
+        description: Mediated request object
         content:
           application/json:
             schema:
-              $ref: 'schemas/SecureRequest.yaml#/SecureRequest'
-
+              $ref: 'schemas/mediatedRequest.yaml#/MediatedRequest'
+            examples:
+              objectExample:
+                externalValue: 'examples/mediatedRequest.json'
+    mediatedRequests:
+      description: A collection of mediated request objects
+      content:
+        application/json:
+          schema:
+            $ref: 'schemas/mediatedRequests.yaml#/MediatedRequests'
+          examples:
+            objectExample:
+              externalValue: 'examples/mediatedRequests.json'
+    badRequestResponse:
+      description: Validation errors
+      content:
+        application/json:
+          example:
+            errors:
+              - message: Request is invalid
+            total_records: 1
+          schema:
+            $ref: '#/components/schemas/errorResponse'
+    notFoundResponse:
+      description: Not found
+      content:
+        application/json:
+          example:
+            errors:
+              - message: Request not found
+            total_records: 1
+          schema:
+            $ref: '#/components/schemas/errorResponse'
+    internalServerErrorResponse:
+      description: When unhandled exception occurred during code execution, e.g. NullPointerException
+      content:
+        application/json:
+          example:
+            errors:
+              - message: Unexpected error
+            total_records: 1
+          schema:
+            $ref: '#/components/schemas/errorResponse'
