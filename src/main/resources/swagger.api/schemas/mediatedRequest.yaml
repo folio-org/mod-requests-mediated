@@ -4,7 +4,7 @@ MediatedRequest:
   properties:
     id:
       description: ID of the mediated request
-      $ref: "uuid.yaml"
+      $ref: uuid.yaml
     requestLevel:
       description: Level of the request - Item or Title
       type: string
@@ -22,16 +22,16 @@ MediatedRequest:
       type: string
     requesterId:
       description: ID of the requesting patron (user)
-      $ref: "uuid.yaml"
+      $ref: uuid.yaml
     proxyUserId:
       description: ID of the proxy user
-      $ref: "uuid.yaml"
+      $ref: uuid.yaml
     instanceId:
       description: ID of the instance
-      $ref: "uuid.yaml"
+      $ref: uuid.yaml
     itemId:
       description: ID of the item
-      $ref: "uuid.yaml"
+      $ref: uuid.yaml
     status:
       description: Status of the mediated request
       type: string
@@ -40,10 +40,10 @@ MediatedRequest:
       ]
     cancellationReasonId:
       description: ID of the cancellation reason
-      $ref: "uuid.yaml"
+      $ref: uuid.yaml
     cancelledByUserId:
       description: ID of the user that cancelled mediated request
-      $ref: "uuid.yaml"
+      $ref: uuid.yaml
     cancellationAdditionalInformation:
       description: Additional information about mediated request cancellation
       type: string
@@ -60,7 +60,7 @@ MediatedRequest:
       enum: [ "Hold Shelf", "Delivery" ]
     deliveryAddressTypeId:
       description: ID of the delivery address type
-      $ref: "uuid.yaml"
+      $ref: uuid.yaml
     pickupServicePointId:
       description: ID of the pickup service point
-      $ref: "uuid.yaml"
+      $ref: uuid.yaml

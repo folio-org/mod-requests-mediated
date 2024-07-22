@@ -165,7 +165,7 @@ components:
               $ref: 'schemas/mediatedRequest.yaml#/MediatedRequest'
             examples:
               objectExample:
-                $ref: 'examples/mediatedRequest.json'
+                externalValue: 'examples/mediatedRequest.json'
     mediatedRequests:
       description: A collection of mediated request objects
       content:
@@ -174,7 +174,7 @@ components:
             $ref: 'schemas/mediatedRequests.yaml#/MediatedRequests'
           examples:
             objectExample:
-              $ref: 'examples/mediatedRequests.json'
+              externalValue: 'examples/mediatedRequests.json'
     badRequestResponse:
       description: Validation errors
       content:
