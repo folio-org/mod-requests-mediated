@@ -28,6 +28,7 @@ class MediatedRequestsApiTest extends BaseIT {
     "  \"requesterId\": \"73b17dee-d278-4128-b0fd-5d9f801b0400\",\n" +
     "  \"proxyUserId\": \"13e309c8-d501-4c3b-9cbc-d573621bb62c\",\n" +
     "  \"instanceId\": \"6d996a75-930d-4ad1-a953-9b44c9021a35\",\n" +
+    "  \"holdingsRecordId\": null,\n" +
     "  \"itemId\": null,\n" +
     "  \"status\": \"New - Awaiting confirmation\",\n" +
     "  \"cancellationReasonId\": null,\n" +

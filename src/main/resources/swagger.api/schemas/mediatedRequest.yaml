@@ -8,11 +8,11 @@ MediatedRequest:
     requestLevel:
       description: Level of the request - Item or Title
       type: string
-      enum: [ "Item", "Title" ]
+      enum: [ 'Item', 'Title' ]
     requestType:
       description: Whether the item should be held upon return, recalled or paged for
       type: string
-      enum: [ "Hold", "Recall", "Page" ]
+      enum: [ 'Hold', 'Recall', 'Page' ]
     requestDate:
       description: Date when the request was placed
       type: string
@@ -29,14 +29,17 @@ MediatedRequest:
     instanceId:
       description: ID of the instance
       $ref: 'uuid.yaml'
+    holdingsRecordId:
+      description: ID of the holdings record
+      $ref: 'uuid.yaml'
     itemId:
       description: ID of the item
       $ref: 'uuid.yaml'
     status:
       description: Status of the mediated request
       type: string
-      enum: [ "Open - Awaiting pickup", "Open - In progress", "Open - In transit", "Open - Item arrived",
-        "Closed - Cancelled", "Closed - Declined", "Closed - Filled", "New - Awaiting confirmation"
+      enum: [ 'Open - Awaiting pickup', 'Open - In progress', 'Open - In transit', 'Open - Item arrived',
+        'Closed - Cancelled', 'Closed - Declined', 'Closed - Filled', 'New - Awaiting confirmation'
       ]
     cancellationReasonId:
       description: ID of the cancellation reason
@@ -57,7 +60,7 @@ MediatedRequest:
     fulfillmentPreference:
       description: How should the request be fulfilled (whether the item should be kept on the hold shelf for collection or delivered to the requester)
       type: string
-      enum: [ "Hold Shelf", "Delivery" ]
+      enum: [ 'Hold Shelf', 'Delivery' ]
     deliveryAddressTypeId:
       description: ID of the delivery address type
       $ref: 'uuid.yaml'

@@ -36,6 +36,7 @@ public class MediatedRequestEntity {
   private UUID requesterId;
   private UUID proxyUserId;
   private UUID instanceId;
+  private UUID holdingsRecordId;
   private UUID itemId;
   private String status;
   private UUID cancellationReasonId;
