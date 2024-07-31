@@ -9,14 +9,15 @@ import org.folio.mr.domain.FulfillmentPreference;
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.RequestLevel;
 import org.folio.mr.domain.RequestType;
+import org.folio.mr.domain.converter.FulfillmentPreferenceJdbcType;
+import org.folio.mr.domain.converter.MediatedRequestStatusJdbcType;
+import org.folio.mr.domain.converter.RequestLevelJdbcType;
+import org.folio.mr.domain.converter.RequestTypeJdbcType;
 import org.hibernate.annotations.JdbcType;
-import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
@@ -33,13 +34,11 @@ public class MediatedRequestEntity {
   private UUID id;
 
   @Column(name = "request_level", columnDefinition = "RequestLevel")
-  @Enumerated(EnumType.STRING)
-  @JdbcType(PostgreSQLEnumJdbcType.class)
+  @JdbcType(RequestLevelJdbcType.class)
   private RequestLevel requestLevel;
 
   @Column(name = "request_type", columnDefinition = "RequestType")
-  @Enumerated(EnumType.STRING)
-  @JdbcType(PostgreSQLEnumJdbcType.class)
+  @JdbcType(RequestTypeJdbcType.class)
   private RequestType requestType;
 
   private Date requestDate;
@@ -82,8 +81,7 @@ public class MediatedRequestEntity {
   private String mediatedWorkflow;
 
   @Column(name = "mediated_request_status", columnDefinition = "MediatedRequestStatus")
-  @Enumerated(EnumType.STRING)
-  @JdbcType(PostgreSQLEnumJdbcType.class)
+  @JdbcType(MediatedRequestStatusJdbcType.class)
   private MediatedRequestStatus mediatedRequestStatus;
 
   private String mediatedRequestStep;
@@ -101,8 +99,7 @@ public class MediatedRequestEntity {
   private Integer position;
 
   @Column(name = "fulfillment_preference", columnDefinition = "FulfillmentPreference")
-  @Enumerated(EnumType.STRING)
-  @JdbcType(PostgreSQLEnumJdbcType.class)
+  @JdbcType(FulfillmentPreferenceJdbcType.class)
   private FulfillmentPreference fulfillmentPreference;
 
   private UUID deliveryAddressTypeId;
@@ -140,4 +137,5 @@ public class MediatedRequestEntity {
 
   @Column(name = "updated_by_username")
   private String updatedByUsername;
+
 }

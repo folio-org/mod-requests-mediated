@@ -12,25 +12,25 @@
 
     <changeSet id="create-request-level-enum" author="AlexanderKurash">
         <sql dbms="postgresql">
-            CREATE TYPE RequestLevel AS ENUM ('ITEM', 'TITLE');
+            CREATE TYPE RequestLevel AS ENUM ('Item', 'Title');
         </sql>
     </changeSet>
 
     <changeSet id="create-request-type-enum" author="AlexanderKurash">
         <sql dbms="postgresql">
-            CREATE TYPE RequestType AS ENUM ('HOLD', 'RECALL', 'PAGE');
+            CREATE TYPE RequestType AS ENUM ('Hold', 'Recall', 'Page');
         </sql>
     </changeSet>
 
     <changeSet id="create-mediated-request-status-enum" author="AlexanderKurash">
         <sql dbms="postgresql">
-            CREATE TYPE MediatedRequestStatus AS ENUM ('NEW', 'OPEN', 'CLOSED');
+            CREATE TYPE MediatedRequestStatus AS ENUM ('New', 'Open', 'Closed');
         </sql>
     </changeSet>
 
     <changeSet id="create-mediated-request-fulfillment-preference-enum" author="AlexanderKurash">
         <sql dbms="postgresql">
-            CREATE TYPE FulfillmentPreference AS ENUM ('HOLD_SHELF', 'DELIVERY');
+            CREATE TYPE FulfillmentPreference AS ENUM ('Hold Shelf', 'Delivery');
         </sql>
     </changeSet>
 
