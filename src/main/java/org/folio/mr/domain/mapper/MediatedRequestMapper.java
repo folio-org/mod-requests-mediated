@@ -40,9 +40,15 @@ public interface MediatedRequestMapper {
   @Mapping(target = "mediatedRequestStatus", expression = "java(mediatedRequestEntity.getMediatedRequestStatus() != null ? "
     + "MediatedRequest.MediatedRequestStatusEnum.fromValue(mediatedRequestEntity.getMediatedRequestStatus().getValue()) : null)")
   @Mapping(target = "instance", expression = "java(mapDtoInstance(mediatedRequestEntity))")
-  @Mapping(target = "item", expression = "java(mapDtoItem(mediatedRequestEntity))")
-  @Mapping(target = "requester", expression = "java(mapDtoRequester(mediatedRequestEntity))")
-  @Mapping(target = "proxy", expression = "java(mapDtoProxy(mediatedRequestEntity))")
+  @Mapping(target = "item.barcode", source="itemBarcode")
+  @Mapping(target = "requester.firstName", source="requesterFirstName")
+  @Mapping(target = "requester.lastName", source="requesterLastName")
+  @Mapping(target = "requester.middleName", source="requesterMiddleName")
+  @Mapping(target = "requester.barcode", source="requesterBarcode")
+  @Mapping(target = "proxy.firstName", source="proxyFirstName")
+  @Mapping(target = "proxy.lastName", source="proxyLastName")
+  @Mapping(target = "proxy.middleName", source="proxyMiddleName")
+  @Mapping(target = "proxy.barcode", source="proxyBarcode")
   // Search index
   @Mapping(target = "searchIndex.callNumberComponents.callNumber", source="callNumber")
   @Mapping(target = "searchIndex.callNumberComponents.prefix", source="callNumberPrefix")
@@ -155,10 +161,6 @@ public interface MediatedRequestMapper {
       .value(identifier.getValue());
   }
 
-  default MediatedRequestItem mapDtoItem(MediatedRequestEntity mediatedRequestEntity) {
-    return new MediatedRequestItem().barcode(mediatedRequestEntity.getItemBarcode());
-  }
-
   @Named("ItemDtoToItemBarcode")
   default String mapItemDtoToItemBarcode(MediatedRequestItem item) {
     return item == null ? null : item.getBarcode();
@@ -184,14 +186,6 @@ public interface MediatedRequestMapper {
     return requester == null ? null : requester.getBarcode();
   }
 
-  default MediatedRequestRequester mapDtoRequester(MediatedRequestEntity mediatedRequestEntity) {
-    return new MediatedRequestRequester()
-      .firstName(mediatedRequestEntity.getRequesterFirstName())
-      .lastName(mediatedRequestEntity.getRequesterLastName())
-      .middleName(mediatedRequestEntity.getRequesterMiddleName())
-      .barcode(mediatedRequestEntity.getRequesterBarcode());
-  }
-
   @Named("ProxyDtoToRequesterFirstName")
   default String mapRequesterDtoToProxyFirstName(MediatedRequestProxy proxy) {
     return proxy == null ? null : proxy.getFirstName();
@@ -210,14 +204,6 @@ public interface MediatedRequestMapper {
   @Named("ProxyDtoToRequesterBarcode")
   default String mapRequesterDtoToProxyBarcode(MediatedRequestProxy proxy) {
     return proxy == null ? null : proxy.getBarcode();
-  }
-
-  default MediatedRequestProxy mapDtoProxy(MediatedRequestEntity mediatedRequestEntity) {
-    return new MediatedRequestProxy()
-      .firstName(mediatedRequestEntity.getProxyFirstName())
-      .lastName(mediatedRequestEntity.getProxyLastName())
-      .middleName(mediatedRequestEntity.getProxyMiddleName())
-      .barcode(mediatedRequestEntity.getProxyBarcode());
   }
 
   @AfterMapping
