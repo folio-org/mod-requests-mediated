@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.folio.mr.util.DbInitializer;
 import org.folio.mr.util.TestUtils;
 import org.folio.mr.util.WireMockInitializer;
 import org.folio.spring.FolioModuleMetadata;
@@ -43,7 +44,7 @@ import lombok.SneakyThrows;
 
 @EnablePostgres
 @ActiveProfiles("test")
-@ContextConfiguration(initializers = {WireMockInitializer.class})
+@ContextConfiguration(initializers = {WireMockInitializer.class, DbInitializer.class})
 @EnableAutoConfiguration(exclude = {FlywayAutoConfiguration.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
