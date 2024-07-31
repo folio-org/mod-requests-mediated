@@ -23,23 +23,103 @@ MediatedRequest:
     requesterId:
       description: ID of the requesting patron (user)
       $ref: 'uuid.yaml'
+    requester:
+      description: Copy of some requester data
+      type: object
+      properties:
+        firstName:
+          description: First name of the requester
+          type: string
+        lastName:
+          description: Last name of the requester
+          type: string
+        middleName:
+          description: Middle name of the requester
+          type: string
+        barcode:
+          description: Barcode of the requester
+          type: string
+      additionalProperties: false
     proxyUserId:
       description: ID of the proxy user
       $ref: 'uuid.yaml'
+    proxy:
+      description: Copy of some proxy patron data
+      type: object
+      properties:
+        firstName:
+          description: First name of the proxy patron
+          type: string
+        lastName:
+          description: Last name of the proxy patron
+          type: string
+        middleName:
+          description: Middle name of the proxy patron
+          type: string
+        barcode:
+          description: Barcode of the proxy patron
+          type: string
+      additionalProperties: false
     instanceId:
       description: ID of the instance
       $ref: 'uuid.yaml'
+    instance:
+      description: Copy of some instance data
+      type: object
+      properties:
+        title:
+          description: Title of the instance",
+          type: string
+        identifiers:
+          description: An extensible set of name-value pairs of identifiers associated with the resource
+          type: array
+          items:
+            type: object
+            properties:
+              identifierTypeId:
+                description: UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)
+                $ref: 'uuid.yaml'
+              value:
+                description: Resource identifier value
+                type: string
+            additionalProperties: false
+            required:
+              - identifierTypeId
+              - value
+      additionalProperties: false
+      required:
+        - title
+        - identifiers
     holdingsRecordId:
       description: ID of the holdings record
       $ref: 'uuid.yaml'
     itemId:
       description: ID of the item
       $ref: 'uuid.yaml'
+    item:
+      description: Copy of some item data
+      type: object
+      properties:
+        barcode:
+          description: Barcode of the item
+          type: string
+      additionalProperties: false
+    mediatedWorkflow:
+      description: Mediated workflow that mediated request follows
+      type: string
+    mediatedRequestStatus:
+      description: Status of the mediated request
+      type: string
+      enum: [ 'New', 'Open', 'Closed']
+    mediatedRequestStep:
+      description: Step of the mediated request in mediated workflow
+      type: string
     status:
       description: Status of the mediated request
       type: string
-      enum: [ 'Open - Awaiting pickup', 'Open - In progress', 'Open - In transit', 'Open - Item arrived',
-        'Closed - Cancelled', 'Closed - Declined', 'Closed - Filled', 'New - Awaiting confirmation'
+      enum: [ 'New - Awaiting confirmation', 'Open - Not yet filled', 'Open - In transit 1',
+              'Open - Item arrived', 'Open - In transit 2','Open - Awaiting pickup',
+              'Closed - Cancelled', 'Closed - Declined', 'Closed - Filled'
       ]
     cancellationReasonId:
       description: ID of the cancellation reason
@@ -67,3 +147,41 @@ MediatedRequest:
     pickupServicePointId:
       description: ID of the pickup service point
       $ref: 'uuid.yaml'
+    searchIndex:
+      description: Request fields used for search
+      type: object
+      properties:
+        callNumberComponents:
+          description: Effective call number components
+          type: object
+          properties:
+            callNumber:
+              description: Effective Call Number is an identifier assigned to an item or its holding and associated with the item
+              type: string
+            prefix:
+              description: Effective Call Number Prefix is the prefix of the identifier assigned to an item or its holding and associated with the item
+              type: string
+            suffix:
+              description: Effective Call Number Suffix is the suffix of the identifier assigned to an item or its holding and associated with the item
+              type: string
+          additionalProperties: false
+        shelvingOrder:
+          description: A system generated normalization of the call number that allows for call number sorting in reports and search results
+          type: string
+        pickupServicePointName:
+          description: The name of the request pickup service point
+          type: string
+      additionalProperties: false
+    metadata:
+      description: Mediated request metadata
+      type: object
+      $ref: 'metadata.json'
+  additionalProperties: false
+  required:
+    - requestLevel
+    - requestType
+    - requestDate
+    - requesterId
+    - instanceId
+    - status
+    - fulfillmentPreference

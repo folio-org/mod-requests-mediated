@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.1.5</version>
+    <version>3.2.3</version>
     <relativePath/>
   </parent>
   <groupId>org.folio</groupId>
@@ -33,13 +33,16 @@
     <argLine/>
 
     <!-- runtime dependencies -->
-    <folio-spring-base.version>7.2.2</folio-spring-base.version>
-    <openapi-generator.version>6.2.1</openapi-generator.version>
+    <folio-spring-base.version>8.1.0</folio-spring-base.version>
+    <openapi-generator.version>7.3.0</openapi-generator.version>
     <mapstruct.version>1.5.3.Final</mapstruct.version>
 
     <!-- test dependencies -->
     <wiremock.version>3.2.0</wiremock.version>
+    <embedded-database-spring-test.version>2.2.0</embedded-database-spring-test.version>
+    <embedded-postgres.version>2.0.3</embedded-postgres.version>
     <testcontainers.version>1.17.6</testcontainers.version>
+    <hypersistence-utils.version>3.7.3</hypersistence-utils.version>
   </properties>
 
   <dependencies>
@@ -63,7 +66,6 @@
         </exclusion>
       </exclusions>
     </dependency>
-
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-jaxb-annotations</artifactId>
@@ -80,19 +82,16 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <optional>true</optional>
     </dependency>
-
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <scope>runtime</scope>
     </dependency>
-
     <dependency>
       <groupId>org.mapstruct</groupId>
       <artifactId>mapstruct</artifactId>
@@ -104,6 +103,12 @@
       <version>${mapstruct.version}</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>io.hypersistence</groupId>
+      <artifactId>hypersistence-utils-hibernate-63</artifactId>
+      <version>${hypersistence-utils.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-webflux</artifactId>
@@ -153,6 +158,16 @@
       <groupId>org.springframework.kafka</groupId>
       <artifactId>spring-kafka-test</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.wiremock</groupId>
@@ -172,7 +187,30 @@
       <version>1.5.5-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>io.zonky.test</groupId>
+      <artifactId>embedded-database-spring-test</artifactId>
+      <version>${embedded-database-spring-test.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.zonky.test</groupId>
+      <artifactId>embedded-postgres</artifactId>
+      <version>${embedded-postgres.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
 
   <build>

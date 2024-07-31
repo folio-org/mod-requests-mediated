@@ -1,0 +1,60 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="createMediatedRequestStepTable" author="AlexanderKurash">
+        <comment>
+            Create mediated_workflow_step table
+        </comment>
+
+        <createTable tableName="mediated_request_step">
+            <column name="mediated_workflow" type="varchar(255)">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="mediated_request_status" type="MediatedRequestStatus">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints primaryKey="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="addMediatedWorkflowStepForeignKey" author="AlexanderKurash">
+        <addForeignKeyConstraint constraintName="fk_medwf_medreqstep"
+                                 baseTableName="mediated_request_step"
+                                 baseColumnNames="mediated_workflow"
+                                 referencedTableName="mediated_workflow"
+                                 referencedColumnNames="name"
+                                 deferrable="true"
+                                 initiallyDeferred="true"
+                                 onDelete="RESTRICT"
+                                 onUpdate="RESTRICT"/>
+    </changeSet>
+
+    <changeSet id="addMediatedRequestStepForeignKey" author="AlexanderKurash">
+        <addForeignKeyConstraint constraintName="fk_medreq_medreqstep"
+                                 baseTableName="mediated_request"
+                                 baseColumnNames="mediated_workflow, mediated_request_status, mediated_request_step"
+                                 referencedTableName="mediated_request_step"
+                                 referencedColumnNames="mediated_workflow, mediated_request_status, name"
+                                 deferrable="true"
+                                 initiallyDeferred="true"
+                                 onDelete="RESTRICT"
+                                 onUpdate="RESTRICT"/>
+    </changeSet>
+
+    <changeSet id="populateInitialMediatedRequestSteps" author="AlexanderKurash">
+        <preConditions onFail="MARK_RAN">
+            <tableIsEmpty tableName="mediated_request_step"
+                          schemaName="${database.defaultSchemaName}"/>
+        </preConditions>
+        <sqlFile dbms="postgresql"
+                 path="2024-07-29-populate-initial-mediated-request-steps.sql"
+                 relativeToChangelogFile="true"
+                 splitStatements="false"/>
+    </changeSet>
+
+</databaseChangeLog>

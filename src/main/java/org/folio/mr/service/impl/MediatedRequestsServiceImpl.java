@@ -1,16 +1,17 @@
 package org.folio.mr.service.impl;
 
-import java.util.List;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.MediatedRequests;
+import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.mapper.MediatedRequestMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.MediatedRequestsService;
 import org.folio.spring.data.OffsetRequest;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -56,15 +57,25 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
 
   @Override
   public MediatedRequest post(MediatedRequest mediatedRequest) {
-    return requestsMapper.mapEntityToDto(mediatedRequestsRepository.save(
-      requestsMapper.mapDtoToEntity(mediatedRequest)));
+    var mediatedRequestEntity = requestsMapper.mapDtoToEntity(
+      setStatusBasedOnMediatedRequestStatusAndStep(mediatedRequest));
+
+    if (mediatedRequestEntity.getCreatedDate() == null) {
+      log.info("post:: New mediated request. Initializing metadata.");
+      refreshCreatedDate(mediatedRequestEntity);
+      refreshUpdatedDate(mediatedRequestEntity);
+    }
+
+    return requestsMapper.mapEntityToDto(mediatedRequestsRepository.save(mediatedRequestEntity));
   }
 
   @Override
   public Optional<MediatedRequest> update(UUID requestId, MediatedRequest mediatedRequest) {
     return mediatedRequestsRepository.findById(requestId)
+      .map(this::refreshUpdatedDate)
       .map(mediatedRequestEntity -> requestsMapper.mapEntityToDto(
-        mediatedRequestsRepository.save(requestsMapper.mapDtoToEntity(mediatedRequest))));
+        mediatedRequestsRepository.save(requestsMapper.mapDtoToEntity(
+          setStatusBasedOnMediatedRequestStatusAndStep(mediatedRequest)))));
   }
 
   @Override
@@ -76,4 +87,30 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
         return requestsMapper.mapEntityToDto(mediatedRequestEntity);
       });
    }
+
+  private MediatedRequest setStatusBasedOnMediatedRequestStatusAndStep(
+    MediatedRequest mediatedRequest) {
+
+    var statusElements = mediatedRequest.getStatus().toString().split(" - ");
+    if (statusElements.length == 2) {
+      mediatedRequest.setMediatedRequestStatus(
+        MediatedRequest.MediatedRequestStatusEnum.fromValue(statusElements[0]));
+      mediatedRequest.setMediatedRequestStep(statusElements[1]);
+      return mediatedRequest;
+    } else {
+      log.warn("setStatusBasedOnMediatedRequestStatusAndStep:: Invalid status: {}",
+        mediatedRequest.getStatus());
+      return null;
+    }
+  }
+
+  private MediatedRequestEntity refreshCreatedDate(MediatedRequestEntity mediatedRequestEntity) {
+    mediatedRequestEntity.setCreatedDate(Timestamp.valueOf(LocalDateTime.now()));
+    return mediatedRequestEntity;
+  }
+
+  private MediatedRequestEntity refreshUpdatedDate(MediatedRequestEntity mediatedRequestEntity) {
+    mediatedRequestEntity.setUpdatedDate(Timestamp.valueOf(LocalDateTime.now()));
+    return mediatedRequestEntity;
+  }
 }
