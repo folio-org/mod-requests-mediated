@@ -27,6 +27,23 @@ public class MediatedRequestInstanceIdentifier {
   private String value;
 
   @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof MediatedRequestInstanceIdentifier identifier) {
+      var mediatedRequestEquals =
+        (mediatedRequest == null && identifier.mediatedRequest == null) ||
+          (mediatedRequest != null && mediatedRequest.equals(identifier.mediatedRequest));
+      var identifierTypeIdEquals =
+        (identifierTypeId == null && identifier.identifierTypeId == null) ||
+          (identifierTypeId != null && identifierTypeId.equals(identifier.identifierTypeId));
+      var valueEquals = (value == null && identifier.value == null) ||
+        (value != null && value.equals(identifier.value));
+
+      return mediatedRequestEquals && identifierTypeIdEquals && valueEquals;
+    }
+    return false;
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(mediatedRequest == null ? null : mediatedRequest.getId(),
       identifierTypeId, value);
