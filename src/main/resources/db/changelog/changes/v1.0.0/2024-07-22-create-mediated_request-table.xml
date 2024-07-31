@@ -140,4 +140,9 @@
                                  onUpdate="RESTRICT"/>
     </changeSet>
 
+    <changeSet id="addFullCallNumberIndex" author="AlexanderKurash" runOnChange="true">
+        <sql dbms="postgresql">CREATE INDEX fullCallNumberIndex ON
+    ${database.defaultSchemaName}.mediated_request(call_number_prefix, call_number, call_number_suffix)</sql>
+    </changeSet>
+
 </databaseChangeLog>

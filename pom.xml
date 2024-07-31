@@ -187,30 +187,6 @@
       <version>1.5.5-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>io.zonky.test</groupId>
-      <artifactId>embedded-database-spring-test</artifactId>
-      <version>${embedded-database-spring-test.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>io.zonky.test</groupId>
-      <artifactId>embedded-postgres</artifactId>
-      <version>${embedded-postgres.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
   </dependencies>
 
   <build>
