@@ -87,7 +87,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("searchIndex.callNumberComponents.prefix", is("pre")))
       .andExpect(jsonPath("searchIndex.callNumberComponents.suffix", is("suf")))
       .andExpect(jsonPath("searchIndex.shelvingOrder", is("F 416 H37 A2 59001")))
-      .andExpect(jsonPath("searchIndex.pickupServicePointName", is("Circ Desk 1fff")))
+      .andExpect(jsonPath("searchIndex.pickupServicePointName", is("Circ Desk 1")))
       .andExpect(jsonPath("metadata.createdDate", notNullValue()))
       .andExpect(jsonPath("metadata.updatedDate", notNullValue()));
   }

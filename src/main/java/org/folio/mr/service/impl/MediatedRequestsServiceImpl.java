@@ -174,6 +174,10 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
       .shelvingLagTime(1)
       .pickupLocation(true));
 
+    mediatedRequest.getMetadata()
+      .createdByUserId(UUID.randomUUID().toString())
+      .updatedByUserId(UUID.randomUUID().toString());
+
     return mediatedRequest;
   }
 }

@@ -197,7 +197,7 @@ MediatedRequest:
           type: string
         status:
           description: Status of the item
-          default: Checked out
+          type: string
         callNumber:
           description: Call number of the item
           type: string
