@@ -23,6 +23,20 @@ public class CustomEnumBinder<T> extends BasicBinder<T> {
   }
 
   @Override
+  protected void doBindNull(PreparedStatement preparedStatement, int index,
+    WrapperOptions options) throws SQLException {
+
+    preparedStatement.setNull(index, Types.OTHER);
+  }
+
+  @Override
+  protected void doBindNull(CallableStatement preparedStatement, String name,
+    WrapperOptions options) throws SQLException {
+
+    preparedStatement.setNull(name, Types.OTHER);
+  }
+
+  @Override
   protected void doBind(PreparedStatement preparedStatement, Object enumObject, int index,
     WrapperOptions wrapperOptions) throws SQLException {
 

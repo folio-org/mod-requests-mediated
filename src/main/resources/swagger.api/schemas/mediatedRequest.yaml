@@ -39,6 +39,22 @@ MediatedRequest:
         barcode:
           description: Barcode of the requester
           type: string
+        patronGroupId:
+          description: Patron group ID of the requester
+          $ref: 'uuid.yaml'
+        patronGroup:
+          description: Patron group of the requester
+          type: object
+          properties:
+            id:
+              description: Patron group ID
+              $ref: 'uuid.yaml'
+            group:
+              description: Patron group name
+              type: string
+            desc:
+              description: Patron group description
+              type: string
       additionalProperties: false
     proxyUserId:
       description: ID of the proxy user
@@ -59,6 +75,22 @@ MediatedRequest:
         barcode:
           description: Barcode of the proxy patron
           type: string
+        patronGroupId:
+          description: Patron group ID of the proxy patron
+          $ref: 'uuid.yaml'
+        patronGroup:
+          description: Patron group of the proxy patron
+          type: object
+          properties:
+            id:
+              description: Patron group ID
+              $ref: 'uuid.yaml'
+            group:
+              description: Patron group name
+              type: string
+            desc:
+              description: Patron group description
+              type: string
       additionalProperties: false
     instanceId:
       description: ID of the instance
@@ -86,6 +118,40 @@ MediatedRequest:
             required:
               - identifierTypeId
               - value
+        contributorNames:
+          description: A list of contributor names
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                description: Contributor name
+                type: string
+            additionalProperties: false
+        publication:
+          description: Publication information
+          type: array
+          items:
+            type: object
+            properties:
+              publisher:
+                description: Name of the publisher
+                type: string
+              place:
+                description: Place of publication
+                type: string
+              dateOfPublication:
+                description: Date of publication
+                type: string
+              role:
+                description: Role of the publisher
+                type: string
+            additionalProperties: false
+        editions:
+          description: The edition statement, imprint and other publication source information
+          type: array
+          items:
+            type: string
       additionalProperties: false
       required:
         - title
@@ -102,6 +168,55 @@ MediatedRequest:
       properties:
         barcode:
           description: Barcode of the item
+          type: string
+        location:
+          description: Effective location of the item
+          type: object
+          properties:
+            name:
+              description: Name of the location
+              type: string
+            libraryName:
+              description: Library name of the location
+              type: string
+            code:
+              description: Code of the location
+              type: string
+          additionalProperties: false
+        enumeration:
+          description: Enumeration of the item
+          type: string
+        volume:
+          description: Volume of the item
+          type: string
+        chronology:
+          description: Chronology of the item
+          type: string
+        displaySummary:
+          description: Display summary of the item
+          type: string
+        status:
+          description: Status of the item
+          default: Checked out
+        callNumber:
+          description: Call number of the item
+          type: string
+        callNumberComponents:
+          description: Components of the item's call number
+          type: object
+          properties:
+            callNumber:
+              description: Call number of the item
+              type: string
+            prefix:
+              description: Prefix of the item's call number
+              type: string
+            suffix:
+              description: Suffix of the item's call number
+              type: string
+          additionalProperties: false
+        copyNumber:
+          description: Copy number of the item
           type: string
       additionalProperties: false
     mediatedWorkflow:
@@ -144,9 +259,58 @@ MediatedRequest:
     deliveryAddressTypeId:
       description: ID of the delivery address type
       $ref: 'uuid.yaml'
+    deliveryAddress:
+      description: Delivery address
+      type: object
+      properties:
+        addressTypeId:
+          description: ID of the delivery address type
+          type: string
+        addressLine1:
+          description: Address line 1
+          type: string
+        addressLine2:
+          description: Address line 2
+          type: string
+        city:
+          description: City
+          type: string
+        region:
+          description: Region
+          type: string
+        postalCode:
+          description: Postal code
+          type: string
+        countryId:
+          description: Country ID
+          type: string
+      additionalProperties: false
     pickupServicePointId:
       description: ID of the pickup service point
       $ref: 'uuid.yaml'
+    pickupServicePoint:
+      description: Pickup service point
+      type: object
+      properties:
+        name:
+          description: Pickup service point name
+          type: string
+        code:
+          description: Pickup service point code
+          type: string
+        discoveryDisplayName:
+          description: Pickup service point discovery display name
+          type: string
+        description:
+          description: Pickup service point description
+          type: string
+        shelvingLagTime:
+          description: Pickup service point description
+          type: integer
+        pickupLocation:
+          description: Whether pickup service point is a pickup location
+          type: boolean
+      additionalProperties: false
     searchIndex:
       description: Request fields used for search
       type: object
