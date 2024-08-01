@@ -87,10 +87,23 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("searchIndex.callNumberComponents.prefix", is("pre")))
       .andExpect(jsonPath("searchIndex.callNumberComponents.suffix", is("suf")))
       .andExpect(jsonPath("searchIndex.shelvingOrder", is("F 416 H37 A2 59001")))
-      .andExpect(jsonPath("searchIndex.pickupServicePointName", is("Circ Desk 1")))
+      .andExpect(jsonPath("searchIndex.pickupServicePointName", is("Circ Desk 1fff")))
       .andExpect(jsonPath("metadata.createdDate", notNullValue()))
-      .andExpect(jsonPath("metadata.updatedDate", notNullValue()))
-    ;
+      .andExpect(jsonPath("metadata.updatedDate", notNullValue()));
+  }
+
+  @SneakyThrows
+  @Test
+  void mediatedRequestShouldBeCreatedAndRetrievedByQuery() {
+    var response = doPost(URI_TEMPLATE, buildMediatedRequestPayload())
+      .expectStatus().isEqualTo(CREATED);
+    var requestId = getResponseBodyObjectId(response);
+
+    mockMvc.perform(get(URI_TEMPLATE + "?query=fullCallNumber==\"*reF16*\"")
+        .headers(defaultHeaders())
+        .contentType(MediaType.APPLICATION_JSON))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("mediatedRequests[0].id", is(requestId)));
   }
 
   @SneakyThrows

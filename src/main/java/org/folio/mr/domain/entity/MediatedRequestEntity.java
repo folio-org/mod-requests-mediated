@@ -117,6 +117,8 @@ public class MediatedRequestEntity {
 
   private String callNumberSuffix;
 
+  private String fullCallNumber;
+
   private String shelvingOrder;
 
   private String pickupServicePointName;
