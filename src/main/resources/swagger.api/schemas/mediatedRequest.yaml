@@ -311,6 +311,9 @@ MediatedRequest:
           description: Whether pickup service point is a pickup location
           type: boolean
       additionalProperties: false
+    confirmedRequestId:
+      description: Confirmed circulation request ID
+      $ref: 'uuid.yaml'
     searchIndex:
       description: Request fields used for search
       type: object

@@ -58,6 +58,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
     var mediatedRequests = mediatedRequestsRepository.findAll(OffsetRequest.of(offset, limit))
       .stream()
       .map(requestsMapper::mapEntityToDto)
+      .map(this::extendMediatedRequestDto)
       .toList();
 
     var totalRecords = mediatedRequestsRepository.count();

@@ -101,6 +101,7 @@
     "shelvingLagTime": 1,
     "pickupLocation": true
   },
+  "confirmedRequestId": "0a034628-6eb6-4c66-9ea5-9eeea151c820",
   "searchIndex": {
     "callNumberComponents": {
       "callNumber": "F16.H37 A2 9001",

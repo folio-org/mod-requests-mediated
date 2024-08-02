@@ -123,6 +123,8 @@ public class MediatedRequestEntity {
 
   private String pickupServicePointName;
 
+  private UUID confirmedRequestId;
+
   // Metadata
 
   @Column(name = "created_date")

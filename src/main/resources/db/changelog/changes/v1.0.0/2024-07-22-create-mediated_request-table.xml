@@ -92,6 +92,7 @@
             </column>
             <column name="delivery_address_type_id" type="uuid"/>
             <column name="pickup_service_point_id" type="uuid"/>
+            <column name="confirmed_request_id" type="uuid"/>
 
             <!-- Search index -->
             <column name="call_number" type="varchar(255)"/>
@@ -117,7 +118,7 @@
             LANGUAGE plpgsql
             AS $$
             BEGIN
-                NEW.full_call_number := NEW.call_number_prefix || NEW.call_number || NEW.call_number_suffix;
+                NEW.full_call_number := NEW.call_number_prefix || ' ' || NEW.call_number || ' ' || NEW.call_number_suffix;
                 RETURN NEW;
             END;
             $$;

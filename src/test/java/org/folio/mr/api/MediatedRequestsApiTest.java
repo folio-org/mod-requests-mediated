@@ -83,6 +83,7 @@ class MediatedRequestsApiTest extends BaseIT {
         containsInAnyOrder("0123456789", "98765432123456")))
       .andExpect(jsonPath("item.barcode", is("12345")))
       .andExpect(jsonPath("requester.barcode", is("123")))
+      .andExpect(jsonPath("confirmedRequestId", is("0a034628-6eb6-4c66-9ea5-9eeea151c820")))
       .andExpect(jsonPath("searchIndex.callNumberComponents.callNumber", is("F16.H37 A2 9001")))
       .andExpect(jsonPath("searchIndex.callNumberComponents.prefix", is("pre")))
       .andExpect(jsonPath("searchIndex.callNumberComponents.suffix", is("suf")))
@@ -99,7 +100,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .expectStatus().isEqualTo(CREATED);
     var requestId = getResponseBodyObjectId(response);
 
-    mockMvc.perform(get(URI_TEMPLATE + "?query=fullCallNumber==\"*reF16*\"")
+    mockMvc.perform(get(URI_TEMPLATE + "?query=fullCallNumber==\"*re F16*\"")
         .headers(defaultHeaders())
         .contentType(MediaType.APPLICATION_JSON))
       .andExpect(status().isOk())
@@ -206,6 +207,7 @@ class MediatedRequestsApiTest extends BaseIT {
         "fulfillmentPreference": "Hold Shelf",
         "deliveryAddressTypeId": null,
         "pickupServicePointId": "b2ffa7df-98e8-48a1-b5a8-4e712364eb8d",
+        "confirmedRequestId": "0a034628-6eb6-4c66-9ea5-9eeea151c820",
         "searchIndex": {
           "callNumberComponents": {
             "callNumber": "F16.H37 A2 9001",

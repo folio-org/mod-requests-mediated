@@ -103,6 +103,7 @@ public class MediatedRequestMapperTest {
       .fulfillmentPreference(MediatedRequest.FulfillmentPreferenceEnum.HOLD_SHELF)
       .deliveryAddressTypeId(null)
       .pickupServicePointId(UUID.randomUUID().toString())
+      .confirmedRequestId(UUID.randomUUID().toString())
       .searchIndex(new MediatedRequestSearchIndex()
         .callNumberComponents(new MediatedRequestSearchIndexCallNumberComponents()
           .callNumber("F16.H37 A2 9001")
