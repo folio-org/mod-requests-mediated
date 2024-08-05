@@ -1,8 +1,5 @@
 package org.folio.mr.domain;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-
 public enum RequestLevel {
   ITEM("Item"),
   TITLE("Title");

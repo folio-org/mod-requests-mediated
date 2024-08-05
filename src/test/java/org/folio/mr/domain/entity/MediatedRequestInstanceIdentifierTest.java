@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-public class MediatedRequestInstanceIdentifierTest {
+class MediatedRequestInstanceIdentifierTest {
   @ParameterizedTest
   @CsvSource(value = {
     "bb97a683-d710-4c73-9010-a85c5160e299, bb97a683-d710-4c73-9010-a85c5160e299, 70a334e2-e295-4105-aa77-56fc731f147d, 70a334e2-e295-4105-aa77-56fc731f147d, valueA, valueA, true",

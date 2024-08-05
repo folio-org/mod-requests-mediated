@@ -1,6 +1,5 @@
 package org.folio.mr.domain.entity;
 
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
@@ -128,7 +127,7 @@ public class MediatedRequestEntity {
   // Metadata
 
   @Column(name = "created_date")
-  private Timestamp createdDate;
+  private Date createdDate;
 
   @Column(name = "created_by_user_id")
   private UUID createdByUserId;
@@ -137,7 +136,7 @@ public class MediatedRequestEntity {
   private String createdByUsername;
 
   @Column(name = "updated_date")
-  private Timestamp updatedDate;
+  private Date updatedDate;
 
   @Column(name = "updated_by_user_id")
   private UUID updatedByUserId;

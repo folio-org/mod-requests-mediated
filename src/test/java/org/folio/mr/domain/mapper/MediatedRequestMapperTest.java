@@ -15,7 +15,7 @@ import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndexCallNumberComponents;
 import org.junit.jupiter.api.Test;
 
-public class MediatedRequestMapperTest {
+class MediatedRequestMapperTest {
   @Test
   void testDtoToEntityMapping() {
     MediatedRequestMapperImpl mapper = new MediatedRequestMapperImpl();

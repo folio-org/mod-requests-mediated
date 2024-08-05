@@ -13,7 +13,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 public class CustomEnumBinder<T> extends BasicBinder<T> {
 
-  private final Function<Object, String> enumToStringConverterFunction;
+  private final transient Function<Object, String> enumToStringConverterFunction;
 
   public CustomEnumBinder(JavaType<T> javaType, JdbcType jdbcType,
     Function<Object, String> enumToStringConverterFunction) {

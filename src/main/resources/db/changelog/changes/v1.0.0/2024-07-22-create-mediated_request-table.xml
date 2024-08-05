@@ -103,10 +103,10 @@
             <column name="pickup_service_point_name" type="varchar(255)"/>
 
             <!-- Metadata -->
-            <column name="created_date" type="timestamp" defaultValueComputed="now()"/>
+            <column name="created_date" type="timestamp without time zone" defaultValueComputed="now()"/>
             <column name="created_by_user_id" type="uuid"/>
             <column name="created_by_username" type="varchar(100)"/>
-            <column name="updated_date" type="timestamp"/>
+            <column name="updated_date" type="timestamp without time zone"/>
             <column name="updated_by_user_id" type="uuid"/>
             <column name="updated_by_username" type="varchar(100)"/>
         </createTable>

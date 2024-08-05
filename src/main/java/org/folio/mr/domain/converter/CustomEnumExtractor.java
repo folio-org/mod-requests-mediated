@@ -12,7 +12,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 public class CustomEnumExtractor<T> extends BasicExtractor<T> {
 
-  private final Function<String, Object> stringToEnumConverterFunction;
+  private final transient Function<String, Object> stringToEnumConverterFunction;
 
   public CustomEnumExtractor(JavaType<T> javaType, JdbcType jdbcType,
     Function<String, Object> stringToEnumConverterFunction) {
