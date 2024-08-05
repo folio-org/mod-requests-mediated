@@ -23,6 +23,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.NullValueCheckStrategy;
 
+@SuppressWarnings("all")
 @Mapper(componentModel = "spring",
   nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
   imports = {RequestLevel.class, RequestType.class, MediatedRequestStatus.class,
