@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -21,7 +22,6 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.NullValueCheckStrategy;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring",
   nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
@@ -92,77 +92,72 @@ public interface MediatedRequestMapper {
   @Mapping(target = "updatedByUsername", source = "metadata.updatedByUsername")
   MediatedRequestEntity mapDtoToEntity(MediatedRequest mediatedRequest);
 
+  default <T, V> T mapEnum(V v, Function<V, String> valueGetter, Function <String, T> mapper) {
+    return v != null
+      ? mapper.apply(valueGetter.apply(v))
+      : null;
+  }
 
   @Named("EntityRequestLevelToDtoRequestLevel")
   default MediatedRequest.RequestLevelEnum mapEntityRequestLevelToDtoRequestLevel(
     RequestLevel requestLevel) {
 
-    return requestLevel != null
-      ? MediatedRequest.RequestLevelEnum.fromValue(requestLevel.getValue())
-      : null;
+    return mapEnum(requestLevel, RequestLevel::getValue,
+      MediatedRequest.RequestLevelEnum::fromValue);
   }
 
   @Named("DtoRequestLevelToEntityRequestLevel")
   default RequestLevel mapDtoRequestLevelToEntityRequestLevel(
     MediatedRequest.RequestLevelEnum requestLevel) {
 
-    return requestLevel != null
-      ? RequestLevel.fromValue(requestLevel.getValue())
-      : null;
+    return mapEnum(requestLevel, MediatedRequest.RequestLevelEnum::getValue,
+      RequestLevel::fromValue);
   }
 
   @Named("EntityRequestTypeToDtoRequestType")
   default MediatedRequest.RequestTypeEnum mapEntityRequestTypeToDtoRequestType(
     RequestType requestType) {
 
-    return requestType != null
-      ? MediatedRequest.RequestTypeEnum.fromValue(requestType.getValue())
-      : null;
+    return mapEnum(requestType, RequestType::getValue, MediatedRequest.RequestTypeEnum::fromValue);
   }
 
   @Named("DtoRequestTypeToEntityRequestType")
   default RequestType mapDtoRequestTypeToEntityRequestType(
     MediatedRequest.RequestTypeEnum requestType) {
 
-    return requestType != null
-      ? RequestType.fromValue(requestType.getValue())
-      : null;
+    return mapEnum(requestType, MediatedRequest.RequestTypeEnum::getValue, RequestType::fromValue);
   }
 
   @Named("EntityFulfillmentPreferenceToDtoFulfillmentPreference")
   default MediatedRequest.FulfillmentPreferenceEnum mapEntityFulfillmentPreferenceToDtoFulfillmentPreference(
     FulfillmentPreference fulfillmentPreference) {
 
-    return fulfillmentPreference != null
-      ? MediatedRequest.FulfillmentPreferenceEnum.fromValue(fulfillmentPreference.getValue())
-      : null;
+    return mapEnum(fulfillmentPreference, FulfillmentPreference::getValue,
+      MediatedRequest.FulfillmentPreferenceEnum::fromValue);
   }
 
   @Named("DtoFulfillmentPreferenceToEntityFulfillmentPreference")
   default FulfillmentPreference mapDtoFulfillmentPreferenceToEntityFulfillmentPreference(
     MediatedRequest.FulfillmentPreferenceEnum fulfillmentPreference) {
 
-    return fulfillmentPreference != null
-      ? FulfillmentPreference.fromValue(fulfillmentPreference.getValue())
-      : null;
+    return mapEnum(fulfillmentPreference, MediatedRequest.FulfillmentPreferenceEnum::getValue,
+      FulfillmentPreference::fromValue);
   }
 
   @Named("EntityMediatedRequestStatusToDtoMediatedRequestStatus")
   default MediatedRequest.MediatedRequestStatusEnum mapEntityMediatedRequestStatusToDtoMediatedRequestStatus(
     MediatedRequestStatus mediatedRequestStatus) {
 
-    return mediatedRequestStatus != null
-      ? MediatedRequest.MediatedRequestStatusEnum.fromValue(mediatedRequestStatus.getValue())
-      : null;
+    return mapEnum(mediatedRequestStatus, MediatedRequestStatus::getValue,
+      MediatedRequest.MediatedRequestStatusEnum::fromValue);
   }
 
   @Named("DtoMediatedRequestStatusToEntityMediatedRequestStatus")
   default MediatedRequestStatus mapDtoMediatedRequestStatusToEntityMediatedRequestStatus(
     MediatedRequest.MediatedRequestStatusEnum mediatedRequestStatus) {
 
-    return mediatedRequestStatus != null
-      ? MediatedRequestStatus.fromValue(mediatedRequestStatus.getValue())
-      : null;
+    return mapEnum(mediatedRequestStatus, MediatedRequest.MediatedRequestStatusEnum::getValue,
+      MediatedRequestStatus::fromValue);
   }
 
   @Named("StringToStatus")
