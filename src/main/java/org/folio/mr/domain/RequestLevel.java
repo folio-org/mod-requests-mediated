@@ -13,21 +13,19 @@ public enum RequestLevel {
     this.value = value;
   }
 
-  @JsonValue
   public String getValue() {
     return value;
   }
 
   @Override
   public String toString() {
-    return String.valueOf(value);
+    return value;
   }
 
-  @JsonCreator
   public static RequestLevel fromValue(String value) {
-    for (RequestLevel rl : RequestLevel.values()) {
-      if (rl.value.equals(value)) {
-        return rl;
+    for (RequestLevel requestLevel : RequestLevel.values()) {
+      if (requestLevel.value.equals(value)) {
+        return requestLevel;
       }
     }
     throw new IllegalArgumentException("Unexpected value '" + value + "'");

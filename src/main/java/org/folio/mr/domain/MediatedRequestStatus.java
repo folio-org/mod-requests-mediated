@@ -1,34 +1,29 @@
 package org.folio.mr.domain;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-
 public enum MediatedRequestStatus {
   NEW("New"),
   OPEN("Open"),
   CLOSED("Closed");
 
-  private String value;
+  private final String value;
 
   MediatedRequestStatus(String value) {
     this.value = value;
   }
 
-  @JsonValue
   public String getValue() {
     return value;
   }
 
   @Override
   public String toString() {
-    return String.valueOf(value);
+    return value;
   }
 
-  @JsonCreator
   public static MediatedRequestStatus fromValue(String value) {
-    for (MediatedRequestStatus b : MediatedRequestStatus.values()) {
-      if (b.value.equals(value)) {
-        return b;
+    for (MediatedRequestStatus mediatedRequestStatus : MediatedRequestStatus.values()) {
+      if (mediatedRequestStatus.value.equals(value)) {
+        return mediatedRequestStatus;
       }
     }
     throw new IllegalArgumentException("Unexpected value '" + value + "'");

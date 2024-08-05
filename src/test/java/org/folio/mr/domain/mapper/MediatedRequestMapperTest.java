@@ -1,5 +1,7 @@
 package org.folio.mr.domain.mapper;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.Date;
 import java.util.UUID;
 
@@ -11,7 +13,6 @@ import org.folio.mr.domain.dto.MediatedRequestProxy;
 import org.folio.mr.domain.dto.MediatedRequestRequester;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndexCallNumberComponents;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class MediatedRequestMapperTest {
@@ -20,23 +21,23 @@ public class MediatedRequestMapperTest {
     MediatedRequestMapperImpl mapper = new MediatedRequestMapperImpl();
     var entity = mapper.mapDtoToEntity(buildMediatedRequest());
 
-    Assertions.assertEquals("identifier-value",
+    assertEquals("identifier-value",
       entity.getInstanceIdentifiers().stream().iterator().next().getValue());
-    Assertions.assertEquals("12345", entity.getItemBarcode());
-    Assertions.assertEquals("First", entity.getRequesterFirstName());
-    Assertions.assertEquals("Last", entity.getRequesterLastName());
-    Assertions.assertEquals("Middle", entity.getRequesterMiddleName());
-    Assertions.assertEquals("123", entity.getRequesterBarcode());
-    Assertions.assertEquals("ProxyFirst", entity.getProxyFirstName());
-    Assertions.assertEquals("ProxyLast", entity.getProxyLastName());
-    Assertions.assertEquals("ProxyMiddle", entity.getProxyMiddleName());
-    Assertions.assertEquals("Proxy123", entity.getProxyBarcode());
+    assertEquals("12345", entity.getItemBarcode());
+    assertEquals("First", entity.getRequesterFirstName());
+    assertEquals("Last", entity.getRequesterLastName());
+    assertEquals("Middle", entity.getRequesterMiddleName());
+    assertEquals("123", entity.getRequesterBarcode());
+    assertEquals("ProxyFirst", entity.getProxyFirstName());
+    assertEquals("ProxyLast", entity.getProxyLastName());
+    assertEquals("ProxyMiddle", entity.getProxyMiddleName());
+    assertEquals("Proxy123", entity.getProxyBarcode());
 
-    Assertions.assertEquals("F16.H37 A2 9001", entity.getCallNumber());
-    Assertions.assertEquals("pre", entity.getCallNumberPrefix());
-    Assertions.assertEquals("suf", entity.getCallNumberSuffix());
-    Assertions.assertEquals("F 416 H37 A2 59001", entity.getShelvingOrder());
-    Assertions.assertEquals("Circ Desk 1", entity.getPickupServicePointName());
+    assertEquals("F16.H37 A2 9001", entity.getCallNumber());
+    assertEquals("pre", entity.getCallNumberPrefix());
+    assertEquals("suf", entity.getCallNumberSuffix());
+    assertEquals("F 416 H37 A2 59001", entity.getShelvingOrder());
+    assertEquals("Circ Desk 1", entity.getPickupServicePointName());
   }
 
   @Test
@@ -45,23 +46,23 @@ public class MediatedRequestMapperTest {
     var entity = mapper.mapDtoToEntity(buildMediatedRequest());
     var dto = mapper.mapEntityToDto(entity);
 
-    Assertions.assertEquals("identifier-value",
+    assertEquals("identifier-value",
       dto.getInstance().getIdentifiers().get(0).getValue());
-    Assertions.assertEquals("12345", dto.getItem().getBarcode());
-    Assertions.assertEquals("First", dto.getRequester().getFirstName());
-    Assertions.assertEquals("Last", dto.getRequester().getLastName());
-    Assertions.assertEquals("Middle", dto.getRequester().getMiddleName());
-    Assertions.assertEquals("123", dto.getRequester().getBarcode());
-    Assertions.assertEquals("ProxyFirst", dto.getProxy().getFirstName());
-    Assertions.assertEquals("ProxyLast", dto.getProxy().getLastName());
-    Assertions.assertEquals("ProxyMiddle", dto.getProxy().getMiddleName());
-    Assertions.assertEquals("Proxy123", dto.getProxy().getBarcode());
+    assertEquals("12345", dto.getItem().getBarcode());
+    assertEquals("First", dto.getRequester().getFirstName());
+    assertEquals("Last", dto.getRequester().getLastName());
+    assertEquals("Middle", dto.getRequester().getMiddleName());
+    assertEquals("123", dto.getRequester().getBarcode());
+    assertEquals("ProxyFirst", dto.getProxy().getFirstName());
+    assertEquals("ProxyLast", dto.getProxy().getLastName());
+    assertEquals("ProxyMiddle", dto.getProxy().getMiddleName());
+    assertEquals("Proxy123", dto.getProxy().getBarcode());
 
-    Assertions.assertEquals("F16.H37 A2 9001", dto.getSearchIndex().getCallNumberComponents().getCallNumber());
-    Assertions.assertEquals("pre", dto.getSearchIndex().getCallNumberComponents().getPrefix());
-    Assertions.assertEquals("suf", dto.getSearchIndex().getCallNumberComponents().getSuffix());
-    Assertions.assertEquals("F 416 H37 A2 59001", dto.getSearchIndex().getShelvingOrder());
-    Assertions.assertEquals("Circ Desk 1", dto.getSearchIndex().getPickupServicePointName());
+    assertEquals("F16.H37 A2 9001", dto.getSearchIndex().getCallNumberComponents().getCallNumber());
+    assertEquals("pre", dto.getSearchIndex().getCallNumberComponents().getPrefix());
+    assertEquals("suf", dto.getSearchIndex().getCallNumberComponents().getSuffix());
+    assertEquals("F 416 H37 A2 59001", dto.getSearchIndex().getShelvingOrder());
+    assertEquals("Circ Desk 1", dto.getSearchIndex().getPickupServicePointName());
   }
 
   private MediatedRequest buildMediatedRequest() {

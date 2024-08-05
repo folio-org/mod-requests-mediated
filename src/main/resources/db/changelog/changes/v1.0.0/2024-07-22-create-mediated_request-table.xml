@@ -112,7 +112,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="addFullCallNumberProcedure" author="me">
+    <changeSet id="addFullCallNumberProcedure" author="AlexanderKurash">
         <createProcedure>
             CREATE OR REPLACE FUNCTION fn_update_full_call_number() RETURNS trigger
             LANGUAGE plpgsql
@@ -128,7 +128,7 @@
         </rollback>
     </changeSet>
 
-    <changeSet id="addFullCallNumberTrigger" author="me">
+    <changeSet id="addFullCallNumberTrigger" author="AlexanderKurash">
         <sql>
             DROP TRIGGER IF EXISTS trg_medreq_fullcallnum
             ON ${database.defaultSchemaName}.mediated_request;
