@@ -22,21 +22,27 @@ public class CustomEnumExtractor<T> extends BasicExtractor<T> {
   }
 
   @Override
-  protected T doExtract(ResultSet resultSet, int i, WrapperOptions wrapperOptions) throws SQLException {
+  protected T doExtract(ResultSet resultSet, int index, WrapperOptions wrapperOptions)
+    throws SQLException {
+
     return this.getJavaType().wrap(stringToEnumConverterFunction.apply(
-      resultSet.getObject(i).toString()), wrapperOptions);
+      resultSet.getObject(index).toString()), wrapperOptions);
   }
 
   @Override
-  protected T doExtract(CallableStatement callableStatement, int i, WrapperOptions wrapperOptions) throws SQLException {
+  protected T doExtract(CallableStatement callableStatement, int index,
+    WrapperOptions wrapperOptions) throws SQLException {
+
     return this.getJavaType().wrap(stringToEnumConverterFunction.apply(
-      callableStatement.getObject(i).toString()), wrapperOptions);
+      callableStatement.getObject(index).toString()), wrapperOptions);
   }
 
   @Override
-  protected T doExtract(CallableStatement callableStatement, String s, WrapperOptions wrapperOptions) throws SQLException {
+  protected T doExtract(CallableStatement callableStatement, String name,
+    WrapperOptions wrapperOptions) throws SQLException {
+
     return this.getJavaType().wrap(stringToEnumConverterFunction.apply(
-      callableStatement.getObject(s).toString()), wrapperOptions);
+      callableStatement.getObject(name).toString()), wrapperOptions);
   }
 
 }
