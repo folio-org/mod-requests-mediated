@@ -1,0 +1,183 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="create-pgcrypto-extension" author="AlexanderKurash">
+        <sql dbms="postgresql">
+            CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public;
+        </sql>
+    </changeSet>
+
+    <changeSet id="create-request-level-enum" author="AlexanderKurash">
+        <sql dbms="postgresql">
+            CREATE TYPE RequestLevel AS ENUM ('Item', 'Title');
+        </sql>
+    </changeSet>
+
+    <changeSet id="create-request-type-enum" author="AlexanderKurash">
+        <sql dbms="postgresql">
+            CREATE TYPE RequestType AS ENUM ('Hold', 'Recall', 'Page');
+        </sql>
+    </changeSet>
+
+    <changeSet id="create-mediated-request-status-enum" author="AlexanderKurash">
+        <sql dbms="postgresql">
+            CREATE TYPE MediatedRequestStatus AS ENUM ('New', 'Open', 'Closed');
+        </sql>
+    </changeSet>
+
+    <changeSet id="create-mediated-request-fulfillment-preference-enum" author="AlexanderKurash">
+        <sql dbms="postgresql">
+            CREATE TYPE FulfillmentPreference AS ENUM ('Hold Shelf', 'Delivery');
+        </sql>
+    </changeSet>
+
+    <changeSet id="createMediatedRequestsTable" author="AlexanderKurash">
+        <comment>
+            Create mediated_request table
+        </comment>
+
+        <createTable tableName="mediated_request">
+            <column name="id" type="uuid" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="request_level" type="RequestLevel">
+                <constraints nullable="false"/>
+            </column>
+            <column name="request_type" type="RequestType">
+                <constraints nullable="false"/>
+            </column>
+            <column name="request_date" type="timestamp without time zone" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patron_comments" type="text"/>
+            <column name="requester_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requester_first_name" type="varchar(255)"/>
+            <column name="requester_last_name" type="varchar(255)"/>
+            <column name="requester_middle_name" type="varchar(255)"/>
+            <column name="requester_barcode" type="varchar(255)"/>
+            <column name="proxy_user_id" type="uuid"/>
+            <column name="proxy_first_name" type="varchar(255)"/>
+            <column name="proxy_last_name" type="varchar(255)"/>
+            <column name="proxy_middle_name" type="varchar(255)"/>
+            <column name="proxy_barcode" type="varchar(255)"/>
+            <column name="instance_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="instance_title" type="varchar(255)"/>
+            <column name="holdings_record_id" type="uuid"/>
+            <column name="item_id" type="uuid"/>
+            <column name="item_barcode" type="varchar(255)"/>
+            <column name="mediated_workflow" type="varchar(255)"/>
+            <column name="mediated_request_status" type="MediatedRequestStatus">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mediated_request_step" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cancellation_reason_id" type="uuid"/>
+            <column name="cancelled_by_user_id" type="uuid"/>
+            <column name="cancellation_additional_information" type="text"/>
+            <column name="cancelled_date" type="timestamp without time zone" defaultValueComputed="now()"/>
+            <column name="position" type="int"/>
+            <column name="fulfillment_preference" type="FulfillmentPreference">
+                <constraints nullable="false"/>
+            </column>
+            <column name="delivery_address_type_id" type="uuid"/>
+            <column name="pickup_service_point_id" type="uuid"/>
+            <column name="confirmed_request_id" type="uuid"/>
+
+            <!-- Search index -->
+            <column name="call_number" type="varchar(255)"/>
+            <column name="call_number_prefix" type="varchar(255)"/>
+            <column name="call_number_suffix" type="varchar(255)"/>
+            <column name="full_call_number" type="varchar(255)"/>
+            <column name="shelving_order" type="varchar(255)"/>
+            <column name="pickup_service_point_name" type="varchar(255)"/>
+
+            <!-- Metadata -->
+            <column name="created_date" type="timestamp without time zone" defaultValueComputed="now()"/>
+            <column name="created_by_user_id" type="uuid"/>
+            <column name="created_by_username" type="varchar(100)"/>
+            <column name="updated_date" type="timestamp without time zone"/>
+            <column name="updated_by_user_id" type="uuid"/>
+            <column name="updated_by_username" type="varchar(100)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="addFullCallNumberProcedure" author="AlexanderKurash">
+        <createProcedure>
+            CREATE OR REPLACE FUNCTION fn_update_full_call_number() RETURNS trigger
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                NEW.full_call_number := NEW.call_number_prefix || ' ' || NEW.call_number || ' ' || NEW.call_number_suffix;
+                RETURN NEW;
+            END;
+            $$;
+        </createProcedure>
+        <rollback>
+            DROP FUNCTION fn_update_full_call_number();
+        </rollback>
+    </changeSet>
+
+    <changeSet id="addFullCallNumberTrigger" author="AlexanderKurash">
+        <sql>
+            DROP TRIGGER IF EXISTS trg_medreq_fullcallnum
+            ON ${database.defaultSchemaName}.mediated_request;
+
+            CREATE TRIGGER trg_medreq_fullcallnum
+            BEFORE INSERT OR UPDATE ON ${database.defaultSchemaName}.mediated_request
+            FOR EACH ROW EXECUTE PROCEDURE fn_update_full_call_number();
+        </sql>
+        <rollback>
+            DROP TRIGGER trg_medreq_fullcallnum ON ${database.defaultSchemaName}.mediated_request;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="createMediatedRequestInstanceIdentifierTable" author="AlexanderKurash">
+        <comment>
+            Create mediated_workflow_step table
+        </comment>
+
+        <createTable tableName="mediated_request_instance_identifier">
+            <column name="mediated_request_id" type="uuid">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="identifier_type_id" type="uuid">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="value" type="varchar(255)">
+                <constraints primaryKey="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="addMediatedRequestInstanceIdentifiersForeignKey" author="AlexanderKurash">
+        <addForeignKeyConstraint constraintName="fk_medreq_medreqinsident"
+                                 baseTableName="mediated_request_instance_identifier"
+                                 baseColumnNames="mediated_request_id"
+                                 referencedTableName="mediated_request"
+                                 referencedColumnNames="id"
+                                 deferrable="true"
+                                 initiallyDeferred="true"
+                                 onDelete="RESTRICT"
+                                 onUpdate="RESTRICT"/>
+    </changeSet>
+
+    <changeSet id="addMediatedRequestsIndexes" author="AlexanderKurash" runOnChange="true">
+        <sql dbms="postgresql">CREATE INDEX idx_medreq_item_barcode ON ${database.defaultSchemaName}.mediated_request(item_barcode)</sql>
+        <sql dbms="postgresql">CREATE INDEX idx_medreq_instance_title ON ${database.defaultSchemaName}.mediated_request(instance_title)</sql>
+        <sql dbms="postgresql">CREATE INDEX idx_medreq_requester_barcode ON ${database.defaultSchemaName}.mediated_request(requester_barcode)</sql>
+        <sql dbms="postgresql">CREATE INDEX idx_medreq_call_number ON ${database.defaultSchemaName}.mediated_request(call_number)</sql>
+        <sql dbms="postgresql">CREATE INDEX idx_medreq_full_call_number ON ${database.defaultSchemaName}.mediated_request(full_call_number)</sql>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,40 +1,9 @@
 package org.folio.mr.api;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import lombok.SneakyThrows;
-import lombok.extern.log4j.Log4j2;
-
-import org.folio.mr.util.TestUtils;
-import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.FolioModuleMetadata;
-import org.folio.spring.integration.XOkapiHeaders;
-import org.folio.spring.scope.FolioExecutionContextSetter;
-import org.folio.tenant.domain.dto.TenantAttributes;
-import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.support.TestPropertySourceUtils;
-import org.springframework.test.util.TestSocketUtils;
-import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import static java.util.stream.Collectors.toMap;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -42,55 +11,70 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static java.util.stream.Collectors.toMap;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.folio.mr.util.DbInitializer;
+import org.folio.mr.util.TestUtils;
+import org.folio.mr.util.WireMockInitializer;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.integration.XOkapiHeaders;
+import org.folio.spring.scope.FolioExecutionContextSetter;
+import org.folio.tenant.domain.dto.TenantAttributes;
+import org.folio.test.extensions.EnablePostgres;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.reactive.function.BodyInserters;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
+
+import lombok.SneakyThrows;
+
+@EnablePostgres
+@ActiveProfiles("test")
+@ContextConfiguration(initializers = {WireMockInitializer.class, DbInitializer.class})
+@EnableAutoConfiguration(exclude = {FlywayAutoConfiguration.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@ContextConfiguration(initializers = BaseIT.DockerPostgresDataSourceInitializer.class)
 @AutoConfigureMockMvc
-@Testcontainers
-@DirtiesContext
-@Log4j2
 public class BaseIT {
-  protected static final String HEADER_TENANT = "x-okapi-tenant";
   protected static final String TOKEN = "test_token";
-  public static final String TENANT_ID_DIKU = "diku";
   protected static final String TENANT_ID_CONSORTIUM = "consortium";
-  protected static final String TENANT_ID_UNIVERSITY = "university";
-  protected static final String TENANT_ID_COLLEGE = "college";
+
   @Autowired
   private WebTestClient webClient;
   @Autowired
   protected MockMvc mockMvc;
   @Autowired
-  private FolioExecutionContext context;
-  @Autowired
   private FolioModuleMetadata moduleMetadata;
-  public static WireMockServer wireMockServer;
+  @Autowired
+  public WireMockServer wireMockServer;
   private FolioExecutionContextSetter contextSetter;
-  protected static PostgreSQLContainer<?> postgreDBContainer = new PostgreSQLContainer<>("postgres:12-alpine");
-  public static final int WIRE_MOCK_PORT = TestSocketUtils.findAvailableTcpPort();
+
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 
-  static {
-    postgreDBContainer.start();
-  }
-
   @BeforeAll
   static void beforeAll(@Autowired MockMvc mockMvc) {
-    wireMockServer = new WireMockServer(WIRE_MOCK_PORT);
-    wireMockServer.start();
     setUpTenant(mockMvc);
   }
 
   @BeforeEach
   void beforeEachTest() {
     contextSetter = initFolioContext();
+    wireMockServer.resetAll();
   }
 
   @AfterEach
@@ -100,15 +84,6 @@ public class BaseIT {
 
   protected FolioExecutionContextSetter initFolioContext() {
     return new FolioExecutionContextSetter(moduleMetadata, buildDefaultHeaders());
-  }
-
-  public static String getOkapiUrl() {
-    return String.format("http://localhost:%s", WIRE_MOCK_PORT);
-  }
-
-  @AfterAll
-  static void tearDown() {
-    wireMockServer.stop();
   }
 
   @SneakyThrows
@@ -124,7 +99,6 @@ public class BaseIT {
 
     httpHeaders.setContentType(APPLICATION_JSON);
     httpHeaders.put(XOkapiHeaders.TENANT, List.of(TENANT_ID_CONSORTIUM));
-    httpHeaders.add(XOkapiHeaders.URL, wireMockServer.baseUrl());
     httpHeaders.add(XOkapiHeaders.TOKEN, TOKEN);
     httpHeaders.add(XOkapiHeaders.USER_ID, "08d51c7a-0f36-4f3d-9e35-d285612a23df");
 
@@ -140,16 +114,6 @@ public class BaseIT {
   @SneakyThrows
   public static String asJsonString(Object value) {
     return OBJECT_MAPPER.writeValueAsString(value);
-  }
-
-  public static class DockerPostgresDataSourceInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-    @Override
-    public void initialize(@NotNull ConfigurableApplicationContext applicationContext) {
-      TestPropertySourceUtils.addInlinedPropertiesToEnvironment(applicationContext,
-        "spring.datasource.url=" + postgreDBContainer.getJdbcUrl(),
-        "spring.datasource.username=" + postgreDBContainer.getUsername(),
-        "spring.datasource.password=" + postgreDBContainer.getPassword());
-    }
   }
 
   protected WebTestClient.RequestBodySpec buildRequest(HttpMethod method, String uri) {
