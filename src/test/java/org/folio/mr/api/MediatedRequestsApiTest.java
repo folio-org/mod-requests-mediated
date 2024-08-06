@@ -95,7 +95,7 @@ class MediatedRequestsApiTest extends BaseIT {
 
   @SneakyThrows
   @Test
-  void mediatedRequestShouldBeCreatedAndRetrievedByQuery() {
+  void mediatedRequestShouldBeCreatedAndRetrievedByFullCallNumberQuery() {
     var response = doPost(URI_TEMPLATE, buildMediatedRequestPayload())
       .expectStatus().isEqualTo(CREATED);
     var requestId = getResponseBodyObjectId(response);

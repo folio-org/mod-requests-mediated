@@ -102,17 +102,19 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   private MediatedRequest setStatusBasedOnMediatedRequestStatusAndStep(
     MediatedRequest mediatedRequest) {
 
-    var statusElements = mediatedRequest.getStatus().toString().split(" - ");
-    if (statusElements.length == 2) {
-      mediatedRequest.setMediatedRequestStatus(
-        MediatedRequest.MediatedRequestStatusEnum.fromValue(statusElements[0]));
-      mediatedRequest.setMediatedRequestStep(statusElements[1]);
-      return mediatedRequest;
-    } else {
-      log.warn("setStatusBasedOnMediatedRequestStatusAndStep:: Invalid status: {}",
-        mediatedRequest.getStatus());
-      return null;
+    if (mediatedRequest.getStatus() != null) {
+      var statusElements = mediatedRequest.getStatus().toString().split(" - ");
+      if (statusElements.length == 2) {
+        mediatedRequest.setMediatedRequestStatus(
+          MediatedRequest.MediatedRequestStatusEnum.fromValue(statusElements[0]));
+        mediatedRequest.setMediatedRequestStep(statusElements[1]);
+        return mediatedRequest;
+      }
     }
+
+    log.warn("setStatusBasedOnMediatedRequestStatusAndStep:: Invalid status: {}",
+      mediatedRequest.getStatus());
+    return mediatedRequest;
   }
 
   private MediatedRequestEntity refreshCreatedDate(MediatedRequestEntity mediatedRequestEntity) {
