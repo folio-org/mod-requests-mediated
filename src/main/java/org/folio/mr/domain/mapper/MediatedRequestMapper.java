@@ -29,10 +29,14 @@ import org.mapstruct.NullValueCheckStrategy;
     FulfillmentPreference.class})
 public interface MediatedRequestMapper {
   @Mapping(target = "id", qualifiedByName = "UuidToStringSafe")
-  @Mapping(target = "requestLevel", qualifiedByName = "EntityRequestLevelToDtoRequestLevel")
-  @Mapping(target = "requestType", qualifiedByName = "EntityRequestTypeToDtoRequestType")
-  @Mapping(target = "fulfillmentPreference", qualifiedByName = "EntityFulfillmentPreferenceToDtoFulfillmentPreference")
-  @Mapping(target = "mediatedRequestStatus", qualifiedByName = "EntityMediatedRequestStatusToDtoMediatedRequestStatus")
+  @Mapping(target = "requestLevel", expression =
+    "java(mapEnum(mediatedRequestEntity.getRequestLevel(), RequestLevel::getValue, MediatedRequest.RequestLevelEnum::fromValue))")
+  @Mapping(target = "requestType", expression =
+    "java(mapEnum(mediatedRequestEntity.getRequestType(), RequestType::getValue, MediatedRequest.RequestTypeEnum::fromValue))")
+  @Mapping(target = "fulfillmentPreference", expression =
+    "java(mapEnum(mediatedRequestEntity.getFulfillmentPreference(), FulfillmentPreference::getValue, MediatedRequest.FulfillmentPreferenceEnum::fromValue))")
+  @Mapping(target = "mediatedRequestStatus", expression =
+    "java(mapEnum(mediatedRequestEntity.getMediatedRequestStatus(), MediatedRequestStatus::getValue, MediatedRequest.MediatedRequestStatusEnum::fromValue))")
   @Mapping(target = "status", qualifiedByName = "StringToStatus")
   @Mapping(target = "instance.title", source = "instanceTitle")
   @Mapping(target = "instance.identifiers", source="instanceIdentifiers", qualifiedByName = "EntityIdentifiersToDtoIdentifiers")
@@ -61,10 +65,14 @@ public interface MediatedRequestMapper {
   MediatedRequest mapEntityToDto(MediatedRequestEntity mediatedRequestEntity);
 
   @Mapping(target = "id", qualifiedByName = "StringToUuidSafe")
-  @Mapping(target = "requestLevel", qualifiedByName = "DtoRequestLevelToEntityRequestLevel")
-  @Mapping(target = "requestType", qualifiedByName = "DtoRequestTypeToEntityRequestType")
-  @Mapping(target = "fulfillmentPreference", qualifiedByName = "DtoFulfillmentPreferenceToEntityFulfillmentPreference")
-  @Mapping(target = "mediatedRequestStatus", qualifiedByName = "DtoMediatedRequestStatusToEntityMediatedRequestStatus")
+  @Mapping(target = "requestLevel", expression =
+    "java(mapEnum(mediatedRequest.getRequestLevel(), MediatedRequest.RequestLevelEnum::getValue, RequestLevel::fromValue))")
+  @Mapping(target = "requestType", expression =
+    "java(mapEnum(mediatedRequest.getRequestType(), MediatedRequest.RequestTypeEnum::getValue, RequestType::fromValue))")
+  @Mapping(target = "fulfillmentPreference", expression =
+    "java(mapEnum(mediatedRequest.getFulfillmentPreference(), MediatedRequest.FulfillmentPreferenceEnum::getValue, FulfillmentPreference::fromValue))")
+  @Mapping(target = "mediatedRequestStatus", expression =
+    "java(mapEnum(mediatedRequest.getMediatedRequestStatus(), MediatedRequest.MediatedRequestStatusEnum::getValue, MediatedRequestStatus::fromValue))")
   @Mapping(target = "status", qualifiedByName = "StatusToString")
   @Mapping(target = "instanceTitle", source = "instance.title")
   @Mapping(target = "instanceIdentifiers", source = "instance.identifiers", qualifiedByName = "InstanceIdentifiersToIdentifiersSet")
@@ -96,68 +104,6 @@ public interface MediatedRequestMapper {
     return v != null
       ? mapper.apply(valueGetter.apply(v))
       : null;
-  }
-
-  @Named("EntityRequestLevelToDtoRequestLevel")
-  default MediatedRequest.RequestLevelEnum mapEntityRequestLevelToDtoRequestLevel(
-    RequestLevel requestLevel) {
-
-    return mapEnum(requestLevel, RequestLevel::getValue,
-      MediatedRequest.RequestLevelEnum::fromValue);
-  }
-
-  @Named("DtoRequestLevelToEntityRequestLevel")
-  default RequestLevel mapDtoRequestLevelToEntityRequestLevel(
-    MediatedRequest.RequestLevelEnum requestLevel) {
-
-    return mapEnum(requestLevel, MediatedRequest.RequestLevelEnum::getValue,
-      RequestLevel::fromValue);
-  }
-
-  @Named("EntityRequestTypeToDtoRequestType")
-  default MediatedRequest.RequestTypeEnum mapEntityRequestTypeToDtoRequestType(
-    RequestType requestType) {
-
-    return mapEnum(requestType, RequestType::getValue, MediatedRequest.RequestTypeEnum::fromValue);
-  }
-
-  @Named("DtoRequestTypeToEntityRequestType")
-  default RequestType mapDtoRequestTypeToEntityRequestType(
-    MediatedRequest.RequestTypeEnum requestType) {
-
-    return mapEnum(requestType, MediatedRequest.RequestTypeEnum::getValue, RequestType::fromValue);
-  }
-
-  @Named("EntityFulfillmentPreferenceToDtoFulfillmentPreference")
-  default MediatedRequest.FulfillmentPreferenceEnum mapEntityFulfillmentPreferenceToDtoFulfillmentPreference(
-    FulfillmentPreference fulfillmentPreference) {
-
-    return mapEnum(fulfillmentPreference, FulfillmentPreference::getValue,
-      MediatedRequest.FulfillmentPreferenceEnum::fromValue);
-  }
-
-  @Named("DtoFulfillmentPreferenceToEntityFulfillmentPreference")
-  default FulfillmentPreference mapDtoFulfillmentPreferenceToEntityFulfillmentPreference(
-    MediatedRequest.FulfillmentPreferenceEnum fulfillmentPreference) {
-
-    return mapEnum(fulfillmentPreference, MediatedRequest.FulfillmentPreferenceEnum::getValue,
-      FulfillmentPreference::fromValue);
-  }
-
-  @Named("EntityMediatedRequestStatusToDtoMediatedRequestStatus")
-  default MediatedRequest.MediatedRequestStatusEnum mapEntityMediatedRequestStatusToDtoMediatedRequestStatus(
-    MediatedRequestStatus mediatedRequestStatus) {
-
-    return mapEnum(mediatedRequestStatus, MediatedRequestStatus::getValue,
-      MediatedRequest.MediatedRequestStatusEnum::fromValue);
-  }
-
-  @Named("DtoMediatedRequestStatusToEntityMediatedRequestStatus")
-  default MediatedRequestStatus mapDtoMediatedRequestStatusToEntityMediatedRequestStatus(
-    MediatedRequest.MediatedRequestStatusEnum mediatedRequestStatus) {
-
-    return mapEnum(mediatedRequestStatus, MediatedRequest.MediatedRequestStatusEnum::getValue,
-      MediatedRequestStatus::fromValue);
   }
 
   @Named("StringToStatus")
