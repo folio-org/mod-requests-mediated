@@ -122,6 +122,18 @@ components:
   schemas:
     mediatedRequest:
       $ref: 'schemas/mediatedRequest.yaml#/MediatedRequest'
+    user:
+      $ref: 'schemas/users/user.json'
+    users:
+      $ref: 'schemas/users/users.json'
+    userGroup:
+      $ref: 'schemas/users/userGroup.json'
+    userGroups:
+      $ref: 'schemas/users/userGroups.json'
+    instance:
+      $ref: 'schemas/inventory/instance.json'
+    instances:
+      $ref: 'schemas/inventory/instances.json'
     errorResponse:
       $ref: 'schemas/errors.json'
   parameters:

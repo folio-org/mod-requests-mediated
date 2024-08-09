@@ -350,5 +350,4 @@ MediatedRequest:
     - requestDate
     - requesterId
     - instanceId
-    - status
     - fulfillmentPreference

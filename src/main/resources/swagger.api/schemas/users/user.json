@@ -1,0 +1,257 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "User Schema",
+  "description": "A user",
+  "javaName": "User",
+  "type": "object",
+  "properties": {
+    "username": {
+      "description": "A unique name belonging to a user. Typically used for login",
+      "type": "string"
+    },
+    "id": {
+      "description": "A globally unique (UUID) identifier for the user",
+      "type": "string"
+    },
+    "externalSystemId": {
+      "description": "A unique ID that corresponds to an external authority",
+      "type": "string"
+    },
+    "barcode": {
+      "description": "The unique library barcode for this user",
+      "type": "string"
+    },
+    "active": {
+      "description": "A flag to determine if the user's account is effective and not expired. The tenant configuration can require the user to be active for login. Active is different from the loan patron block",
+      "type": "boolean"
+    },
+    "type": {
+      "description": "The class of user like staff or patron; this is different from patronGroup; it can store shadow, system user and dcb types also",
+      "type": "string"
+    },
+    "patronGroup": {
+      "description": "A UUID corresponding to the group the user belongs to, see /groups API, example groups are undergraduate and faculty; loan rules, patron blocks, fees/fines and expiration days can use the patron group",
+      "type": "string",
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "uuid.schema",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$"
+    },
+    "departments": {
+      "description": "A list of UUIDs corresponding to the departments the user belongs to, see /departments API",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "id": "uuid.schema",
+        "description": "A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/",
+        "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$"
+      }
+    },
+    "meta": {
+      "description": "Deprecated",
+      "type": "object"
+    },
+    "proxyFor": {
+      "description": "Deprecated",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "personal": {
+      "description": "Personal information about the user",
+      "type": "object",
+      "properties": {
+        "lastName": {
+          "description": "The user's surname",
+          "type": "string"
+        },
+        "firstName": {
+          "description": "The user's given name",
+          "type": "string"
+        },
+        "middleName": {
+          "description": "The user's middle name (if any)",
+          "type": "string"
+        },
+        "preferredFirstName": {
+          "description": "The user's preferred name",
+          "type": "string"
+        },
+        "email": {
+          "description": "The user's email address",
+          "type": "string"
+        },
+        "phone": {
+          "description": "The user's primary phone number",
+          "type": "string"
+        },
+        "mobilePhone": {
+          "description": "The user's mobile phone number",
+          "type": "string"
+        },
+        "dateOfBirth": {
+          "type": "string",
+          "description": "The user's birth date",
+          "format": "date-time"
+        },
+        "addresses": {
+          "description": "Physical addresses associated with the user",
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "description": "A unique id for this address",
+                "type": "string"
+              },
+              "countryId": {
+                "description": "The country code for this address",
+                "type": "string"
+              },
+              "addressLine1": {
+                "description": "Address, Line 1",
+                "type": "string"
+              },
+              "addressLine2": {
+                "description": "Address, Line 2",
+                "type": "string"
+              },
+              "city": {
+                "description": "City name",
+                "type": "string"
+              },
+              "region": {
+                "description": "Region",
+                "type": "string"
+              },
+              "postalCode": {
+                "description": "Postal Code",
+                "type": "string"
+              },
+              "addressTypeId": {
+                "description": "A UUID that corresponds with an address type object",
+                "type": "string",
+                "$schema": "http://json-schema.org/draft-04/schema#",
+                "id": "uuid.schema",
+                "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$"
+              },
+              "primaryAddress": {
+                "description": "Is this the user's primary address?",
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "preferredContactTypeId": {
+          "description": "Id of user's preferred contact type like Email, Mail or Text Message, see /addresstypes API",
+          "type": "string"
+        },
+        "profilePictureLink": {
+          "description": "Link to the profile picture",
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": true
+    },
+    "enrollmentDate": {
+      "description": "The date in which the user joined the organization",
+      "type": "string",
+      "format": "date-time"
+    },
+    "expirationDate": {
+      "description": "The date for when the user becomes inactive",
+      "type": "string",
+      "format": "date-time"
+    },
+    "createdDate": {
+      "description": "Deprecated",
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedDate": {
+      "description": "Deprecated",
+      "type": "string",
+      "format": "date-time"
+    },
+    "metadata": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "metadata.schema",
+      "title": "Metadata Schema",
+      "description": "Metadata about creation and changes to records, provided by the server (client should not provide)",
+      "properties": {
+        "createdDate": {
+          "description": "Date and time when the record was created",
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdByUserId": {
+          "description": "ID of the user who created the record (when available)",
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+        },
+        "createdByUsername": {
+          "description": "Username of the user who created the record (when available)",
+          "type": "string"
+        },
+        "updatedDate": {
+          "description": "Date and time when the record was last updated",
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedByUserId": {
+          "description": "ID of the user who last updated the record (when available)",
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+        },
+        "updatedByUsername": {
+          "description": "Username of the user who last updated the record (when available)",
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "tags": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "tags.schema",
+      "title": "tags",
+      "description": "List of simple tags that can be added to an object",
+      "properties": {
+        "tagList": {
+          "description": "List of tags",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "customFields": {
+      "description": "Object that contains custom field",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "preferredEmailCommunication": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "Support",
+          "Programs",
+          "Services"
+        ]
+      },
+      "maxItems": 3,
+      "uniqueItems": true,
+      "description": "Preferred email communication types"
+    }
+  },
+  "additionalProperties": true
+}
