@@ -4,7 +4,8 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
 
-    <include file="changes/v1.0.0/2024-07-22-create-mediated_request-table.xml" relativeToChangelogFile="true"/>
-    <include file="changes/v1.0.0/2024-07-24-create-mediated_workflow-table.xml" relativeToChangelogFile="true"/>
-    <include file="changes/v1.0.0/2024-07-29-create-mediated_request_step-table.xml" relativeToChangelogFile="true"/>
+<!--    <include file="changes/v1.0.0/2024-07-22-create-mediated_request-table.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="changes/v1.0.0/2024-07-24-create-mediated_workflow-table.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="changes/v1.0.0/2024-07-29-create-mediated_request_step-table.xml" relativeToChangelogFile="true"/>-->
+    <include file="changes/v1.0.0/2024-08-09-alter-search-indexes.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
