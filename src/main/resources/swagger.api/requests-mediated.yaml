@@ -134,6 +134,14 @@ components:
       $ref: 'schemas/inventory/instance.json'
     instances:
       $ref: 'schemas/inventory/instances.json'
+    servicePoint:
+      $ref: 'schemas/inventory/servicePoint.json'
+    item:
+      $ref: 'schemas/inventory/item.json'
+    location:
+      $ref: 'schemas/inventory/location.json'
+    library:
+      $ref: 'schemas/inventory/library.json'
     errorResponse:
       $ref: 'schemas/errors.json'
   parameters:

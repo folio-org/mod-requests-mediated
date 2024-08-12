@@ -2,7 +2,6 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Holdings record statement",
   "javaType": "org.folio.rest.jaxrs.model.HoldingsStatement",
-  "additionalProperties": false,
   "type": "object",
   "properties": {
     "statement": {

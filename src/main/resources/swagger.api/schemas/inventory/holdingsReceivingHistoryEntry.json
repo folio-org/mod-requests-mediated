@@ -2,7 +2,6 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Receiving history entry of holdings record",
   "javaType": "org.folio.rest.jaxrs.model.HoldingsReceivingHistoryEntry",
-  "additionalProperties": false,
   "type": "object",
   "properties": {
     "publicDisplay": {

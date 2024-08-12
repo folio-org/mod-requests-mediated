@@ -12,7 +12,7 @@
           ],
           "pathPattern": "/requests-mediated/mediated-requests",
           "permissionsRequired": ["requests-mediated.mediated-request.collection.get"],
-          "modulePermissions": []
+          "modulePermissions": ["requests-mediated.internal.fetch-request-details"]
         },
         {
           "methods": [
@@ -20,7 +20,7 @@
           ],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
           "permissionsRequired": ["requests-mediated.mediated-request.item.get"],
-          "modulePermissions": []
+          "modulePermissions": ["requests-mediated.internal.fetch-request-details"]
         },
         {
           "methods": ["POST"],
@@ -82,6 +82,30 @@
       "permissionName": "requests-mediated.mediated-request.item.delete",
       "displayName": "requests-mediated - remove mediated request",
       "description": "Remove mediated request"
+    },
+    {
+      "permissionName": "requests-mediated.internal.fetch-request-details",
+      "displayName": "Fetch mediated request details",
+      "description": "Internal permission set for fetching mediated request details",
+      "subPermissions": [
+        "inventory-storage.items.collection.get",
+        "inventory-storage.items.item.get",
+        "inventory-storage.holdings.collection.get",
+        "inventory-storage.holdings.item.get",
+        "inventory-storage.instances.collection.get",
+        "inventory-storage.instances.item.get",
+        "inventory-storage.service-points.collection.get",
+        "inventory-storage.service-points.item.get",
+        "users.collection.get",
+        "users.item.get",
+        "usergroups.collection.get",
+        "usergroups.item.get",
+        "inventory-storage.locations.collection.get",
+        "inventory-storage.locations.item.get",
+        "inventory-storage.location-units.libraries.collection.get",
+        "inventory-storage.location-units.libraries.item.get"
+      ],
+      "visible": false
     }
   ],
   "requires": [],

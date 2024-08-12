@@ -2,7 +2,6 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "A holdings record",
   "javaType": "org.folio.rest.jaxrs.model.HoldingsRecord",
-  "additionalProperties": false,
   "type": "object",
   "properties": {
     "id": {

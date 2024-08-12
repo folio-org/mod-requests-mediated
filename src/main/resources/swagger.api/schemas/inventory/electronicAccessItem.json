@@ -2,7 +2,6 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Electronic access item",
   "javaType": "org.folio.rest.jaxrs.model.ElectronicAccessItem",
-  "additionalProperties": false,
   "type": "object",
   "properties": {
     "uri": {
