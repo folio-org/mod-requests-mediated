@@ -118,10 +118,31 @@ paths:
           $ref: '#/components/responses/notFoundResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
+  /requests-mediated/confirm-item-arrival:
+    post:
+      description: Confirm item arrival
+      operationId: confirmItemArrival
+      tags:
+        - mediatedRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/confirmItemArrivalRequest'
+        required: true
+      parameters:
+        - $ref: '#/components/parameters/itemBarcode'
+      responses:
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
 components:
   schemas:
     mediatedRequest:
       $ref: 'schemas/mediatedRequest.yaml#/MediatedRequest'
+    confirmItemArrivalRequest:
+      $ref: 'schemas/confirmItemArrivalRequest.yaml#/ConfirmItemArrivalRequest'
     errorResponse:
       $ref: 'schemas/errors.json'
   parameters:
@@ -132,6 +153,13 @@ components:
       schema:
         type: string
         format: uuid
+    itemBarcode:
+      name: itemBarcode
+      in: query
+      required: true
+      description: The barcode number of the item arrived.
+      schema:
+        type: string
     trait_queryable_query:
       name: query
       in: query
