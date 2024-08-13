@@ -121,6 +121,4 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
     return mediatedRequestEntity;
   }
 
-
-
 }

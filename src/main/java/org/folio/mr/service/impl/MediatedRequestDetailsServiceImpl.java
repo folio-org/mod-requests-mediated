@@ -261,7 +261,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private void populateMetadata(MediatedRequest request) {
     // TODO: use real metadata
     request.getMetadata()
-      .createdByUserId(UUID.randomUUID().toString())
-      .updatedByUserId(UUID.randomUUID().toString());
+      .createdByUserId(request.getRequesterId())
+      .updatedByUserId(request.getRequesterId());
   }
 }
