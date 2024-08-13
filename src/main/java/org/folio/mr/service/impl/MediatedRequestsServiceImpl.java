@@ -45,13 +45,13 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 @Log4j2
 public class MediatedRequestsServiceImpl implements MediatedRequestsService {
-  private ItemClient itemClient;
-  private InstanceClient instanceClient;
-  private ServicePointClient servicePointClient;
-  private UserClient userClient;
-  private UserGroupClient userGroupClient;
-  private LocationClient locationClient;
-  private LocationUnitClient locationUnitClient;
+  private final ItemClient itemClient;
+  private final InstanceClient instanceClient;
+  private final ServicePointClient servicePointClient;
+  private final UserClient userClient;
+  private final UserGroupClient userGroupClient;
+  private final LocationClient locationClient;
+  private final LocationUnitClient locationUnitClient;
 
   private final MediatedRequestsRepository mediatedRequestsRepository;
   private final MediatedRequestMapper requestsMapper;
