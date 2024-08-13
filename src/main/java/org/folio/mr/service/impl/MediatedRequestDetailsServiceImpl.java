@@ -1,7 +1,7 @@
 package org.folio.mr.service.impl;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
 import org.folio.mr.client.InstanceClient;
 import org.folio.mr.client.ItemClient;
@@ -52,10 +52,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     fetchProxyUser(request);
     fetchInstance(request);
     fetchPickupServicePoint(request);
-
-    //    request.getMetadata()
-    //      .createdByUserId(UUID.randomUUID().toString())
-    //      .updatedByUserId(UUID.randomUUID().toString());
+    populateMetadata(request);
 
     return request;
   }
@@ -259,5 +256,12 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .description(pickupServicePoint.getDescription())
       .shelvingLagTime(pickupServicePoint.getShelvingLagTime())
       .pickupLocation(pickupServicePoint.getPickupLocation()));
+  }
+
+  private void populateMetadata(MediatedRequest request) {
+    // TODO: use real metadata
+    request.getMetadata()
+      .createdByUserId(UUID.randomUUID().toString())
+      .updatedByUserId(UUID.randomUUID().toString());
   }
 }
