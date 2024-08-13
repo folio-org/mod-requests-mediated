@@ -17,6 +17,7 @@ import org.folio.mr.domain.dto.Library;
 import org.folio.mr.domain.dto.Location;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.MediatedRequestInstanceContributorNamesInner;
+import org.folio.mr.domain.dto.MediatedRequestInstanceIdentifiersInner;
 import org.folio.mr.domain.dto.MediatedRequestInstancePublicationInner;
 import org.folio.mr.domain.dto.MediatedRequestItemCallNumberComponents;
 import org.folio.mr.domain.dto.MediatedRequestItemLocation;
@@ -211,13 +212,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     log.info("fetchInstance:: fetching instance {}", instanceId);
     Instance instance = instanceClient.get(request.getInstanceId());
 
-    List<MediatedRequestInstanceContributorNamesInner> contributors = instance.getContributors()
+    var contributors = instance.getContributors()
       .stream()
       .map(InstanceContributorsInner::getName)
       .map(new MediatedRequestInstanceContributorNamesInner()::name)
       .toList();
 
-    List<MediatedRequestInstancePublicationInner> publications = instance.getPublication()
+    var publications = instance.getPublication()
       .stream()
       .map(publication -> new MediatedRequestInstancePublicationInner()
         .publisher(publication.getPublisher())
@@ -226,10 +227,18 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
         .role(publication.getRole()))
       .toList();
 
+    var identifiers = instance.getIdentifiers()
+      .stream()
+      .map(i -> new MediatedRequestInstanceIdentifiersInner()
+        .value(i.getValue())
+        .identifierTypeId(i.getIdentifierTypeId()))
+      .toList();
+
     request.getInstance()
       .title(instance.getTitle())
       .contributorNames(contributors)
       .publication(publications)
+      .identifiers(identifiers)
       .editions(new ArrayList<>(instance.getEditions()));
   }
 
