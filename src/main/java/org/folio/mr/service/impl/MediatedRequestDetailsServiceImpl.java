@@ -70,6 +70,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     Item item = itemClient.get(itemId);
 
     request.getItem()
+      .barcode(item.getBarcode())
       .enumeration(item.getEnumeration())
       .volume(item.getVolume())
       .chronology(item.getChronology())
@@ -226,6 +227,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .toList();
 
     request.getInstance()
+      .title(instance.getTitle())
       .contributorNames(contributors)
       .publication(publications)
       .editions(new ArrayList<>(instance.getEditions()));
