@@ -1,5 +1,7 @@
 package org.folio.mr.service.impl;
 
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CONFIRMATION;
+
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -23,6 +25,9 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class MediatedRequestsServiceImpl implements MediatedRequestsService {
 
+  private static final MediatedRequest.StatusEnum DEFAULT_STATUS = NEW_AWAITING_CONFIRMATION;
+  private static final String DEFAULT_WORKFLOW = "Private request";
+
   private final MediatedRequestsRepository mediatedRequestsRepository;
   private final MediatedRequestMapper requestsMapper;
   private final MediatedRequestDetailsService requestDetailsService;
@@ -31,7 +36,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   public Optional<MediatedRequest> get(UUID id) {
     return mediatedRequestsRepository.findById(id)
       .map(requestsMapper::mapEntityToDto)
-      .map(requestDetailsService::fetchRequestDetails);
+      .map(requestDetailsService::fetchRequestDetailsForRetrieval);
   }
 
   @Override
@@ -39,7 +44,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
     var mediatedRequests =
       mediatedRequestsRepository.findByCql(query, OffsetRequest.of(offset, limit)).stream()
         .map(requestsMapper::mapEntityToDto)
-        .map(requestDetailsService::fetchRequestDetails)
+        .map(requestDetailsService::fetchRequestDetailsForRetrieval)
         .toList();
 
     var totalRecords = mediatedRequestsRepository.count(query);
@@ -52,7 +57,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
     var mediatedRequests = mediatedRequestsRepository.findAll(OffsetRequest.of(offset, limit))
       .stream()
       .map(requestsMapper::mapEntityToDto)
-      .map(requestDetailsService::fetchRequestDetails)
+      .map(requestDetailsService::fetchRequestDetailsForRetrieval)
       .toList();
 
     var totalRecords = mediatedRequestsRepository.count();
@@ -62,6 +67,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
 
   @Override
   public MediatedRequest post(MediatedRequest mediatedRequest) {
+    requestDetailsService.fetchRequestDetailsForCreation(mediatedRequest);
     var mediatedRequestEntity = requestsMapper.mapDtoToEntity(
       setStatusBasedOnMediatedRequestStatusAndStep(mediatedRequest));
 
@@ -96,14 +102,19 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   private MediatedRequest setStatusBasedOnMediatedRequestStatusAndStep(
     MediatedRequest mediatedRequest) {
 
-    if (mediatedRequest.getStatus() != null) {
-      var statusElements = mediatedRequest.getStatus().toString().split(" - ");
-      if (statusElements.length == 2) {
-        mediatedRequest.setMediatedRequestStatus(
-          MediatedRequest.MediatedRequestStatusEnum.fromValue(statusElements[0]));
-        mediatedRequest.setMediatedRequestStep(statusElements[1]);
-        return mediatedRequest;
-      }
+    if (mediatedRequest.getStatus() == null) {
+      mediatedRequest.setStatus(DEFAULT_STATUS);
+    }
+    if (mediatedRequest.getMediatedWorkflow() == null) {
+      mediatedRequest.mediatedWorkflow(DEFAULT_WORKFLOW);
+    }
+
+    var statusElements = mediatedRequest.getStatus().toString().split(" - ");
+    if (statusElements.length == 2) {
+      mediatedRequest.setMediatedRequestStatus(
+        MediatedRequest.MediatedRequestStatusEnum.fromValue(statusElements[0]));
+      mediatedRequest.setMediatedRequestStep(statusElements[1]);
+      return mediatedRequest;
     }
 
     log.warn("setStatusBasedOnMediatedRequestStatusAndStep:: Invalid status: {}",

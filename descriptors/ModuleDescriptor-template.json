@@ -26,13 +26,13 @@
           "methods": ["POST"],
           "pathPattern": "/requests-mediated/mediated-requests",
           "permissionsRequired": ["requests-mediated.mediated-request.item.post"],
-          "modulePermissions": []
+          "modulePermissions": ["requests-mediated.internal.fetch-request-details"]
         },
         {
           "methods": ["PUT"],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
           "permissionsRequired": ["requests-mediated.mediated-request.item.put"],
-          "modulePermissions": []
+          "modulePermissions": ["requests-mediated.internal.fetch-request-details"]
         },
         {
           "methods": ["DELETE"],
