@@ -29,6 +29,7 @@ import org.folio.mr.domain.dto.MediatedRequestRequester;
 import org.folio.mr.domain.dto.MediatedRequestRequesterPatronGroup;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndexCallNumberComponents;
+import org.folio.mr.domain.dto.Metadata;
 import org.folio.mr.domain.dto.ServicePoint;
 import org.folio.mr.domain.dto.User;
 import org.folio.mr.domain.dto.UserGroup;
@@ -59,7 +60,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     fetchInstance(request);
     fetchItem(request, true);
     fetchPickupServicePoint(request);
-    populateMetadata(request);
+//    populateMetadata(request);
 
     return request;
   }
@@ -305,6 +306,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private void populateMetadata(MediatedRequest request) {
+    if (request.getMetadata() == null) {
+      request.setMetadata(new Metadata());
+    }
     // TODO: use real metadata
     request.getMetadata()
       .createdByUserId(request.getRequesterId())
