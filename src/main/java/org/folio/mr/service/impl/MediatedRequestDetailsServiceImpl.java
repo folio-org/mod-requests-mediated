@@ -15,13 +15,17 @@ import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.Library;
 import org.folio.mr.domain.dto.Location;
 import org.folio.mr.domain.dto.MediatedRequest;
+import org.folio.mr.domain.dto.MediatedRequestInstance;
 import org.folio.mr.domain.dto.MediatedRequestInstanceContributorNamesInner;
 import org.folio.mr.domain.dto.MediatedRequestInstanceIdentifiersInner;
 import org.folio.mr.domain.dto.MediatedRequestInstancePublicationInner;
+import org.folio.mr.domain.dto.MediatedRequestItem;
 import org.folio.mr.domain.dto.MediatedRequestItemCallNumberComponents;
 import org.folio.mr.domain.dto.MediatedRequestItemLocation;
 import org.folio.mr.domain.dto.MediatedRequestPickupServicePoint;
+import org.folio.mr.domain.dto.MediatedRequestProxy;
 import org.folio.mr.domain.dto.MediatedRequestProxyPatronGroup;
+import org.folio.mr.domain.dto.MediatedRequestRequester;
 import org.folio.mr.domain.dto.MediatedRequestRequesterPatronGroup;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndexCallNumberComponents;
 import org.folio.mr.domain.dto.ServicePoint;
@@ -82,14 +86,14 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     log.info("fetchItem:: fetching item {}", itemId);
     Item item = itemClient.get(itemId);
 
-    request.getItem()
+    request.item(new MediatedRequestItem()
       .barcode(item.getBarcode())
       .enumeration(item.getEnumeration())
       .volume(item.getVolume())
       .chronology(item.getChronology())
       .displaySummary(item.getDisplaySummary())
       .status(item.getStatus().getName().getValue())
-      .copyNumber(item.getCopyNumber());
+      .copyNumber(item.getCopyNumber()));
 
     request.getSearchIndex()
       .shelvingOrder(item.getEffectiveShelvingOrder());
@@ -153,9 +157,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     log.info("fetchRequester:: fetching requester {}", requesterId);
     User requester = userClient.get(request.getRequesterId());
 
-    request.getRequester()
+    request.requester(new MediatedRequestRequester()
       .barcode(requester.getBarcode())
-      .patronGroupId(requester.getPatronGroup());
+      .patronGroupId(requester.getPatronGroup()));
 
     UserPersonal personal = requester.getPersonal();
     if (personal != null) {
@@ -193,9 +197,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     log.info("fetchProxyUser:: fetching proxy user {}", proxyUserId);
     User proxyUser = userClient.get(proxyUserId);
 
-    request.getProxy()
+    request.proxy(new MediatedRequestProxy()
       .barcode(proxyUser.getBarcode())
-      .patronGroupId(proxyUser.getPatronGroup());
+      .patronGroupId(proxyUser.getPatronGroup()));
 
     UserPersonal personal = proxyUser.getPersonal();
     if (personal != null) {
@@ -255,12 +259,12 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
         .identifierTypeId(i.getIdentifierTypeId()))
       .toList();
 
-    request.getInstance()
+    request.instance(new MediatedRequestInstance()
       .title(instance.getTitle())
       .contributorNames(contributors)
       .publication(publications)
       .identifiers(identifiers)
-      .editions(new ArrayList<>(instance.getEditions()));
+      .editions(new ArrayList<>(instance.getEditions())));
   }
 
   private void fetchPickupServicePoint(MediatedRequest request) {
