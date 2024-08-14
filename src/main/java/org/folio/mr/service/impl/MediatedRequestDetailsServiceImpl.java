@@ -155,7 +155,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     }
 
     log.info("fetchRequester:: fetching requester {}", requesterId);
-    User requester = userClient.get(request.getRequesterId());
+    User requester = userClient.get(requesterId);
 
     request.requester(new MediatedRequestRequester()
       .barcode(requester.getBarcode())
@@ -211,7 +211,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private void fetchProxyUserGroup(MediatedRequest request) {
-    final String userGroupId = request.getProxy().getPatronGroupId();
+    final MediatedRequestProxy proxy = request.getProxy();
+    if (proxy == null) {
+      log.info("fetchProxyUserGroup:: proxy user is null, doing nothing");
+      return;
+    }
+
+    final String userGroupId = proxy.getPatronGroupId();
     if (userGroupId == null) {
       log.info("fetchProxyUserGroup:: userGroupId is null, doing nothing");
       return;
@@ -220,7 +226,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     log.info("fetchProxyUserGroup:: fetching proxy user group {}", userGroupId);
     UserGroup userGroup = userGroupClient.get(userGroupId);
 
-    request.getProxy()
+    proxy
       .patronGroup(new MediatedRequestProxyPatronGroup()
         .id(userGroup.getId())
         .group(userGroup.getGroup())
