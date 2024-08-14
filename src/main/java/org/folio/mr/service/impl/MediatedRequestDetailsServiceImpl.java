@@ -27,6 +27,7 @@ import org.folio.mr.domain.dto.MediatedRequestProxy;
 import org.folio.mr.domain.dto.MediatedRequestProxyPatronGroup;
 import org.folio.mr.domain.dto.MediatedRequestRequester;
 import org.folio.mr.domain.dto.MediatedRequestRequesterPatronGroup;
+import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndexCallNumberComponents;
 import org.folio.mr.domain.dto.ServicePoint;
 import org.folio.mr.domain.dto.User;
@@ -94,6 +95,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .displaySummary(item.getDisplaySummary())
       .status(item.getStatus().getName().getValue())
       .copyNumber(item.getCopyNumber()));
+
+    if (request.getSearchIndex() == null) {
+      request.searchIndex(new MediatedRequestSearchIndex());
+    }
 
     request.getSearchIndex()
       .shelvingOrder(item.getEffectiveShelvingOrder());
@@ -290,6 +295,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .description(pickupServicePoint.getDescription())
       .shelvingLagTime(pickupServicePoint.getShelvingLagTime())
       .pickupLocation(pickupServicePoint.getPickupLocation()));
+
+    if (request.getSearchIndex() == null) {
+      request.searchIndex(new MediatedRequestSearchIndex());
+    }
 
     request.getSearchIndex()
       .pickupServicePointName(pickupServicePoint.getName());
