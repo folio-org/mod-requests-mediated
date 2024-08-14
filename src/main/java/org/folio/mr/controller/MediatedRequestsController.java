@@ -63,7 +63,7 @@ public class MediatedRequestsController implements RequestsMediatedApi {
   }
 
   @Override
-  public ResponseEntity<Void> confirmItemArrival(String itemBarcode, ConfirmItemArrivalRequest request) {
+  public ResponseEntity<Void> confirmItemArrival(ConfirmItemArrivalRequest request) {
     return ResponseEntity.ok(null);
   }
 }

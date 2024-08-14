@@ -42,7 +42,7 @@ class MediatedRequestsControllerTest {
 
   @Test
   void confirmItemArrival() {
-    var response = requestsController.confirmItemArrival("", mock(ConfirmItemArrivalRequest.class));
+    var response = requestsController.confirmItemArrival(mock(ConfirmItemArrivalRequest.class));
     Assertions.assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
   }
 }
