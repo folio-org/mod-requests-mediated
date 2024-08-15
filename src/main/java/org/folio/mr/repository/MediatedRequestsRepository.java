@@ -7,5 +7,6 @@ import org.folio.spring.cql.JpaCqlRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface MediatedRequestsRepository extends JpaCqlRepository<MediatedRequestEntity, UUID> {
+public interface MediatedRequestsRepository extends MediatedRequestsExtendedRepository,
+  JpaCqlRepository<MediatedRequestEntity, UUID> {
 }
