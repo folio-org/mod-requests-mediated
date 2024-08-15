@@ -131,6 +131,8 @@ paths:
               $ref: '#/components/schemas/confirmItemArrivalRequest'
         required: true
       responses:
+        '200':
+          description: Successful operation, no content returned
         '400':
           $ref: '#/components/responses/badRequestResponse'
         '500':

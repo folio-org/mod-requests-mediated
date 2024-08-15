@@ -9,7 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -30,19 +30,19 @@ class MediatedRequestsControllerTest {
     when(requestsService.get(any())).thenReturn(Optional.empty());
     var response = requestsController.getMediatedRequestById(any());
     verify(requestsService).get(any());
-    Assertions.assertEquals(HttpStatusCode.valueOf(404), response.getStatusCode());
+    Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
 
   @Test
   void getById() {
     when(requestsService.get(any())).thenReturn(Optional.of(new MediatedRequest()));
     var response = requestsController.getMediatedRequestById(any());
-    Assertions.assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
+    Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
   }
 
   @Test
   void confirmItemArrival() {
     var response = requestsController.confirmItemArrival(mock(ConfirmItemArrivalRequest.class));
-    Assertions.assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
+    Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
   }
 }
