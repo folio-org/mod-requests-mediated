@@ -2,18 +2,16 @@ package org.folio.mr.service.impl;
 
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CONFIRMATION;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.MediatedRequests;
-import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.mapper.MediatedRequestMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.MediatedRequestDetailsService;
 import org.folio.mr.service.MediatedRequestsService;
+import org.folio.mr.service.MetadataService;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +29,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   private final MediatedRequestsRepository mediatedRequestsRepository;
   private final MediatedRequestMapper requestsMapper;
   private final MediatedRequestDetailsService requestDetailsService;
+  private final MetadataService metadataService;
 
   @Override
   public Optional<MediatedRequest> get(UUID id) {
@@ -68,14 +67,15 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   @Override
   public MediatedRequest post(MediatedRequest mediatedRequest) {
     requestDetailsService.fetchRequestDetailsForCreation(mediatedRequest);
+    metadataService.updateMetadata(mediatedRequest);
     var mediatedRequestEntity = requestsMapper.mapDtoToEntity(
       setStatusBasedOnMediatedRequestStatusAndStep(mediatedRequest));
 
-    if (mediatedRequestEntity.getCreatedDate() == null) {
-      log.info("post:: New mediated request. Initializing metadata.");
-      refreshCreatedDate(mediatedRequestEntity);
-      refreshUpdatedDate(mediatedRequestEntity);
-    }
+//    if (mediatedRequestEntity.getCreatedDate() == null) {
+//      log.info("post:: New mediated request. Initializing metadata.");
+//      refreshCreatedDate(mediatedRequestEntity);
+//      refreshUpdatedDate(mediatedRequestEntity);
+//    }
 
     return requestsMapper.mapEntityToDto(mediatedRequestsRepository.save(mediatedRequestEntity));
   }
@@ -83,7 +83,8 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   @Override
   public Optional<MediatedRequest> update(UUID requestId, MediatedRequest mediatedRequest) {
     return mediatedRequestsRepository.findById(requestId)
-      .map(this::refreshUpdatedDate)
+      .map(metadataService::updateMetadata)
+//      .map(this::refreshUpdatedDate)
       .map(mediatedRequestEntity -> requestsMapper.mapEntityToDto(
         mediatedRequestsRepository.save(requestsMapper.mapDtoToEntity(
           setStatusBasedOnMediatedRequestStatusAndStep(mediatedRequest)))));
@@ -122,14 +123,14 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
     return mediatedRequest;
   }
 
-  private MediatedRequestEntity refreshCreatedDate(MediatedRequestEntity mediatedRequestEntity) {
-    mediatedRequestEntity.setCreatedDate(Timestamp.valueOf(LocalDateTime.now()));
-    return mediatedRequestEntity;
-  }
-
-  private MediatedRequestEntity refreshUpdatedDate(MediatedRequestEntity mediatedRequestEntity) {
-    mediatedRequestEntity.setUpdatedDate(Timestamp.valueOf(LocalDateTime.now()));
-    return mediatedRequestEntity;
-  }
+//  private MediatedRequestEntity refreshCreatedDate(MediatedRequestEntity mediatedRequestEntity) {
+//    mediatedRequestEntity.setCreatedDate(Timestamp.valueOf(LocalDateTime.now()));
+//    return mediatedRequestEntity;
+//  }
+//
+//  private MediatedRequestEntity refreshUpdatedDate(MediatedRequestEntity mediatedRequestEntity) {
+//    mediatedRequestEntity.setUpdatedDate(Timestamp.valueOf(LocalDateTime.now()));
+//    return mediatedRequestEntity;
+//  }
 
 }
