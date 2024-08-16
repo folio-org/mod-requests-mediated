@@ -218,6 +218,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private static void createProxy(MediatedRequestContext context) {
     User proxy = context.getProxy();
     if (proxy == null) {
+      context.getRequest().proxy(null);
       return;
     }
 
@@ -300,6 +301,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
   private static void createItem(MediatedRequestContext context) {
     if (context.getItem() == null) {
+      context.getRequest().item(null);
       return;
     }
     context.getRequest()
@@ -338,6 +340,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private static void createPickupServicePoint(MediatedRequestContext context) {
     ServicePoint pickupServicePoint = context.getPickupServicePoint();
     if (pickupServicePoint == null) {
+      context.getRequest().pickupServicePoint(null);
       return;
     }
     context.getRequest().pickupServicePoint(new MediatedRequestPickupServicePoint()
@@ -374,19 +377,6 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
     context.getRequest().searchIndex(searchIndex);
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 //  private void fetchRequester(MediatedRequest request) {

@@ -24,8 +24,6 @@ public class MetadataServiceImpl implements MetadataService {
       final Metadata existingMetadata = (Metadata) getMetadata.invoke(obj);
       final Date now = new Date();
       final String userId = context.getUserId().toString();
-//      final String userId = HttpUtils.getUserIdFromToken().orElse(null);
-//      final String username = HttpUtils.getUsernameFromToken().orElse(null);
 
       if (existingMetadata != null) {
         log.info("updateMetadata:: updating metadata");
