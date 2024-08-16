@@ -26,6 +26,7 @@ import org.folio.mr.domain.dto.MediatedRequestInstancePublicationInner;
 import org.folio.mr.domain.dto.MediatedRequestItem;
 import org.folio.mr.domain.dto.MediatedRequestItemCallNumberComponents;
 import org.folio.mr.domain.dto.MediatedRequestItemLocation;
+import org.folio.mr.domain.dto.MediatedRequestPickupServicePoint;
 import org.folio.mr.domain.dto.MediatedRequestProxy;
 import org.folio.mr.domain.dto.MediatedRequestProxyPatronGroup;
 import org.folio.mr.domain.dto.MediatedRequestRequester;
@@ -339,13 +340,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     if (pickupServicePoint == null) {
       return;
     }
-    context.getRequest().getPickupServicePoint()
+    context.getRequest().pickupServicePoint(new MediatedRequestPickupServicePoint()
       .name(pickupServicePoint.getName())
       .code(pickupServicePoint.getCode())
       .discoveryDisplayName(pickupServicePoint.getDiscoveryDisplayName())
       .description(pickupServicePoint.getDescription())
       .shelvingLagTime(pickupServicePoint.getShelvingLagTime())
-      .pickupLocation(pickupServicePoint.getPickupLocation());
+      .pickupLocation(pickupServicePoint.getPickupLocation()));
   }
 
   private static void createSearchIndex(MediatedRequestContext context) {
