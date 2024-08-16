@@ -1,7 +1,5 @@
 package org.folio.mr.service.impl;
 
-import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CONFIRMATION;
-
 import java.util.Optional;
 import java.util.UUID;
 
@@ -11,7 +9,6 @@ import org.folio.mr.domain.mapper.MediatedRequestMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.MediatedRequestDetailsService;
 import org.folio.mr.service.MediatedRequestsService;
-import org.folio.mr.service.MetadataService;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.stereotype.Service;
 
@@ -23,19 +20,15 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class MediatedRequestsServiceImpl implements MediatedRequestsService {
 
-  private static final MediatedRequest.StatusEnum DEFAULT_STATUS = NEW_AWAITING_CONFIRMATION;
-  private static final String DEFAULT_WORKFLOW = "Private request";
-
   private final MediatedRequestsRepository mediatedRequestsRepository;
   private final MediatedRequestMapper requestsMapper;
   private final MediatedRequestDetailsService requestDetailsService;
-  private final MetadataService metadataService;
 
   @Override
   public Optional<MediatedRequest> get(UUID id) {
     return mediatedRequestsRepository.findById(id)
       .map(requestsMapper::mapEntityToDto)
-      .map(requestDetailsService::fetchRequestDetailsForRetrieval);
+      .map(requestDetailsService::populateRequestDetailsForGet);
   }
 
   @Override
@@ -43,7 +36,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
     var mediatedRequests =
       mediatedRequestsRepository.findByCql(query, OffsetRequest.of(offset, limit)).stream()
         .map(requestsMapper::mapEntityToDto)
-        .map(requestDetailsService::fetchRequestDetailsForRetrieval)
+        .map(requestDetailsService::populateRequestDetailsForGet)
         .toList();
 
     var totalRecords = mediatedRequestsRepository.count(query);
@@ -56,7 +49,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
     var mediatedRequests = mediatedRequestsRepository.findAll(OffsetRequest.of(offset, limit))
       .stream()
       .map(requestsMapper::mapEntityToDto)
-      .map(requestDetailsService::fetchRequestDetailsForRetrieval)
+      .map(requestDetailsService::populateRequestDetailsForGet)
       .toList();
 
     var totalRecords = mediatedRequestsRepository.count();
@@ -66,28 +59,20 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
 
   @Override
   public MediatedRequest post(MediatedRequest mediatedRequest) {
-    requestDetailsService.fetchRequestDetailsForCreation(mediatedRequest);
-    metadataService.updateMetadata(mediatedRequest);
-    var mediatedRequestEntity = requestsMapper.mapDtoToEntity(
-      setStatusBasedOnMediatedRequestStatusAndStep(mediatedRequest));
-
-//    if (mediatedRequestEntity.getCreatedDate() == null) {
-//      log.info("post:: New mediated request. Initializing metadata.");
-//      refreshCreatedDate(mediatedRequestEntity);
-//      refreshUpdatedDate(mediatedRequestEntity);
-//    }
-
-    return requestsMapper.mapEntityToDto(mediatedRequestsRepository.save(mediatedRequestEntity));
+    requestDetailsService.populateRequestDetailsForCreate(mediatedRequest);
+    return requestsMapper.mapEntityToDto(mediatedRequestsRepository.save(
+      requestsMapper.mapDtoToEntity(mediatedRequest)));
+    // TODO: return extended version?
   }
 
   @Override
   public Optional<MediatedRequest> update(UUID requestId, MediatedRequest mediatedRequest) {
     return mediatedRequestsRepository.findById(requestId)
-      .map(metadataService::updateMetadata)
-//      .map(this::refreshUpdatedDate)
-      .map(mediatedRequestEntity -> requestsMapper.mapEntityToDto(
-        mediatedRequestsRepository.save(requestsMapper.mapDtoToEntity(
-          setStatusBasedOnMediatedRequestStatusAndStep(mediatedRequest)))));
+      .map(ignored -> mediatedRequest)
+      .map(requestDetailsService::populateRequestDetailsForUpdate)
+      .map(requestsMapper::mapDtoToEntity)
+      .map(mediatedRequestsRepository::save)
+      .map(ignored -> mediatedRequest);
   }
 
   @Override
@@ -100,37 +85,6 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
       });
    }
 
-  private MediatedRequest setStatusBasedOnMediatedRequestStatusAndStep(
-    MediatedRequest mediatedRequest) {
 
-    if (mediatedRequest.getStatus() == null) {
-      mediatedRequest.setStatus(DEFAULT_STATUS);
-    }
-    if (mediatedRequest.getMediatedWorkflow() == null) {
-      mediatedRequest.mediatedWorkflow(DEFAULT_WORKFLOW);
-    }
-
-    var statusElements = mediatedRequest.getStatus().toString().split(" - ");
-    if (statusElements.length == 2) {
-      mediatedRequest.setMediatedRequestStatus(
-        MediatedRequest.MediatedRequestStatusEnum.fromValue(statusElements[0]));
-      mediatedRequest.setMediatedRequestStep(statusElements[1]);
-      return mediatedRequest;
-    }
-
-    log.warn("setStatusBasedOnMediatedRequestStatusAndStep:: Invalid status: {}",
-      mediatedRequest.getStatus());
-    return mediatedRequest;
-  }
-
-//  private MediatedRequestEntity refreshCreatedDate(MediatedRequestEntity mediatedRequestEntity) {
-//    mediatedRequestEntity.setCreatedDate(Timestamp.valueOf(LocalDateTime.now()));
-//    return mediatedRequestEntity;
-//  }
-//
-//  private MediatedRequestEntity refreshUpdatedDate(MediatedRequestEntity mediatedRequestEntity) {
-//    mediatedRequestEntity.setUpdatedDate(Timestamp.valueOf(LocalDateTime.now()));
-//    return mediatedRequestEntity;
-//  }
 
 }
