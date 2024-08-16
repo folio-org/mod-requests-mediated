@@ -64,6 +64,6 @@ public class MediatedRequestsController implements RequestsMediatedApi {
 
   @Override
   public ResponseEntity<Void> confirmItemArrival(ConfirmItemArrivalRequest request) {
-    return ResponseEntity.ok(null);
+    return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 }
