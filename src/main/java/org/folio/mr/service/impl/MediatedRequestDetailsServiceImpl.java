@@ -236,6 +236,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
   private static void populateProxy(MediatedRequestContext context) {
     if (context.getProxy() == null) {
+      context.getRequest().proxy(null);
       return;
     }
 
@@ -311,6 +312,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private static void populateItem(MediatedRequestContext context) {
     Item item = context.getItem();
     if (item == null) {
+      context.getRequest().item(null);
       return;
     }
 
