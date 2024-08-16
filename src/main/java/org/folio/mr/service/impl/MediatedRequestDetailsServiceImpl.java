@@ -353,20 +353,23 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     MediatedRequestSearchIndex searchIndex = new MediatedRequestSearchIndex();
 
     Item item = context.getItem();
-    String shelvingOrder = item.getEffectiveShelvingOrder();
-    ItemEffectiveCallNumberComponents callNumberComponents = item.getEffectiveCallNumberComponents();
-    String pickupServicePointName = context.getPickupServicePoint().getName();
-    if (shelvingOrder != null) {
-      searchIndex.setShelvingOrder(shelvingOrder);
+    if (item != null) {
+      String shelvingOrder = item.getEffectiveShelvingOrder();
+      ItemEffectiveCallNumberComponents callNumberComponents = item.getEffectiveCallNumberComponents();
+      if (shelvingOrder != null) {
+        searchIndex.setShelvingOrder(shelvingOrder);
+      }
+      if (callNumberComponents != null) {
+        searchIndex.callNumberComponents(new MediatedRequestSearchIndexCallNumberComponents()
+          .callNumber(callNumberComponents.getCallNumber())
+          .prefix(callNumberComponents.getPrefix())
+          .suffix(callNumberComponents.getSuffix()));
+      }
     }
-    if (callNumberComponents != null) {
-      searchIndex.callNumberComponents(new MediatedRequestSearchIndexCallNumberComponents()
-        .callNumber(callNumberComponents.getCallNumber())
-        .prefix(callNumberComponents.getPrefix())
-        .suffix(callNumberComponents.getSuffix()));
-    }
-    if (pickupServicePointName != null) {
-      searchIndex.setPickupServicePointName(pickupServicePointName);
+
+    ServicePoint pickupServicePoint = context.getPickupServicePoint();
+    if (pickupServicePoint != null && pickupServicePoint.getName() != null) {
+      searchIndex.setPickupServicePointName(pickupServicePoint.getName());
     }
 
     context.getRequest().searchIndex(searchIndex);
