@@ -21,6 +21,8 @@ class MediatedRequestsServiceTest {
   private MediatedRequestsRepository mediatedRequestsRepository;
   @Mock
   private MediatedRequestMapper mediatedRequestMapper;
+  @Mock
+  private MediatedRequestDetailsService mediatedRequestDetailsService;
 
   @Test
   void getById() {
