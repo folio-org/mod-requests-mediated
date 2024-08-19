@@ -1,8 +1,6 @@
 package org.folio.mr.controller;
 
-import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.MediatedRequest;
-import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.service.MediatedRequestsService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -14,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
