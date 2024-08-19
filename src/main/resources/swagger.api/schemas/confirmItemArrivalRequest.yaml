@@ -1,0 +1,9 @@
+ConfirmItemArrivalRequest:
+  description: Confirm item arrival request
+  type: object
+  properties:
+    itemBarcode:
+      description: Barcode of the confirmed item
+      type: string
+  required:
+    - itemBarcode
