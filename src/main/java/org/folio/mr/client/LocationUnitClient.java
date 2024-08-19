@@ -1,6 +1,5 @@
 package org.folio.mr.client;
 
-import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.Library;
 import org.folio.spring.config.FeignClientConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
