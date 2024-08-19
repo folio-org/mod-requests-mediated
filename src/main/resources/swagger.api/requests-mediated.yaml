@@ -118,10 +118,33 @@ paths:
           $ref: '#/components/responses/notFoundResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
+  /requests-mediated/confirm-item-arrival:
+    post:
+      description: Confirm item arrival
+      operationId: confirmItemArrival
+      tags:
+        - mediatedRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/confirmItemArrivalRequest'
+        required: true
+      responses:
+        '204':
+          description: Successful operation, no content returned
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
 components:
   schemas:
     mediatedRequest:
       $ref: 'schemas/mediatedRequest.yaml#/MediatedRequest'
+    confirmItemArrivalRequest:
+      $ref: 'schemas/confirmItemArrivalRequest.yaml#/ConfirmItemArrivalRequest'
+    errorResponse:
+      $ref: 'schemas/errors.json'
     user:
       $ref: 'schemas/users/user.json'
     users:
@@ -142,8 +165,6 @@ components:
       $ref: 'schemas/inventory/location.json'
     library:
       $ref: 'schemas/inventory/library.json'
-    errorResponse:
-      $ref: 'schemas/errors.json'
   parameters:
     mediatedRequestId:
       name: mediatedRequestId

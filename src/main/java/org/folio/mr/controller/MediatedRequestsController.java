@@ -2,6 +2,7 @@ package org.folio.mr.controller;
 
 import java.util.UUID;
 
+import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.MediatedRequests;
 import org.folio.mr.rest.resource.RequestsMediatedApi;
@@ -59,5 +60,10 @@ public class MediatedRequestsController implements RequestsMediatedApi {
     return mediatedRequestsService.delete(requestId)
       .map(entity -> ResponseEntity.status(HttpStatus.NO_CONTENT).<Void>build())
       .orElseGet(() -> ResponseEntity.notFound().build());
+  }
+
+  @Override
+  public ResponseEntity<Void> confirmItemArrival(ConfirmItemArrivalRequest request) {
+    return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 }
