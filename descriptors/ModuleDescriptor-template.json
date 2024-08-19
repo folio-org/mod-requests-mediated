@@ -39,6 +39,22 @@
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
           "permissionsRequired": ["requests-mediated.mediated-request.item.delete"],
           "modulePermissions": []
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/request-mediated-actions/confirm-item-arrival",
+          "permissionsRequired": ["request-mediated-actions.confirm-item-arrival"],
+          "modulePermissions": []
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/request-mediated-actions/send-item-in-transit",
+          "permissionsRequired": ["request-mediated-actions.send-item-in-transit"],
+          "modulePermissions": []
         }
       ]
     },
@@ -88,6 +104,16 @@
       "permissionName": "requests-mediated.mediated-request.item.delete",
       "displayName": "requests-mediated - remove mediated request",
       "description": "Remove mediated request"
+    },
+    {
+      "permissionName": "request-mediated-actions.confirm-item-arrival",
+      "displayName": "requests-mediated action - arrival item to be confirmed",
+      "description": "Arrival item to be confirmed"
+    },
+    {
+      "permissionName": "request-mediated-actions.send-item-in-transit",
+      "displayName": "requests-mediated action - send item in transit",
+      "description": "Send item in transit"
     }
   ],
   "requires": [],

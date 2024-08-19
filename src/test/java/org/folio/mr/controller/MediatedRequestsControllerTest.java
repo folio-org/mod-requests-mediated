@@ -40,16 +40,4 @@ class MediatedRequestsControllerTest {
     var response = requestsController.getMediatedRequestById(any());
     Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
   }
-
-  @Test
-  void confirmItemArrival() {
-    var response = requestsController.confirmItemArrival(mock(ConfirmItemArrivalRequest.class));
-    Assertions.assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-  }
-
-  @Test
-  void sendItemInTransit() {
-    var response = requestsController.sendItemInTransit(mock(SendItemInTransitRequest.class));
-    Assertions.assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-  }
 }

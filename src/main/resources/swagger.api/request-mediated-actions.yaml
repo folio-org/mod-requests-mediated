@@ -1,0 +1,72 @@
+openapi: 3.0.0
+info:
+  title: Request Mediated Actions API
+  version: v1
+paths:
+  /request-mediated-actions/confirm-item-arrival:
+    post:
+      description: Confirm item arrival
+      operationId: confirmItemArrival
+      tags:
+        - mediatedRequestActions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/confirmItemArrivalRequest'
+        required: true
+      responses:
+        '204':
+          description: Successful operation, no content returned
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
+  /request-mediated-actions/send-item-in-transit:
+    post:
+      description: Send item in transit
+      operationId: sendItemInTransit
+      tags:
+        - mediatedRequestActions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/sendItemInTransitRequest'
+        required: true
+      responses:
+        '204':
+          description: Successful operation, no content returned
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
+components:
+  schemas:
+    confirmItemArrivalRequest:
+      $ref: 'schemas/confirmItemArrivalRequest.yaml#/ConfirmItemArrivalRequest'
+    sendItemInTransitRequest:
+      $ref: 'schemas/sendItemInTransitRequest.yaml#/SendItemInTransitRequest'
+    errorResponse:
+      $ref: 'schemas/errors.json'
+  responses:
+    badRequestResponse:
+      description: Validation errors
+      content:
+        application/json:
+          example:
+            errors:
+              - message: Request is invalid
+            total_records: 1
+          schema:
+            $ref: '#/components/schemas/errorResponse'
+    internalServerErrorResponse:
+      description: When unhandled exception occurred during code execution, e.g. NullPointerException
+      content:
+        application/json:
+          example:
+            errors:
+              - message: Unexpected error
+            total_records: 1
+          schema:
+            $ref: '#/components/schemas/errorResponse'
