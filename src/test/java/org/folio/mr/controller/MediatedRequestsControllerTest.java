@@ -2,6 +2,7 @@ package org.folio.mr.controller;
 
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.MediatedRequest;
+import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.service.MediatedRequestsService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,12 @@ class MediatedRequestsControllerTest {
   @Test
   void confirmItemArrival() {
     var response = requestsController.confirmItemArrival(mock(ConfirmItemArrivalRequest.class));
+    Assertions.assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+  }
+
+  @Test
+  void sendItemInTransit() {
+    var response = requestsController.sendItemInTransit(mock(SendItemInTransitRequest.class));
     Assertions.assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
   }
 }

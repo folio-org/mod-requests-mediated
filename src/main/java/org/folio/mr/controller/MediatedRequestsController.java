@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.MediatedRequests;
+import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.rest.resource.RequestsMediatedApi;
 import org.folio.mr.service.MediatedRequestsService;
 import org.springframework.http.HttpStatus;
@@ -64,6 +65,11 @@ public class MediatedRequestsController implements RequestsMediatedApi {
 
   @Override
   public ResponseEntity<Void> confirmItemArrival(ConfirmItemArrivalRequest request) {
+    return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+  }
+
+  @Override
+  public ResponseEntity<Void> sendItemInTransit(SendItemInTransitRequest mediatedRequest) {
     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 }
