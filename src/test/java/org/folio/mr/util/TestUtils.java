@@ -1,6 +1,10 @@
 package org.folio.mr.util;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.Date;
 
 import org.json.JSONObject;
 
@@ -29,5 +33,10 @@ public class TestUtils {
       Base64.getEncoder().encodeToString(header.toString().getBytes()),
       Base64.getEncoder().encodeToString(payload.toString().getBytes()),
       signature);
+  }
+
+  public static String dateToString(Date date) {
+    return ZonedDateTime.ofInstant(date.toInstant(), ZoneId.of("UTC"))
+      .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx"));
   }
 }

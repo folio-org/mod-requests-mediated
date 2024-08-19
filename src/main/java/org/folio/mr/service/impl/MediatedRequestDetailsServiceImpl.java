@@ -4,13 +4,6 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CO
 
 import java.util.ArrayList;
 
-import org.folio.mr.client.InstanceClient;
-import org.folio.mr.client.ItemClient;
-import org.folio.mr.client.LocationClient;
-import org.folio.mr.client.LocationUnitClient;
-import org.folio.mr.client.ServicePointClient;
-import org.folio.mr.client.UserClient;
-import org.folio.mr.client.UserGroupClient;
 import org.folio.mr.domain.context.MediatedRequestContext;
 import org.folio.mr.domain.dto.Instance;
 import org.folio.mr.domain.dto.InstanceContributorsInner;
@@ -37,6 +30,7 @@ import org.folio.mr.domain.dto.ServicePoint;
 import org.folio.mr.domain.dto.User;
 import org.folio.mr.domain.dto.UserGroup;
 import org.folio.mr.domain.dto.UserPersonal;
+import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestDetailsService;
 import org.folio.mr.service.MetadataService;
 import org.springframework.stereotype.Service;
@@ -52,13 +46,8 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private static final MediatedRequest.StatusEnum DEFAULT_STATUS = NEW_AWAITING_CONFIRMATION;
   private static final String DEFAULT_WORKFLOW = "Private request";
 
-  private final ItemClient itemClient;
-  private final InstanceClient instanceClient;
-  private final ServicePointClient servicePointClient;
-  private final UserClient userClient;
-  private final UserGroupClient userGroupClient;
-  private final LocationClient locationClient;
-  private final LocationUnitClient locationUnitClient;
+  private final InventoryService inventoryService;
+  private final UserService userService;
   private final MetadataService metadataService;
 
   @Override
@@ -67,18 +56,18 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     setStatusBasedOnMediatedRequestStatusAndStep(request);
     MediatedRequestContext context = buildRequestContext(request);
 
-    createRequester(context);
-    populateRequester(context);
-    createRequesterPatronGroup(context);
-    createProxy(context);
-    populateProxy(context);
-    createProxyPatronGroup(context);
-    createInstance(context);
-    populateInstance(context);
-    createItem(context);
-    populateItem(context);
-    createPickupServicePoint(context);
-    createSearchIndex(context);
+    addRequester(context);
+    extendRequester(context);
+    addRequesterGroup(context);
+    addProxy(context);
+    extendProxy(context);
+    addProxyGroup(context);
+    addInstance(context);
+    extendInstance(context);
+    addItem(context);
+    extendItem(context);
+    addPickupServicePoint(context);
+    addSearchIndex(context);
 
     metadataService.updateMetadata(request);
 
@@ -91,13 +80,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     setStatusBasedOnMediatedRequestStatusAndStep(request);
     MediatedRequestContext context = buildRequestContext(request);
 
-    createRequester(context);
-    createRequesterPatronGroup(context);
-    createProxy(context);
-    createProxyPatronGroup(context);
-    createInstance(context);
-    createItem(context);
-    createSearchIndex(context);
+    addRequester(context);
+    addRequesterGroup(context);
+    addProxy(context);
+    addProxyGroup(context);
+    addInstance(context);
+    addItem(context);
+    addSearchIndex(context);
 
     metadataService.updateMetadata(request);
 
@@ -108,84 +97,52 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   public MediatedRequest populateRequestDetailsForGet(MediatedRequest request) {
     MediatedRequestContext context = buildRequestContext(request);
 
-    populateRequester(context);
-    createRequesterPatronGroup(context);
-    populateProxy(context);
-    createProxyPatronGroup(context);
-    populateInstance(context);
-    populateItem(context);
-    createPickupServicePoint(context);
-
-    removeSearchIndex(request);
+    extendRequester(context);
+    addRequesterGroup(context);
+    extendProxy(context);
+    addProxyGroup(context);
+    extendInstance(context);
+    extendItem(context);
+    addPickupServicePoint(context);
 
     return request;
   }
 
   private MediatedRequestContext buildRequestContext(MediatedRequest request) {
-    MediatedRequestContext context = new MediatedRequestContext(request);
+    var contextBuilder = MediatedRequestContext.builder().request(request);
+    Instance instance = inventoryService.fetchInstance(request.getInstanceId());
+    User requester = userService.fetchUser(request.getRequesterId());
+    UserGroup requesterGroup = userService.fetchUserGroup(requester.getPatronGroup());
 
-    Instance instance = instanceClient.get(request.getInstanceId());
-    context.setInstance(instance);
-
-    User requester = userClient.get(request.getRequesterId());
-    context.setRequester(requester);
-
-    UserGroup requesterGroup = userGroupClient.get(requester.getPatronGroup());
-    context.setRequesterGroup(requesterGroup);
+    contextBuilder.instance(instance)
+      .requester(requester)
+      .requesterGroup(requesterGroup);
 
     if (request.getProxyUserId() != null) {
-      User proxy = userClient.get(request.getProxyUserId());
-      context.setProxy(proxy);
-
-      UserGroup proxyGroup = userGroupClient.get(proxy.getPatronGroup());
-      context.setProxyGroup(proxyGroup);
+      User proxy = userService.fetchUser(request.getProxyUserId());
+      UserGroup proxyGroup = userService.fetchUserGroup(proxy.getPatronGroup());
+      contextBuilder.proxy(proxy)
+        .proxyGroup(proxyGroup);
     }
 
     if (request.getItemId() != null) {
-      Item item = itemClient.get(request.getItemId());
-      context.setItem(item);
-
-      Location itemLocation = locationClient.get(item.getEffectiveLocationId());
-      context.setLocation(itemLocation);
-
-      Library library = locationUnitClient.getLibrary(itemLocation.getLibraryId());
-      context.setLibrary(library);
+      Item item = inventoryService.fetchItem(request.getItemId());
+      Location location = inventoryService.fetchLocation(item.getEffectiveLocationId());
+      Library library = inventoryService.fetchLibrary(location.getLibraryId());
+      contextBuilder.item(item)
+        .location(location)
+        .library(library);
     }
 
     if (request.getPickupServicePointId() != null) {
-      ServicePoint pickupServicePoint = servicePointClient.get(request.getPickupServicePointId());
-      context.setPickupServicePoint(pickupServicePoint);
+      ServicePoint servicePoint = inventoryService.fetchServicePoint(request.getPickupServicePointId());
+      contextBuilder.pickupServicePoint(servicePoint);
     }
 
-    return context;
+    return contextBuilder.build();
   }
 
-//  public MediatedRequest fetchRequestDetailsForRetrieval(MediatedRequest request) {
-//    fetchRequester(request);
-////    fetchProxyUser(request);
-//    fetchInstance(request);
-//    fetchItem(request);
-//    fetchPickupServicePoint(request);
-//
-//    removeSearchIndex(request);
-//
-//    return request;
-//  }
-
-//  public MediatedRequest fetchRequestDetailsForCreation(MediatedRequest request) {
-//    removeExistingRequestDetails(request);
-//    initObjects(request);
-//
-//    fetchRequester(request);
-////    fetchProxyUser(request);
-//    fetchInstance(request);
-//    fetchItem(request);
-//    fetchPickupServicePoint(request);
-//
-//    return request;
-//  }
-
-  private static void createRequester(MediatedRequestContext context) {
+  private static void addRequester(MediatedRequestContext context) {
     User requester = context.getRequester();
     MediatedRequestRequester newRequester = new MediatedRequestRequester()
       .barcode(requester.getBarcode());
@@ -199,13 +156,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     context.getRequest().requester(newRequester);
   }
 
-  private static void populateRequester(MediatedRequestContext context) {
+  private static void extendRequester(MediatedRequestContext context) {
     context.getRequest()
       .getRequester()
       .patronGroupId(context.getRequester().getPatronGroup());
   }
 
-  private static void createRequesterPatronGroup(MediatedRequestContext context) {
+  private static void addRequesterGroup(MediatedRequestContext context) {
     UserGroup userGroup = context.getRequesterGroup();
     context.getRequest()
       .getRequester()
@@ -215,7 +172,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
         .desc(userGroup.getDesc()));
   }
 
-  private static void createProxy(MediatedRequestContext context) {
+  private static void addProxy(MediatedRequestContext context) {
     User proxy = context.getProxy();
     if (proxy == null) {
       context.getRequest().proxy(null);
@@ -234,7 +191,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     context.getRequest().proxy(newProxy);
   }
 
-  private static void populateProxy(MediatedRequestContext context) {
+  private static void extendProxy(MediatedRequestContext context) {
     if (context.getProxy() == null) {
       context.getRequest().proxy(null);
       return;
@@ -245,7 +202,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .patronGroupId(context.getProxy().getPatronGroup());
   }
 
-  private static void createProxyPatronGroup(MediatedRequestContext context) {
+  private static void addProxyGroup(MediatedRequestContext context) {
     if (context.getProxyGroup() == null) {
       return;
     }
@@ -259,7 +216,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
         .desc(userGroup.getDesc()));
   }
 
-  private static void createInstance(MediatedRequestContext context) {
+  private static void addInstance(MediatedRequestContext context) {
     Instance instance = context.getInstance();
     var identifiers = instance.getIdentifiers()
       .stream()
@@ -275,13 +232,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     context.getRequest().instance(newInstance);
   }
 
-  private static void populateInstance(MediatedRequestContext context) {
+  private static void extendInstance(MediatedRequestContext context) {
     Instance instance = context.getInstance();
 
     var contributors = instance.getContributors()
       .stream()
       .map(InstanceContributorsInner::getName)
-      .map(new MediatedRequestInstanceContributorNamesInner()::name)
+      .map(name -> new MediatedRequestInstanceContributorNamesInner().name(name))
       .toList();
 
     var publications = instance.getPublication()
@@ -300,7 +257,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .editions(new ArrayList<>(instance.getEditions()));
   }
 
-  private static void createItem(MediatedRequestContext context) {
+  private static void addItem(MediatedRequestContext context) {
     if (context.getItem() == null) {
       context.getRequest().item(null);
       return;
@@ -309,7 +266,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .item(new MediatedRequestItem().barcode(context.getItem().getBarcode()));
   }
 
-  private static void populateItem(MediatedRequestContext context) {
+  private static void extendItem(MediatedRequestContext context) {
     Item item = context.getItem();
     if (item == null) {
       context.getRequest().item(null);
@@ -339,7 +296,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     }
   }
 
-  private static void createPickupServicePoint(MediatedRequestContext context) {
+  private static void addPickupServicePoint(MediatedRequestContext context) {
     ServicePoint pickupServicePoint = context.getPickupServicePoint();
     if (pickupServicePoint == null) {
       context.getRequest().pickupServicePoint(null);
@@ -354,7 +311,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .pickupLocation(pickupServicePoint.getPickupLocation()));
   }
 
-  private static void createSearchIndex(MediatedRequestContext context) {
+  private static void addSearchIndex(MediatedRequestContext context) {
     MediatedRequestSearchIndex searchIndex = new MediatedRequestSearchIndex();
 
     Item item = context.getItem();
@@ -380,280 +337,14 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     context.getRequest().searchIndex(searchIndex);
   }
 
-
-//  private void fetchRequester(MediatedRequest request) {
-//    final String requesterId = request.getRequesterId();
-//    if (requesterId == null) {
-//      log.info("fetchRequester:: requesterId is null, doing nothing");
-//      return;
-//    }
-//
-//    log.info("fetchRequester:: fetching requester {}", requesterId);
-//    User fetchedRequester = userClient.get(requesterId);
-//    if (request.getRequester() == null) {
-//      initRequester(request, fetchedRequester);
-//    }
-//    request.getRequester().patronGroupId(fetchedRequester.getPatronGroup());
-//    fetchRequesterUserGroup(request);
-//  }
-//
-//  private void initRequester(MediatedRequest request, User requester) {
-//    MediatedRequestRequester newRequester = new MediatedRequestRequester()
-//      .barcode(requester.getBarcode());
-//
-//    UserPersonal personal = requester.getPersonal();
-//    if (personal != null) {
-//      newRequester
-//        .firstName(personal.getFirstName())
-//        .middleName(personal.getMiddleName())
-//        .lastName(personal.getLastName());
-//    }
-//    request.requester(newRequester);
-//  }
-//
-//  private void fetchRequesterUserGroup(MediatedRequest request) {
-//    final MediatedRequestRequester requester = request.getRequester();
-////    if (requester == null) {
-////      log.info("fetchRequesterUserGroup:: requester is null, doing nothing");
-////      return;
-////    }
-//    final String userGroupId = requester.getPatronGroupId();
-//    if (userGroupId == null) {
-//      log.info("fetchRequesterUserGroup:: userGroupId is null, doing nothing");
-//      return;
-//    }
-//
-//    log.info("fetchRequesterUserGroup:: fetching requester user group {}", userGroupId);
-//    UserGroup userGroup = userGroupClient.get(userGroupId);
-//
-//    requester.patronGroup(new MediatedRequestRequesterPatronGroup()
-//      .id(userGroup.getId())
-//      .group(userGroup.getGroup())
-//      .desc(userGroup.getDesc()));
-//  }
-//
-////  private void fetchProxyUser(MediatedRequest request) {
-////    final String proxyUserId = request.getProxyUserId();
-////    if (proxyUserId == null) {
-////      log.info("fetchProxyUser:: proxyUserId is null, doing nothing");
-////      return;
-////    }
-////
-////    log.info("fetchProxyUser:: fetching proxy user {}", proxyUserId);
-////    User fetchedProxyUser = userClient.get(proxyUserId);
-////
-////    if (request.getProxy() == null) {
-////      MediatedRequestProxy newProxyUser = new MediatedRequestProxy()
-////        .barcode(fetchedProxyUser.getBarcode());
-////
-////      UserPersonal personal = fetchedProxyUser.getPersonal();
-////      if (personal != null) {
-////        newProxyUser
-////          .firstName(personal.getFirstName())
-////          .middleName(personal.getMiddleName())
-////          .lastName(personal.getLastName());
-////      }
-////      request.proxy(newProxyUser);
-////    }
-////
-////    request.getProxy().patronGroupId(fetchedProxyUser.getPatronGroup());
-////    fetchProxyUserGroup(request);
-////  }
-////
-////  private void initProxyUser(MediatedRequest request, User proxyUser) {
-////    MediatedRequestRequester newRequester = new MediatedRequestRequester()
-////      .barcode(proxyUser.getBarcode());
-////
-////    UserPersonal personal = proxyUser.getPersonal();
-////    if (personal != null) {
-////      newRequester
-////        .firstName(personal.getFirstName())
-////        .middleName(personal.getMiddleName())
-////        .lastName(personal.getLastName());
-////    }
-////    request.requester(newRequester);
-////  }
-////
-////  private void fetchProxyUserGroup(MediatedRequest request) {
-////    final MediatedRequestProxy proxy = request.getProxy();
-//////    if (proxy == null) {
-//////      log.info("fetchProxyUserGroup:: proxy user is null, doing nothing");
-//////      return;
-//////    }
-////    final String userGroupId = proxy.getPatronGroupId();
-////    if (userGroupId == null) {
-////      log.info("fetchProxyUserGroup:: userGroupId is null, doing nothing");
-////      return;
-////    }
-////
-////    log.info("fetchProxyUserGroup:: fetching proxy user group {}", userGroupId);
-////    UserGroup userGroup = userGroupClient.get(userGroupId);
-////
-////    proxy.patronGroup(new MediatedRequestProxyPatronGroup()
-////      .id(userGroup.getId())
-////      .group(userGroup.getGroup())
-////      .desc(userGroup.getDesc()));
-////  }
-//
-//  private void fetchInstance(MediatedRequest request) {
-//    final String instanceId = request.getInstanceId();
-//    if (instanceId == null) {
-//      log.info("fetchInstance:: instanceId is null, doing nothing");
-//      return;
-//    }
-//
-//    log.info("fetchInstance:: fetching instance {}", instanceId);
-//    Instance fetchedInstance = instanceClient.get(request.getInstanceId());
-//
-//    if (request.getInstance() == null) {
-//      initInstance(request, fetchedInstance);
-//    }
-//
-//    var contributors = fetchedInstance.getContributors()
-//      .stream()
-//      .map(InstanceContributorsInner::getName)
-//      .map(new MediatedRequestInstanceContributorNamesInner()::name)
-//      .toList();
-//
-//    var publications = fetchedInstance.getPublication()
-//      .stream()
-//      .map(publication -> new MediatedRequestInstancePublicationInner()
-//        .publisher(publication.getPublisher())
-//        .place(publication.getPlace())
-//        .dateOfPublication(publication.getDateOfPublication())
-//        .role(publication.getRole()))
-//      .toList();
-//
-//    request.getInstance()
-//      .contributorNames(contributors)
-//      .publication(publications)
-//      .editions(new ArrayList<>(fetchedInstance.getEditions()));
-//  }
-//
-//  private void initInstance(MediatedRequest request, Instance instance) {
-//    var identifiers = instance.getIdentifiers()
-//      .stream()
-//      .map(i -> new MediatedRequestInstanceIdentifiersInner()
-//        .value(i.getValue())
-//        .identifierTypeId(i.getIdentifierTypeId()))
-//      .toList();
-//
-//    MediatedRequestInstance newInstance = new MediatedRequestInstance()
-//      .title(instance.getTitle())
-//      .identifiers(identifiers);
-//
-//    request.instance(newInstance);
-//  }
-//
-//  private void fetchItem(MediatedRequest request) {
-//    final String itemId = request.getItemId();
-//    if (itemId == null) {
-//      log.info("fetchItem:: itemId is null, doing nothing");
-//      return;
-//    }
-//
-//    log.info("fetchItem:: fetching item {}", itemId);
-//    Item fetchedItem = itemClient.get(itemId);
-//
-//    if (request.getItem() == null) {
-//      initItem(request, fetchedItem);
-//    }
-//
-//    request.getItem()
-//      .enumeration(fetchedItem.getEnumeration())
-//      .volume(fetchedItem.getVolume())
-//      .chronology(fetchedItem.getChronology())
-//      .displaySummary(fetchedItem.getDisplaySummary())
-//      .status(fetchedItem.getStatus().getName().getValue())
-//      .copyNumber(fetchedItem.getCopyNumber());
-//
-//    request.getSearchIndex()
-//      .shelvingOrder(fetchedItem.getEffectiveShelvingOrder());
-//
-//    var effectiveCallNumberComponents = fetchedItem.getEffectiveCallNumberComponents();
-//    if (effectiveCallNumberComponents != null) {
-//      request.getItem()
-//        .callNumber(effectiveCallNumberComponents.getCallNumber())
-//        .callNumberComponents(new MediatedRequestItemCallNumberComponents()
-//          .callNumber(effectiveCallNumberComponents.getCallNumber())
-//          .prefix(effectiveCallNumberComponents.getPrefix())
-//          .suffix(effectiveCallNumberComponents.getSuffix()));
-//
-//      request.getSearchIndex()
-//        .callNumberComponents(new MediatedRequestSearchIndexCallNumberComponents()
-//          .callNumber(effectiveCallNumberComponents.getCallNumber())
-//          .prefix(effectiveCallNumberComponents.getPrefix())
-//          .suffix(effectiveCallNumberComponents.getSuffix()));
-//    }
-//
-//    fetchLocation(request, fetchedItem.getEffectiveLocationId());
-//  }
-//
-//  private void initItem(MediatedRequest request, Item item) {
-//    request.item(new MediatedRequestItem().barcode(item.getBarcode()));
-//  }
-//
-//  private void fetchLocation(MediatedRequest request, String locationId) {
-//    if (locationId == null) {
-//      log.info("fetchLocation:: effectiveLocationId is null, doing nothing");
-//      return;
-//    }
-//
-//    log.info("fetchLocation:: fetching location {}", locationId);
-//    Location location = locationClient.get(locationId);
-//
-//    request.getItem()
-//      .location(new MediatedRequestItemLocation()
-//        .name(location.getName())
-//        .code(location.getCode()));
-//
-//    fetchLibrary(request, location.getLibraryId());
-//  }
-//
-//  private void fetchLibrary(MediatedRequest request, String libraryId) {
-//    if (libraryId == null) {
-//      log.info("fetchLibrary:: libraryId is null, doing nothing");
-//      return;
-//    }
-//
-//    log.info("fetchLibrary:: fetching library {}", libraryId);
-//    Library library = locationUnitClient.getLibrary(libraryId);
-//    request.getItem().getLocation().setLibraryName(library.getName());
-//  }
-//
-//  private void fetchPickupServicePoint(MediatedRequest request) {
-//    final String pickupServicePointId = request.getPickupServicePointId();
-//    if (pickupServicePointId == null) {
-//      log.info("fetchPickupServicePoint:: pickupServicePointId is null, doing nothing");
-//      return;
-//    }
-//
-//    log.info("fetchPickupServicePoint:: fetching service point {}", pickupServicePointId);
-//    ServicePoint pickupServicePoint = servicePointClient.get(request.getPickupServicePointId());
-//
-//    request.getPickupServicePoint()
-//      .name(pickupServicePoint.getName())
-//      .code(pickupServicePoint.getCode())
-//      .discoveryDisplayName(pickupServicePoint.getDiscoveryDisplayName())
-//      .description(pickupServicePoint.getDescription())
-//      .shelvingLagTime(pickupServicePoint.getShelvingLagTime())
-//      .pickupLocation(pickupServicePoint.getPickupLocation());
-//
-//    request.getSearchIndex()
-//      .pickupServicePointName(pickupServicePoint.getName());
-//  }
-
   private static void removeExistingRequestDetails(MediatedRequest request) {
+    log.debug("removeExistingRequestDetails:: removing existing request details");
     request.item(null)
       .requester(null)
       .proxy(null)
       .instance(null)
       .pickupServicePoint(null)
       .searchIndex(null);
-  }
-
-  private static void removeSearchIndex(MediatedRequest request) {
-    request.searchIndex(null);
   }
 
   private static void setStatusBasedOnMediatedRequestStatusAndStep(

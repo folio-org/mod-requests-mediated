@@ -1,0 +1,100 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/instance-storage/instances/69640328-788e-43fc-9c3c-af39e243f3b7"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "id": "69640328-788e-43fc-9c3c-af39e243f3b7",
+          "_version": 37,
+          "hrid": "inst000000000001",
+          "source": "FOLIO",
+          "title": "ABA Journal",
+          "alternativeTitles": [],
+          "editions": [
+            "ed.1",
+            "ed.2"
+          ],
+          "series": [],
+          "identifiers": [
+            {
+              "value": "0747-0088",
+              "identifierTypeId": "913300b2-03ed-469a-8179-c1092c991227"
+            },
+            {
+              "value": "84641839",
+              "identifierTypeId": "c858e4f2-2b6b-4385-842b-60732ee14abb"
+            }
+          ],
+          "contributors": [
+            {
+              "name": "First, Author",
+              "contributorTypeText": "",
+              "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a",
+              "primary": true
+            },
+            {
+              "name": "Second, Writer",
+              "contributorTypeText": "",
+              "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a",
+              "primary": false
+            }
+          ],
+          "subjects": [],
+          "classifications": [],
+          "publication": [
+            {
+              "publisher": "American Bar Association",
+              "place": "Chicago, Ill.",
+              "dateOfPublication": "1915-1983",
+              "role": "role1"
+            },
+            {
+              "publisher": "Penguin",
+              "place": "Boston, Mass.",
+              "dateOfPublication": "1916-1975",
+              "role": "role2"
+            }
+          ],
+          "publicationFrequency": [],
+          "publicationRange": [],
+          "publicationPeriod": {
+            "start": 1915,
+            "end": 3456
+          },
+          "electronicAccess": [],
+          "instanceTypeId": "6312d172-f0cf-40f6-b27d-9fa8feaf332f",
+          "instanceFormatIds": [],
+          "instanceFormats": [],
+          "physicalDescriptions": [],
+          "languages": [],
+          "notes": [],
+          "administrativeNotes": [],
+          "previouslyHeld": false,
+          "discoverySuppress": false,
+          "statisticalCodeIds": [],
+          "statusUpdatedDate": "2024-03-26T16:50:31.546+0000",
+          "tags": {
+            "tagList": []
+          },
+          "metadata": {
+            "createdDate": "2024-03-26T16:50:31.543+00:00",
+            "createdByUserId": "9baa8167-61bd-4f7d-b384-4b981ab415b1",
+            "updatedDate": "2024-08-13T10:22:11.369+00:00",
+            "updatedByUserId": "731c4da7-2aac-40ea-9104-393003dcc6a8"
+          },
+          "holdingsRecords2": [],
+          "natureOfContentTermIds": [
+            "0abeee3d-8ad2-4b04-92ff-221b4fce1075"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -38,6 +37,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.tomakehurst.wiremock.WireMockServer;
 
 import lombok.SneakyThrows;
@@ -51,6 +51,7 @@ import lombok.SneakyThrows;
 public class BaseIT {
   protected static final String TOKEN = "test_token";
   protected static final String TENANT_ID_CONSORTIUM = "consortium";
+  protected static final String USER_ID = randomId();
 
   @Autowired
   private WebTestClient webClient;
@@ -64,7 +65,8 @@ public class BaseIT {
 
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+    .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
+    .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
   @BeforeAll
   static void beforeAll(@Autowired MockMvc mockMvc) {
@@ -83,7 +85,11 @@ public class BaseIT {
   }
 
   protected FolioExecutionContextSetter initFolioContext() {
-    return new FolioExecutionContextSetter(moduleMetadata, buildDefaultHeaders());
+    HashMap<String, Collection<String>> headers = new HashMap<>(buildHeaders().entrySet()
+      .stream()
+      .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
+
+    return new FolioExecutionContextSetter(moduleMetadata, headers);
   }
 
   @SneakyThrows
@@ -98,17 +104,17 @@ public class BaseIT {
     final HttpHeaders httpHeaders = new HttpHeaders();
 
     httpHeaders.setContentType(APPLICATION_JSON);
-    httpHeaders.put(XOkapiHeaders.TENANT, List.of(TENANT_ID_CONSORTIUM));
+    httpHeaders.add(XOkapiHeaders.TENANT, TENANT_ID_CONSORTIUM);
     httpHeaders.add(XOkapiHeaders.TOKEN, TOKEN);
-    httpHeaders.add(XOkapiHeaders.USER_ID, "08d51c7a-0f36-4f3d-9e35-d285612a23df");
+    httpHeaders.add(XOkapiHeaders.USER_ID, USER_ID);
 
     return httpHeaders;
   }
 
-  private static Map<String, Collection<String>> buildDefaultHeaders() {
-    return new HashMap<>(defaultHeaders().entrySet()
-      .stream()
-      .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
+  protected HttpHeaders buildHeaders() {
+    HttpHeaders httpHeaders = defaultHeaders();
+    httpHeaders.add(XOkapiHeaders.URL, (wireMockServer.baseUrl()));
+    return httpHeaders;
   }
 
   @SneakyThrows
@@ -124,7 +130,7 @@ public class BaseIT {
       .header(XOkapiHeaders.TENANT, TENANT_ID_CONSORTIUM)
       .header(XOkapiHeaders.URL, wireMockServer.baseUrl())
       .header(XOkapiHeaders.TOKEN, TOKEN)
-      .header(XOkapiHeaders.USER_ID, randomId());
+      .header(XOkapiHeaders.USER_ID, USER_ID);
   }
 
   protected WebTestClient.ResponseSpec doGet(String url) {

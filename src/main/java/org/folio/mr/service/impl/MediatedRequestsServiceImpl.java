@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.MediatedRequests;
+import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.mapper.MediatedRequestMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.MediatedRequestDetailsService;
@@ -28,7 +29,8 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   public Optional<MediatedRequest> get(UUID id) {
     return mediatedRequestsRepository.findById(id)
       .map(requestsMapper::mapEntityToDto)
-      .map(requestDetailsService::populateRequestDetailsForGet);
+      .map(requestDetailsService::populateRequestDetailsForGet)
+      .map(MediatedRequestsServiceImpl::removeSearchIndex);
   }
 
   @Override
@@ -37,6 +39,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
       mediatedRequestsRepository.findByCql(query, OffsetRequest.of(offset, limit)).stream()
         .map(requestsMapper::mapEntityToDto)
         .map(requestDetailsService::populateRequestDetailsForGet)
+        .map(MediatedRequestsServiceImpl::removeSearchIndex)
         .toList();
 
     var totalRecords = mediatedRequestsRepository.count(query);
@@ -50,6 +53,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
       .stream()
       .map(requestsMapper::mapEntityToDto)
       .map(requestDetailsService::populateRequestDetailsForGet)
+      .map(MediatedRequestsServiceImpl::removeSearchIndex)
       .toList();
 
     var totalRecords = mediatedRequestsRepository.count();
@@ -59,10 +63,13 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
 
   @Override
   public MediatedRequest post(MediatedRequest mediatedRequest) {
-    requestDetailsService.populateRequestDetailsForCreate(mediatedRequest);
-    return requestsMapper.mapEntityToDto(mediatedRequestsRepository.save(
-      requestsMapper.mapDtoToEntity(mediatedRequest)));
-    // TODO: return extended version?
+    MediatedRequest extendedRequest = requestDetailsService.populateRequestDetailsForCreate(
+      mediatedRequest);
+    MediatedRequestEntity savedEntity = mediatedRequestsRepository.save(
+      requestsMapper.mapDtoToEntity(mediatedRequest));
+    removeSearchIndex(extendedRequest);
+
+    return extendedRequest.id(savedEntity.getId().toString());
   }
 
   @Override
@@ -72,7 +79,8 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
       .map(requestDetailsService::populateRequestDetailsForUpdate)
       .map(requestsMapper::mapDtoToEntity)
       .map(mediatedRequestsRepository::save)
-      .map(ignored -> mediatedRequest);
+      .map(ignored -> mediatedRequest)
+      .map(MediatedRequestsServiceImpl::removeSearchIndex);
   }
 
   @Override
@@ -85,6 +93,9 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
       });
    }
 
-
+  private static MediatedRequest removeSearchIndex(MediatedRequest request) {
+    log.debug("removeSearchIndex:: removing search index");
+    return request.searchIndex(null);
+  }
 
 }

@@ -1,30 +1,49 @@
 package org.folio.mr.api;
 
-import static org.hamcrest.Matchers.*;
-import static org.springframework.http.HttpStatus.CREATED;
+import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.HOLD_SHELF;
+import static org.folio.mr.domain.dto.MediatedRequest.RequestLevelEnum.ITEM;
+import static org.folio.mr.domain.dto.MediatedRequest.RequestTypeEnum.PAGE;
+import static org.folio.mr.util.TestUtils.dateToString;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.iterableWithSize;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Date;
 import java.util.UUID;
 
+import org.folio.mr.domain.MediatedRequestStatus;
+import org.folio.mr.domain.RequestLevel;
+import org.folio.mr.domain.RequestType;
 import org.folio.mr.domain.dto.MediatedRequest;
+import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.test.types.IntegrationTest;
-import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.ResultActions;
 
 import lombok.SneakyThrows;
 
 @IntegrationTest
 class MediatedRequestsApiTest extends BaseIT {
-  private static final String URI_TEMPLATE = "/requests-mediated/mediated-requests";
+
+  private static final String UUID_PATTEN =
+    "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$";
+  private static final String URL_MEDIATED_REQUESTS = "/requests-mediated/mediated-requests";
+
   @Autowired
   private MediatedRequestsRepository mediatedRequestsRepository;
 
@@ -32,198 +51,299 @@ class MediatedRequestsApiTest extends BaseIT {
   public void clearDatabase() {
     mediatedRequestsRepository.deleteAll();
   }
+
   @Test
   void getByIdNotFound() throws Exception {
-    mockMvc.perform(
-        get(URI_TEMPLATE + UUID.randomUUID())
-          .headers(defaultHeaders())
-          .contentType(MediaType.APPLICATION_JSON))
+    getRequestById(randomId())
       .andExpect(status().isNotFound());
   }
 
   @Test
   void mediatedRequestShouldBeCreated() {
-    doPost(URI_TEMPLATE, buildMediatedRequestPayload())
-      .expectStatus().isEqualTo(CREATED);
+    MediatedRequest mediatedRequest = createMediatedRequest();
+    MediatedRequestEntity entity = mediatedRequestsRepository.findById(UUID.fromString(mediatedRequest.getId()))
+      .orElseThrow(() -> new AssertionError("Failed to find mediated request in DB"));
+
+    assertThat(entity.getId().toString(), is(mediatedRequest.getId()));
+    assertThat(entity.getRequestLevel(), is(RequestLevel.ITEM));
+    assertThat(entity.getRequestType(), is(RequestType.PAGE));
+    assertThat(entity.getRequestDate().getTime(), is(mediatedRequest.getRequestDate().getTime()));
+    assertThat(entity.getPatronComments(), is("test"));
+    assertThat(entity.getRequesterId(), is(UUID.fromString("9812e24b-0a66-457a-832c-c5e789797e35")));
+    assertThat(entity.getRequesterFirstName(), is("Requester"));
+    assertThat(entity.getRequesterMiddleName(), is("X"));
+    assertThat(entity.getRequesterLastName(), is("Mediated"));
+    assertThat(entity.getRequesterBarcode(), is("111"));
+    assertThat(entity.getProxyUserId(), is(UUID.fromString("7b89ee8c-6524-432e-8c57-82bc860af38f")));
+    assertThat(entity.getProxyFirstName(), is("User"));
+    assertThat(entity.getProxyMiddleName(), is("M"));
+    assertThat(entity.getProxyLastName(), is("Proxy"));
+    assertThat(entity.getProxyBarcode(), is("proxy"));
+    assertThat(entity.getInstanceId(), is(UUID.fromString("69640328-788e-43fc-9c3c-af39e243f3b7")));
+    assertThat(entity.getHoldingsRecordId(), is(UUID.fromString("0c45bb50-7c9b-48b0-86eb-178a494e25fe")));
+    assertThat(entity.getItemId(), is(UUID.fromString("9428231b-dd31-4f70-8406-fe22fbdeabc2")));
+    assertThat(entity.getItemBarcode(), is("A14837334314"));
+    assertThat(entity.getMediatedWorkflow(), is("Private request"));
+    assertThat(entity.getMediatedRequestStatus(), is(MediatedRequestStatus.NEW));
+    assertThat(entity.getMediatedRequestStep(), is("Awaiting confirmation"));
+    assertThat(entity.getStatus(), is("New - Awaiting confirmation"));
+    assertThat(entity.getCancellationReasonId(), nullValue());
+    assertThat(entity.getCancelledDate(), nullValue());
+    assertThat(entity.getCancelledByUserId(), nullValue());
+    assertThat(entity.getCancellationAdditionalInformation(), nullValue());
+    assertThat(entity.getPosition(), nullValue());
+    assertThat(entity.getDeliveryAddressTypeId(), nullValue());
+    assertThat(entity.getPickupServicePointId(), is(UUID.fromString("3a40852d-49fd-4df2-a1f9-6e2641a6e91f")));
+    assertThat(entity.getConfirmedRequestId(), nullValue());
+    assertThat(entity.getCallNumber(), is("CN"));
+    assertThat(entity.getCallNumberPrefix(), is("PFX"));
+    assertThat(entity.getCallNumberSuffix(), is("SFX"));
+    assertThat(entity.getFullCallNumber(), is("PFX CN SFX"));
+    assertThat(entity.getShelvingOrder(), is("CN vol.1 v.70:no.7-12 1984:July-Dec. cp.1 SFX"));
+    assertThat(entity.getPickupServicePointName(), is("Circ Desk 1"));
+    assertThat(entity.getCreatedDate(), notNullValue());
+    assertThat(entity.getUpdatedDate(), notNullValue());
+    assertThat(entity.getCreatedByUserId(), is(UUID.fromString(USER_ID)));
+    assertThat(entity.getUpdatedByUserId(), is(UUID.fromString(USER_ID)));
+    assertThat(entity.getCreatedByUsername(), nullValue());
+    assertThat(entity.getUpdatedByUsername(), nullValue());
   }
 
   @SneakyThrows
   @Test
   void mediatedRequestsShouldBeRetrieved() {
-    mockMvc.perform(
-        get(URI_TEMPLATE)
-          .headers(defaultHeaders())
-          .contentType(MediaType.APPLICATION_JSON))
+    getAllRequests()
       .andExpect(status().isOk());
   }
 
   @SneakyThrows
   @Test
   void mediatedRequestsShouldBeRetrievedByQuery() {
-    doPost(URI_TEMPLATE, buildMediatedRequestPayload()).expectStatus().isEqualTo(CREATED);
-    mockMvc.perform(
-        get(URI_TEMPLATE + "?query=requestType==Hold")
-          .headers(defaultHeaders())
-          .contentType(MediaType.APPLICATION_JSON))
-      .andExpect(status().isOk());
+    MediatedRequest mediatedRequest = createMediatedRequest();
+    getRequestsByQuery("requestType==Page")
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("mediatedRequests", iterableWithSize(1)))
+      .andExpect(jsonPath("mediatedRequests[0].id", is(mediatedRequest.getId())));
   }
 
   @SneakyThrows
   @Test
   void mediatedRequestShouldBeCreatedAndRetrievedById() {
-    var response = doPost(URI_TEMPLATE, buildMediatedRequestPayload())
-      .expectStatus().isEqualTo(CREATED);
-    var requestId = getResponseBodyObjectId(response);
-    mockMvc.perform(get(URI_TEMPLATE + "/" + requestId)
-        .headers(defaultHeaders())
-        .contentType(MediaType.APPLICATION_JSON))
+    MediatedRequest mediatedRequest = createMediatedRequest();
+    getRequestById(mediatedRequest.getId())
       .andExpect(status().isOk())
-      .andExpect(jsonPath("instance.identifiers", hasSize(2)))
-      .andExpect(jsonPath("instance.identifiers[*].value",
-        containsInAnyOrder("0123456789", "98765432123456")))
-      .andExpect(jsonPath("item.barcode", is("12345")))
-      .andExpect(jsonPath("requester.barcode", is("123")))
-      .andExpect(jsonPath("confirmedRequestId", is("0a034628-6eb6-4c66-9ea5-9eeea151c820")))
-      .andExpect(jsonPath("searchIndex.callNumberComponents.callNumber", is("F16.H37 A2 9001")))
-      .andExpect(jsonPath("searchIndex.callNumberComponents.prefix", is("pre")))
-      .andExpect(jsonPath("searchIndex.callNumberComponents.suffix", is("suf")))
-      .andExpect(jsonPath("searchIndex.shelvingOrder", is("F 416 H37 A2 59001")))
-      .andExpect(jsonPath("searchIndex.pickupServicePointName", is("Circ Desk 1")))
-      .andExpect(jsonPath("metadata.createdDate", notNullValue()))
-      .andExpect(jsonPath("metadata.updatedDate", notNullValue()));
+      .andExpect(jsonPath("id", is(mediatedRequest.getId())));
   }
 
   @SneakyThrows
   @Test
   void mediatedRequestShouldBeCreatedAndRetrievedByFullCallNumberQuery() {
-    var response = doPost(URI_TEMPLATE, buildMediatedRequestPayload())
-      .expectStatus().isEqualTo(CREATED);
-    var requestId = getResponseBodyObjectId(response);
-
-    mockMvc.perform(get(URI_TEMPLATE + "?query=fullCallNumber==\"*re F16*\"")
-        .headers(defaultHeaders())
-        .contentType(MediaType.APPLICATION_JSON))
+    MediatedRequest mediatedRequest = createMediatedRequest();
+    getRequestsByQuery("fullCallNumber==\"*X CN S*\"")
       .andExpect(status().isOk())
-      .andExpect(jsonPath("mediatedRequests[0].id", is(requestId)));
+      .andExpect(jsonPath("mediatedRequests", iterableWithSize(1)))
+      .andExpect(jsonPath("mediatedRequests[0].id", is(mediatedRequest.getId())));
   }
 
   @SneakyThrows
   @Test
   void mediatedRequestShouldBeUpdated() {
-    var response = doPost(URI_TEMPLATE, buildMediatedRequestPayload())
-      .expectStatus().isEqualTo(CREATED);
-    var requestId = getResponseBodyObjectId(response);
-    mockMvc.perform(
-        put(URI_TEMPLATE + "/" + requestId)
-          .headers(defaultHeaders())
-          .contentType(MediaType.APPLICATION_JSON)
-          .content(buildMediatedRequestPayload()))
+    MediatedRequest mediatedRequest = createMediatedRequest();
+    mediatedRequest.setStatus(MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP);
+
+    putRequest(mediatedRequest)
       .andExpect(status().isNoContent());
+
+    getRequestById(mediatedRequest.getId())
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("status", is("Open - Awaiting pickup")))
+      .andExpect(jsonPath("mediatedRequestStatus", is("Open")))
+      .andExpect(jsonPath("mediatedRequestStep", is("Awaiting pickup")));
   }
 
   @SneakyThrows
   @Test
   void mediatedRequestShouldNotBeUpdatedWhenNotFound() {
-    mockMvc.perform(
-        put(URI_TEMPLATE + "/" + randomId())
-          .headers(defaultHeaders())
-          .contentType(MediaType.APPLICATION_JSON)
-          .content(buildMediatedRequestPayload()))
+    MediatedRequest mediatedRequest = createMediatedRequest();
+    deleteRequest(mediatedRequest.getId())
+      .andExpect(status().isNoContent());
+
+    putRequest(mediatedRequest)
       .andExpect(status().isNotFound());
   }
 
   @SneakyThrows
   @Test
   void mediatedRequestShouldBeCreatedAndDeleted() {
-    var response = doPost(URI_TEMPLATE, buildMediatedRequestPayload())
-      .expectStatus().isEqualTo(CREATED);
-    var requestId = getResponseBodyObjectId(response);
-    mockMvc.perform(
-        delete(URI_TEMPLATE + "/" + requestId)
-          .headers(defaultHeaders())
-          .contentType(MediaType.APPLICATION_JSON))
+    MediatedRequest mediatedRequest = createMediatedRequest();
+    deleteRequest(mediatedRequest.getId())
       .andExpect(status().isNoContent());
   }
 
   @SneakyThrows
   @Test
-  void mediatedRequestShouldNoteBeFoundForDelete() {
-    mockMvc.perform(
-        delete(URI_TEMPLATE + "/" + randomId())
-          .headers(defaultHeaders())
-          .contentType(MediaType.APPLICATION_JSON))
+  void mediatedRequestShouldNotBeFoundForDelete() {
+    deleteRequest(randomId())
       .andExpect(status().isNotFound());
   }
 
-  private static String buildMediatedRequestPayload() {
-    return """
-      {
-        "id": "69abbd7d-b4a6-4376-8453-bf349c579a91",
-        "requestLevel": "Title",
-        "requestType": "Hold",
-        "requestDate": "2024-01-01T00:12:00Z",
-        "patronComments": "",
-        "requesterId": "73b17dee-d278-4128-b0fd-5d9f801b0400",
-        "requester": {
-          "firstName": "First",
-          "lastName": "Last",
-          "middleName": "Middle",
-          "barcode": "123"
-        },
-        "proxyUserId": "13e309c8-d501-4c3b-9cbc-d573621bb62c",
-        "proxy": {
-          "firstName": "ProxyFirst",
-          "lastName": "ProxyLast",
-          "middleName": "ProxyMiddle",
-          "barcode": "Proxy123"
-        },
-        "instanceId": "6d996a75-930d-4ad1-a953-9b44c9021a35",
-        "instance": {
-          "title": "Children of Time",
-          "identifiers": [
-            {
-              "value": "0123456789",
-              "identifierTypeId": "8261054f-9876-422d-bd51-4ed9f33c7654"
-            },
-            {
-              "value": "98765432123456",
-              "identifierTypeId": "8261054f-9876-422d-bd51-4ed9f33c7654"
-            }
-          ]
-        },
-        "holdingsRecordId": null,
-        "itemId": null,
-        "item": {
-          "barcode": "12345"
-        },
-        "mediatedWorkflow": "Private request",
-        "mediatedRequestStatus": "New",
-        "status": "New - Awaiting confirmation",
-        "cancellationReasonId": null,
-        "cancelledByUserId": null,
-        "cancellationAdditionalInformation": null,
-        "cancelledDate": null,
-        "position": 1,
-        "fulfillmentPreference": "Hold Shelf",
-        "deliveryAddressTypeId": null,
-        "pickupServicePointId": "b2ffa7df-98e8-48a1-b5a8-4e712364eb8d",
-        "confirmedRequestId": "0a034628-6eb6-4c66-9ea5-9eeea151c820",
-        "searchIndex": {
-          "callNumberComponents": {
-            "callNumber": "F16.H37 A2 9001",
-            "prefix": "pre",
-            "suffix": "suf"
-          },
-          "shelvingOrder": "F 416 H37 A2 59001",
-          "pickupServicePointName": "Circ Desk 1"
-        }
-      }
-      """;
+  @SneakyThrows
+  private MediatedRequest createMediatedRequest() {
+    Date requestDate = new Date();
+    MediatedRequest request = new MediatedRequest()
+      .requestLevel(ITEM)
+      .requestType(PAGE)
+      .fulfillmentPreference(HOLD_SHELF)
+      .requestDate(requestDate)
+      .patronComments("test")
+      .requesterId("9812e24b-0a66-457a-832c-c5e789797e35")
+      .proxyUserId("7b89ee8c-6524-432e-8c57-82bc860af38f")
+      .instanceId("69640328-788e-43fc-9c3c-af39e243f3b7")
+      .holdingsRecordId("0c45bb50-7c9b-48b0-86eb-178a494e25fe")
+      .itemId("9428231b-dd31-4f70-8406-fe22fbdeabc2")
+      .pickupServicePointId("3a40852d-49fd-4df2-a1f9-6e2641a6e91f");
+
+    String responseBody = postRequest(request)
+      .andExpect(status().isCreated())
+      .andExpect(jsonPath("id", matchesPattern(UUID_PATTEN)))
+      .andExpect(jsonPath("requestLevel", is("Item")))
+      .andExpect(jsonPath("requestType", is("Page")))
+      .andExpect(jsonPath("requestDate", is(dateToString(requestDate))))
+      .andExpect(jsonPath("patronComments", is("test")))
+      .andExpect(jsonPath("requesterId", is("9812e24b-0a66-457a-832c-c5e789797e35")))
+      .andExpect(jsonPath("proxyUserId", is("7b89ee8c-6524-432e-8c57-82bc860af38f")))
+      .andExpect(jsonPath("instanceId", is("69640328-788e-43fc-9c3c-af39e243f3b7")))
+      .andExpect(jsonPath("holdingsRecordId", is("0c45bb50-7c9b-48b0-86eb-178a494e25fe")))
+      .andExpect(jsonPath("itemId", is("9428231b-dd31-4f70-8406-fe22fbdeabc2")))
+      .andExpect(jsonPath("mediatedRequestStatus", is("New")))
+      .andExpect(jsonPath("mediatedRequestStep", is("Awaiting confirmation")))
+      .andExpect(jsonPath("mediatedWorkflow", is("Private request")))
+      .andExpect(jsonPath("status", is("New - Awaiting confirmation")))
+      .andExpect(jsonPath("cancellationReasonId").doesNotExist())
+      .andExpect(jsonPath("cancelledByUserId").doesNotExist())
+      .andExpect(jsonPath("cancellationAdditionalInformation").doesNotExist())
+      .andExpect(jsonPath("cancelledDate").doesNotExist())
+      .andExpect(jsonPath("position").doesNotExist())
+      .andExpect(jsonPath("fulfillmentPreference", is("Hold Shelf")))
+      .andExpect(jsonPath("deliveryAddressTypeId").doesNotExist())
+      .andExpect(jsonPath("deliveryAddress").doesNotExist())
+      .andExpect(jsonPath("confirmedRequestId").doesNotExist())
+      .andExpect(jsonPath("pickupServicePointId", is("3a40852d-49fd-4df2-a1f9-6e2641a6e91f")))
+      .andExpect(jsonPath("instance.title", is("ABA Journal")))
+      .andExpect(jsonPath("instance.identifiers", hasSize(2)))
+      .andExpect(jsonPath("instance.identifiers[0].value", is("0747-0088")))
+      .andExpect(jsonPath("instance.identifiers[0].identifierTypeId", is("913300b2-03ed-469a-8179-c1092c991227")))
+      .andExpect(jsonPath("instance.identifiers[1].value", is("84641839")))
+      .andExpect(jsonPath("instance.identifiers[1].identifierTypeId", is("c858e4f2-2b6b-4385-842b-60732ee14abb")))
+      .andExpect(jsonPath("instance.publication", hasSize(2)))
+      .andExpect(jsonPath("instance.publication[0].publisher", is("American Bar Association")))
+      .andExpect(jsonPath("instance.publication[0].place", is("Chicago, Ill.")))
+      .andExpect(jsonPath("instance.publication[0].dateOfPublication", is("1915-1983")))
+      .andExpect(jsonPath("instance.publication[0].role", is("role1")))
+      .andExpect(jsonPath("instance.publication[1].publisher", is("Penguin")))
+      .andExpect(jsonPath("instance.publication[1].place", is("Boston, Mass.")))
+      .andExpect(jsonPath("instance.publication[1].dateOfPublication", is("1916-1975")))
+      .andExpect(jsonPath("instance.publication[1].role", is("role2")))
+      .andExpect(jsonPath("instance.editions", contains("ed.1", "ed.2")))
+      .andExpect(jsonPath("instance.contributorNames", hasSize(2)))
+      .andExpect(jsonPath("instance.contributorNames[0].name", is("First, Author")))
+      .andExpect(jsonPath("instance.contributorNames[1].name", is("Second, Writer")))
+      .andExpect(jsonPath("item.barcode", is("A14837334314")))
+      .andExpect(jsonPath("item.enumeration", is("v.70:no.7-12")))
+      .andExpect(jsonPath("item.volume", is("vol.1")))
+      .andExpect(jsonPath("item.chronology", is("1984:July-Dec.")))
+      .andExpect(jsonPath("item.displaySummary", is("test summary")))
+      .andExpect(jsonPath("item.status", is("Available")))
+      .andExpect(jsonPath("item.copyNumber", is("cp.1")))
+      .andExpect(jsonPath("item.location.name", is("Main Library")))
+      .andExpect(jsonPath("item.location.code", is("KU/CC/DI/M")))
+      .andExpect(jsonPath("item.location.libraryName", is("Datalogisk Institut")))
+      .andExpect(jsonPath("item.callNumber", is("CN")))
+      .andExpect(jsonPath("item.callNumberComponents.callNumber", is("CN")))
+      .andExpect(jsonPath("item.callNumberComponents.prefix", is("PFX")))
+      .andExpect(jsonPath("item.callNumberComponents.suffix", is("SFX")))
+      .andExpect(jsonPath("requester.barcode", is("111")))
+      .andExpect(jsonPath("requester.firstName", is("Requester")))
+      .andExpect(jsonPath("requester.middleName", is("X")))
+      .andExpect(jsonPath("requester.lastName", is("Mediated")))
+      .andExpect(jsonPath("requester.patronGroupId", is("3684a786-6671-4268-8ed0-9db82ebca60b")))
+      .andExpect(jsonPath("requester.patronGroup.id", is("3684a786-6671-4268-8ed0-9db82ebca60b")))
+      .andExpect(jsonPath("requester.patronGroup.group", is("staff")))
+      .andExpect(jsonPath("requester.patronGroup.desc", is("Staff Member")))
+      .andExpect(jsonPath("proxy.barcode", is("proxy")))
+      .andExpect(jsonPath("proxy.firstName", is("User")))
+      .andExpect(jsonPath("proxy.middleName", is("M")))
+      .andExpect(jsonPath("proxy.lastName", is("Proxy")))
+      .andExpect(jsonPath("proxy.patronGroupId", is("503a81cd-6c26-400f-b620-14c08943697c")))
+      .andExpect(jsonPath("proxy.patronGroup.id", is("503a81cd-6c26-400f-b620-14c08943697c")))
+      .andExpect(jsonPath("proxy.patronGroup.group", is("faculty")))
+      .andExpect(jsonPath("proxy.patronGroup.desc", is("Faculty Member")))
+      .andExpect(jsonPath("pickupServicePoint.name", is("Circ Desk 1")))
+      .andExpect(jsonPath("pickupServicePoint.code", is("cd1")))
+      .andExpect(jsonPath("pickupServicePoint.discoveryDisplayName", is("Circulation Desk -- Hallway")))
+      .andExpect(jsonPath("pickupServicePoint.description", is("test description")))
+      .andExpect(jsonPath("pickupServicePoint.shelvingLagTime", is(99)))
+      .andExpect(jsonPath("pickupServicePoint.pickupLocation", is(true)))
+      .andExpect(jsonPath("searchIndex").doesNotExist())
+      .andExpect(jsonPath("metadata.createdDate").exists())
+      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)))
+      .andExpect(jsonPath("metadata.createdByUsername").doesNotExist())
+      .andExpect(jsonPath("metadata.updatedDate").exists())
+      .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
+      .andExpect(jsonPath("metadata.updatedByUsername").doesNotExist())
+      .andReturn().getResponse().getContentAsString();
+
+    return OBJECT_MAPPER.readValue(responseBody, MediatedRequest.class);
   }
 
   @SneakyThrows
-  private static String getResponseBodyObjectId(WebTestClient.ResponseSpec responseSpec) {
-    var byteArray = responseSpec.returnResult(MediatedRequest.class).getResponseBodyContent();
-    return new JSONObject(new String(byteArray == null ? new byte[0] : byteArray)).getString("id");
+  private ResultActions getRequestById(String id) {
+    return mockMvc.perform(
+        get(URL_MEDIATED_REQUESTS + "/" + id)
+          .headers(buildHeaders())
+          .contentType(MediaType.APPLICATION_JSON));
   }
+
+  @SneakyThrows
+  private ResultActions getRequestsByQuery(String query) {
+    return mockMvc.perform(
+      get(URL_MEDIATED_REQUESTS + "?query=" + query)
+        .headers(buildHeaders())
+        .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @SneakyThrows
+  private ResultActions getAllRequests() {
+    return mockMvc.perform(
+      get(URL_MEDIATED_REQUESTS)
+        .headers(buildHeaders())
+        .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @SneakyThrows
+  private ResultActions postRequest(MediatedRequest request) {
+    return mockMvc.perform(
+      post(URL_MEDIATED_REQUESTS)
+        .headers(buildHeaders())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(asJsonString(request)));
+  }
+
+  @SneakyThrows
+  private ResultActions putRequest(MediatedRequest request) {
+    return mockMvc.perform(
+      put(URL_MEDIATED_REQUESTS + "/" + request.getId())
+        .headers(buildHeaders())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(asJsonString(request)));
+  }
+
+  @SneakyThrows
+  private ResultActions deleteRequest(String id) {
+    return mockMvc.perform(
+      delete(URL_MEDIATED_REQUESTS + "/" + id)
+        .headers(buildHeaders())
+        .contentType(MediaType.APPLICATION_JSON));
+  }
+
 }
