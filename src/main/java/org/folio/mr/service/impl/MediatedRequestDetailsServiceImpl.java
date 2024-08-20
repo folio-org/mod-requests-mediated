@@ -373,8 +373,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void processRequestStatus(MediatedRequest mediatedRequest) {
-    MediatedRequest.StatusEnum status1 = mediatedRequest.getStatus();
-    if (status1 == null) {
+    if (mediatedRequest.getStatus() == null) {
       log.info("processRequestStatus:: using default request status: '{}'", DEFAULT_STATUS.getValue());
       mediatedRequest.setStatus(DEFAULT_STATUS);
     }
@@ -383,7 +382,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       mediatedRequest.mediatedWorkflow(DEFAULT_WORKFLOW);
     }
 
-    var statusElements = status1.toString().split(" - ");
+    var statusElements = mediatedRequest.getStatus().toString().split(" - ");
     if (statusElements.length == 2) {
       String status = statusElements[0];
       String step = statusElements[1];
@@ -394,7 +393,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       return;
     }
 
-    log.warn("processRequestStatus:: Invalid status: {}", status1);
+    log.warn("processRequestStatus:: invalid status: {}", mediatedRequest.getStatus());
   }
 
 }
