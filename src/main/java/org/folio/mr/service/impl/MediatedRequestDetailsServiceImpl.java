@@ -1,5 +1,7 @@
 package org.folio.mr.service.impl;
 
+import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.DELIVERY;
+import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.HOLD_SHELF;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CONFIRMATION;
 
 import java.util.ArrayList;
@@ -319,9 +321,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     var fulfillmentPreference = context.getRequest().getFulfillmentPreference();
     log.info("addFulfillmentDetails:: fulfillment preference is '{}'", fulfillmentPreference.getValue());
 
-    switch (fulfillmentPreference) {
-      case DELIVERY -> addDeliveryAddress(context);
-      case HOLD_SHELF -> addPickupServicePoint(context);
+    if (fulfillmentPreference == DELIVERY) {
+      addDeliveryAddress(context);
+    } else if (fulfillmentPreference == HOLD_SHELF) {
+      addPickupServicePoint(context);
     }
   }
 
