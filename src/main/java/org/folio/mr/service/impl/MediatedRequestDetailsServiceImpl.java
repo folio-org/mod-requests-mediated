@@ -12,6 +12,7 @@ import org.folio.mr.domain.dto.ItemEffectiveCallNumberComponents;
 import org.folio.mr.domain.dto.Library;
 import org.folio.mr.domain.dto.Location;
 import org.folio.mr.domain.dto.MediatedRequest;
+import org.folio.mr.domain.dto.MediatedRequestDeliveryAddress;
 import org.folio.mr.domain.dto.MediatedRequestInstance;
 import org.folio.mr.domain.dto.MediatedRequestInstanceContributorNamesInner;
 import org.folio.mr.domain.dto.MediatedRequestInstanceIdentifiersInner;
@@ -67,7 +68,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     extendInstance(context);
     addItem(context);
     extendItem(context);
-    addPickupServicePoint(context);
+    addFulfillmentDetails(context);
     addSearchIndex(context);
 
     metadataService.updateMetadata(request);
@@ -104,7 +105,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     addProxyGroup(context);
     extendInstance(context);
     extendItem(context);
-    addPickupServicePoint(context);
+    addFulfillmentDetails(context);
 
     return request;
   }
@@ -314,6 +315,16 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     }
   }
 
+  private static void addFulfillmentDetails(MediatedRequestContext context) {
+    var fulfillmentPreference = context.getRequest().getFulfillmentPreference();
+    log.info("addFulfillmentDetails:: fulfillment preference is '{}'", fulfillmentPreference.getValue());
+
+    switch (fulfillmentPreference) {
+      case DELIVERY -> addDeliveryAddress(context);
+      case HOLD_SHELF -> addPickupServicePoint(context);
+    }
+  }
+
   private static void addPickupServicePoint(MediatedRequestContext context) {
     log.info("addPickupServicePoint:: adding pickup service point data");
     ServicePoint pickupServicePoint = context.getPickupServicePoint();
@@ -322,6 +333,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       context.getRequest().pickupServicePoint(null);
       return;
     }
+
     context.getRequest().pickupServicePoint(new MediatedRequestPickupServicePoint()
       .name(pickupServicePoint.getName())
       .code(pickupServicePoint.getCode())
@@ -329,6 +341,33 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .description(pickupServicePoint.getDescription())
       .shelvingLagTime(pickupServicePoint.getShelvingLagTime())
       .pickupLocation(pickupServicePoint.getPickupLocation()));
+  }
+
+  private static void addDeliveryAddress(MediatedRequestContext context) {
+    log.info("addDeliveryAddress:: adding delivery address");
+    String deliveryAddressTypeId = context.getRequest().getDeliveryAddressTypeId();
+    if (deliveryAddressTypeId == null) {
+      log.info("addDeliveryAddress:: deliveryAddressTypeId is null");
+      context.getRequest().deliveryAddress(null);
+      return;
+    }
+
+    context.getRequester()
+      .getPersonal()
+      .getAddresses()
+      .stream()
+      .filter(address -> deliveryAddressTypeId.equals(address.getAddressTypeId()))
+      .findFirst()
+      .ifPresent(address -> context.getRequest().setDeliveryAddress(
+        new MediatedRequestDeliveryAddress()
+          .addressTypeId(address.getAddressTypeId())
+          .addressLine1(address.getAddressLine1())
+          .addressLine2(address.getAddressLine2())
+          .city(address.getCity())
+          .region(address.getRegion())
+          .countryId(address.getCountryId())
+          .postalCode(address.getPostalCode())
+    ));
   }
 
   private static void addSearchIndex(MediatedRequestContext context) {

@@ -24,7 +24,15 @@
             "firstName": "Requester",
             "middleName": "X",
             "email": "a@a.a",
-            "addresses": [],
+            "addresses" : [ {
+              "countryId" : "US",
+              "addressLine1" : "2311 North",
+              "addressLine2" : "Los Robles Avenue",
+              "city" : "Pasadena",
+              "region" : "California",
+              "postalCode" : "91101",
+              "addressTypeId" : "93d3d88d-499b-45d0-9bc7-ac73c3a19880"
+            } ],
             "preferredContactTypeId": "002"
           },
           "createdDate": "2024-08-13T09:20:44.183+00:00",

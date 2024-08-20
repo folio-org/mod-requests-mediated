@@ -120,6 +120,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .requestLevel(TITLE)
       .requestType(HOLD)
       .fulfillmentPreference(DELIVERY)
+      .deliveryAddressTypeId("93d3d88d-499b-45d0-9bc7-ac73c3a19880")
       .requestDate(requestDate)
       .requesterId("9812e24b-0a66-457a-832c-c5e789797e35")
       .instanceId("69640328-788e-43fc-9c3c-af39e243f3b7");
@@ -146,8 +147,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("cancelledDate").doesNotExist())
       .andExpect(jsonPath("position").doesNotExist())
       .andExpect(jsonPath("fulfillmentPreference", is("Delivery")))
-      .andExpect(jsonPath("deliveryAddressTypeId").doesNotExist())
-      .andExpect(jsonPath("deliveryAddress").doesNotExist())
+      .andExpect(jsonPath("deliveryAddressTypeId", is("93d3d88d-499b-45d0-9bc7-ac73c3a19880")))
       .andExpect(jsonPath("confirmedRequestId").doesNotExist())
       .andExpect(jsonPath("pickupServicePointId").doesNotExist())
       .andExpect(jsonPath("instance.title", is("ABA Journal")))
@@ -178,6 +178,13 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("requester.patronGroup.id", is("3684a786-6671-4268-8ed0-9db82ebca60b")))
       .andExpect(jsonPath("requester.patronGroup.group", is("staff")))
       .andExpect(jsonPath("requester.patronGroup.desc", is("Staff Member")))
+      .andExpect(jsonPath("deliveryAddress.addressTypeId", is("93d3d88d-499b-45d0-9bc7-ac73c3a19880")))
+      .andExpect(jsonPath("deliveryAddress.addressLine1", is("2311 North")))
+      .andExpect(jsonPath("deliveryAddress.addressLine2", is("Los Robles Avenue")))
+      .andExpect(jsonPath("deliveryAddress.city", is("Pasadena")))
+      .andExpect(jsonPath("deliveryAddress.region", is("California")))
+      .andExpect(jsonPath("deliveryAddress.countryId", is("US")))
+      .andExpect(jsonPath("deliveryAddress.postalCode", is("91101")))
       .andExpect(jsonPath("proxy").doesNotExist())
       .andExpect(jsonPath("pickupServicePoint").doesNotExist())
       .andExpect(jsonPath("searchIndex").doesNotExist())
@@ -223,7 +230,7 @@ class MediatedRequestsApiTest extends BaseIT {
     assertThat(entity.getCancelledByUserId(), nullValue());
     assertThat(entity.getCancellationAdditionalInformation(), nullValue());
     assertThat(entity.getPosition(), nullValue());
-    assertThat(entity.getDeliveryAddressTypeId(), nullValue());
+    assertThat(entity.getDeliveryAddressTypeId(), is(UUID.fromString("93d3d88d-499b-45d0-9bc7-ac73c3a19880")));
     assertThat(entity.getPickupServicePointId(), nullValue());
     assertThat(entity.getConfirmedRequestId(), nullValue());
     assertThat(entity.getCallNumber(), nullValue());
@@ -415,6 +422,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("pickupServicePoint.description", is("test description")))
       .andExpect(jsonPath("pickupServicePoint.shelvingLagTime", is(99)))
       .andExpect(jsonPath("pickupServicePoint.pickupLocation", is(true)))
+      .andExpect(jsonPath("deliveryAddress").doesNotExist())
       .andExpect(jsonPath("searchIndex").doesNotExist())
       .andExpect(jsonPath("metadata.createdDate").exists())
       .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)))
