@@ -29,7 +29,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   public Optional<MediatedRequest> get(UUID id) {
     return mediatedRequestsRepository.findById(id)
       .map(requestsMapper::mapEntityToDto)
-      .map(requestDetailsService::populateRequestDetailsForGet)
+      .map(requestDetailsService::addRequestDetailsForGet)
       .map(MediatedRequestsServiceImpl::removeSearchIndex);
   }
 
@@ -38,7 +38,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
     var mediatedRequests =
       mediatedRequestsRepository.findByCql(query, OffsetRequest.of(offset, limit)).stream()
         .map(requestsMapper::mapEntityToDto)
-        .map(requestDetailsService::populateRequestDetailsForGet)
+        .map(requestDetailsService::addRequestDetailsForGet)
         .map(MediatedRequestsServiceImpl::removeSearchIndex)
         .toList();
 
@@ -52,7 +52,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
     var mediatedRequests = mediatedRequestsRepository.findAll(OffsetRequest.of(offset, limit))
       .stream()
       .map(requestsMapper::mapEntityToDto)
-      .map(requestDetailsService::populateRequestDetailsForGet)
+      .map(requestDetailsService::addRequestDetailsForGet)
       .map(MediatedRequestsServiceImpl::removeSearchIndex)
       .toList();
 
@@ -63,7 +63,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
 
   @Override
   public MediatedRequest post(MediatedRequest mediatedRequest) {
-    MediatedRequest extendedRequest = requestDetailsService.populateRequestDetailsForCreate(
+    MediatedRequest extendedRequest = requestDetailsService.addRequestDetailsForCreate(
       mediatedRequest);
     MediatedRequestEntity savedEntity = mediatedRequestsRepository.save(
       requestsMapper.mapDtoToEntity(mediatedRequest));
@@ -76,7 +76,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   public Optional<MediatedRequest> update(UUID requestId, MediatedRequest mediatedRequest) {
     return mediatedRequestsRepository.findById(requestId)
       .map(ignored -> mediatedRequest)
-      .map(requestDetailsService::populateRequestDetailsForUpdate)
+      .map(requestDetailsService::addRequestDetailsForUpdate)
       .map(requestsMapper::mapDtoToEntity)
       .map(mediatedRequestsRepository::save)
       .map(ignored -> mediatedRequest)

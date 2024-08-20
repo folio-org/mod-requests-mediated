@@ -51,9 +51,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private final MetadataService metadataService;
 
   @Override
-  public MediatedRequest populateRequestDetailsForCreate(MediatedRequest request) {
+  public MediatedRequest addRequestDetailsForCreate(MediatedRequest request) {
     removeExistingRequestDetails(request);
-    setStatusBasedOnMediatedRequestStatusAndStep(request);
+    processRequestStatus(request);
     MediatedRequestContext context = buildRequestContext(request);
 
     addRequester(context);
@@ -75,9 +75,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   @Override
-  public MediatedRequest populateRequestDetailsForUpdate(MediatedRequest request) {
+  public MediatedRequest addRequestDetailsForUpdate(MediatedRequest request) {
     removeExistingRequestDetails(request);
-    setStatusBasedOnMediatedRequestStatusAndStep(request);
+    processRequestStatus(request);
     MediatedRequestContext context = buildRequestContext(request);
 
     addRequester(context);
@@ -94,7 +94,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   @Override
-  public MediatedRequest populateRequestDetailsForGet(MediatedRequest request) {
+  public MediatedRequest addRequestDetailsForGet(MediatedRequest request) {
     MediatedRequestContext context = buildRequestContext(request);
 
     extendRequester(context);
@@ -109,6 +109,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private MediatedRequestContext buildRequestContext(MediatedRequest request) {
+    log.info("buildRequestContext:: building request context");
     var contextBuilder = MediatedRequestContext.builder().request(request);
     Instance instance = inventoryService.fetchInstance(request.getInstanceId());
     User requester = userService.fetchUser(request.getRequesterId());
@@ -138,11 +139,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       ServicePoint servicePoint = inventoryService.fetchServicePoint(request.getPickupServicePointId());
       contextBuilder.pickupServicePoint(servicePoint);
     }
+    log.info("buildRequestContext:: request context is built");
 
     return contextBuilder.build();
   }
 
   private static void addRequester(MediatedRequestContext context) {
+    log.info("addRequester:: adding requester data");
     User requester = context.getRequester();
     MediatedRequestRequester newRequester = new MediatedRequestRequester()
       .barcode(requester.getBarcode());
@@ -157,12 +160,14 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void extendRequester(MediatedRequestContext context) {
+    log.info("extendRequester:: extending requester data");
     context.getRequest()
       .getRequester()
       .patronGroupId(context.getRequester().getPatronGroup());
   }
 
   private static void addRequesterGroup(MediatedRequestContext context) {
+    log.info("addRequesterGroup:: adding requester user group data");
     UserGroup userGroup = context.getRequesterGroup();
     context.getRequest()
       .getRequester()
@@ -173,8 +178,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void addProxy(MediatedRequestContext context) {
+    log.info("addProxy:: adding proxy user data");
     User proxy = context.getProxy();
     if (proxy == null) {
+      log.info("addProxy:: proxy user is null");
       context.getRequest().proxy(null);
       return;
     }
@@ -192,7 +199,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void extendProxy(MediatedRequestContext context) {
+    log.info("extendProxy:: extending proxy user data");
     if (context.getProxy() == null) {
+      log.info("extendProxy:: proxy user is null");
       context.getRequest().proxy(null);
       return;
     }
@@ -203,7 +212,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void addProxyGroup(MediatedRequestContext context) {
+    log.info("addProxyGroup:: adding proxy user group data");
     if (context.getProxyGroup() == null) {
+      log.info("addProxyGroup:: proxy user group is null");
       return;
     }
 
@@ -217,6 +228,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void addInstance(MediatedRequestContext context) {
+    log.info("addInstance:: adding instance data");
     Instance instance = context.getInstance();
     var identifiers = instance.getIdentifiers()
       .stream()
@@ -233,6 +245,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void extendInstance(MediatedRequestContext context) {
+    log.info("extendInstance:: extending instance data");
     Instance instance = context.getInstance();
 
     var contributors = instance.getContributors()
@@ -258,7 +271,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void addItem(MediatedRequestContext context) {
+    log.info("addItem:: adding item data");
     if (context.getItem() == null) {
+      log.info("addItem:: item is null");
       context.getRequest().item(null);
       return;
     }
@@ -267,8 +282,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void extendItem(MediatedRequestContext context) {
+    log.info("extendItem:: extending item data");
     Item item = context.getItem();
     if (item == null) {
+      log.info("extendItem:: item is null");
       context.getRequest().item(null);
       return;
     }
@@ -297,8 +314,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void addPickupServicePoint(MediatedRequestContext context) {
+    log.info("addPickupServicePoint:: adding pickup service point data");
     ServicePoint pickupServicePoint = context.getPickupServicePoint();
     if (pickupServicePoint == null) {
+      log.info("addPickupServicePoint:: pickup service point is null");
       context.getRequest().pickupServicePoint(null);
       return;
     }
@@ -312,16 +331,20 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void addSearchIndex(MediatedRequestContext context) {
+    log.info("addSearchIndex:: adding search index");
     MediatedRequestSearchIndex searchIndex = new MediatedRequestSearchIndex();
 
     Item item = context.getItem();
     if (item != null) {
+      log.info("addSearchIndex:: adding item data to search index");
       String shelvingOrder = item.getEffectiveShelvingOrder();
       ItemEffectiveCallNumberComponents callNumberComponents = item.getEffectiveCallNumberComponents();
       if (shelvingOrder != null) {
+        log.info("addSearchIndex:: adding shelving order to search index");
         searchIndex.setShelvingOrder(shelvingOrder);
       }
       if (callNumberComponents != null) {
+        log.info("addSearchIndex:: adding call number components to search index");
         searchIndex.callNumberComponents(new MediatedRequestSearchIndexCallNumberComponents()
           .callNumber(callNumberComponents.getCallNumber())
           .prefix(callNumberComponents.getPrefix())
@@ -331,6 +354,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
     ServicePoint pickupServicePoint = context.getPickupServicePoint();
     if (pickupServicePoint != null && pickupServicePoint.getName() != null) {
+      log.info("addSearchIndex:: adding pickup service point data to search index");
       searchIndex.setPickupServicePointName(pickupServicePoint.getName());
     }
 
@@ -347,25 +371,28 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .searchIndex(null);
   }
 
-  private static void setStatusBasedOnMediatedRequestStatusAndStep(
-    MediatedRequest mediatedRequest) {
-
+  private static void processRequestStatus(MediatedRequest mediatedRequest) {
     if (mediatedRequest.getStatus() == null) {
+      log.info("processRequestStatus:: using default request status: '{}'", DEFAULT_STATUS.getValue());
       mediatedRequest.setStatus(DEFAULT_STATUS);
     }
     if (mediatedRequest.getMediatedWorkflow() == null) {
+      log.info("processRequestStatus:: using default workflow: '{}'", DEFAULT_WORKFLOW);
       mediatedRequest.mediatedWorkflow(DEFAULT_WORKFLOW);
     }
 
     var statusElements = mediatedRequest.getStatus().toString().split(" - ");
     if (statusElements.length == 2) {
+      String status = statusElements[0];
+      String step = statusElements[1];
+      log.info("processRequestStatus:: status='{}', step='{}'", status, step);
       mediatedRequest.setMediatedRequestStatus(
-        MediatedRequest.MediatedRequestStatusEnum.fromValue(statusElements[0]));
-      mediatedRequest.setMediatedRequestStep(statusElements[1]);
+        MediatedRequest.MediatedRequestStatusEnum.fromValue(status));
+      mediatedRequest.setMediatedRequestStep(step);
       return;
     }
 
-    log.warn("setStatusBasedOnMediatedRequestStatusAndStep:: Invalid status: {}",
+    log.warn("processRequestStatus:: Invalid status: {}",
       mediatedRequest.getStatus());
   }
 
