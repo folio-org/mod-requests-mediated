@@ -49,7 +49,7 @@ class MetadataServiceTest {
   void metadataIsUpdated() {
     when(context.getUserId()).thenReturn(USER_ID);
     String oldUserId = UUID.randomUUID().toString();
-    Date oldDate = new Date();
+    Date oldDate = Date.from(new Date().toInstant().minusSeconds(99));
 
     MediatedRequest object = new MediatedRequest()
       .metadata(new Metadata()
