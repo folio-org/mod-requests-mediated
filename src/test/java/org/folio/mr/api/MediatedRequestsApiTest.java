@@ -1,7 +1,10 @@
 package org.folio.mr.api;
 
+import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.DELIVERY;
 import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.HOLD_SHELF;
 import static org.folio.mr.domain.dto.MediatedRequest.RequestLevelEnum.ITEM;
+import static org.folio.mr.domain.dto.MediatedRequest.RequestLevelEnum.TITLE;
+import static org.folio.mr.domain.dto.MediatedRequest.RequestTypeEnum.HOLD;
 import static org.folio.mr.domain.dto.MediatedRequest.RequestTypeEnum.PAGE;
 import static org.folio.mr.util.TestUtils.dateToString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -59,7 +62,7 @@ class MediatedRequestsApiTest extends BaseIT {
   }
 
   @Test
-  void mediatedRequestShouldBeCreated() {
+  void mediatedRequestWithAllDetailsShouldBeCreated() {
     MediatedRequest mediatedRequest = createMediatedRequest();
     MediatedRequestEntity entity = mediatedRequestsRepository.findById(UUID.fromString(mediatedRequest.getId()))
       .orElseThrow(() -> new AssertionError("Failed to find mediated request in DB"));
@@ -101,6 +104,135 @@ class MediatedRequestsApiTest extends BaseIT {
     assertThat(entity.getFullCallNumber(), is("PFX CN SFX"));
     assertThat(entity.getShelvingOrder(), is("CN vol.1 v.70:no.7-12 1984:July-Dec. cp.1 SFX"));
     assertThat(entity.getPickupServicePointName(), is("Circ Desk 1"));
+    assertThat(entity.getCreatedDate(), notNullValue());
+    assertThat(entity.getUpdatedDate(), notNullValue());
+    assertThat(entity.getCreatedByUserId(), is(UUID.fromString(USER_ID)));
+    assertThat(entity.getUpdatedByUserId(), is(UUID.fromString(USER_ID)));
+    assertThat(entity.getCreatedByUsername(), nullValue());
+    assertThat(entity.getUpdatedByUsername(), nullValue());
+  }
+
+
+  @Test
+  @SneakyThrows
+  void mediatedRequestWithoutSomeDetailsShouldBeCreated() {
+    Date requestDate = new Date();
+    MediatedRequest request = new MediatedRequest()
+      .requestLevel(TITLE)
+      .requestType(HOLD)
+      .fulfillmentPreference(DELIVERY)
+      .requestDate(requestDate)
+      .requesterId("9812e24b-0a66-457a-832c-c5e789797e35")
+      .instanceId("69640328-788e-43fc-9c3c-af39e243f3b7");
+
+    String responseBody = postRequest(request)
+      .andExpect(status().isCreated())
+      .andExpect(jsonPath("id", matchesPattern(UUID_PATTEN)))
+      .andExpect(jsonPath("requestLevel", is("Title")))
+      .andExpect(jsonPath("requestType", is("Hold")))
+      .andExpect(jsonPath("requestDate", is(dateToString(requestDate))))
+      .andExpect(jsonPath("patronComments").doesNotExist())
+      .andExpect(jsonPath("requesterId", is("9812e24b-0a66-457a-832c-c5e789797e35")))
+      .andExpect(jsonPath("proxyUserId").doesNotExist())
+      .andExpect(jsonPath("instanceId", is("69640328-788e-43fc-9c3c-af39e243f3b7")))
+      .andExpect(jsonPath("holdingsRecordId").doesNotExist())
+      .andExpect(jsonPath("itemId").doesNotExist())
+      .andExpect(jsonPath("mediatedRequestStatus", is("New")))
+      .andExpect(jsonPath("mediatedRequestStep", is("Awaiting confirmation")))
+      .andExpect(jsonPath("mediatedWorkflow", is("Private request")))
+      .andExpect(jsonPath("status", is("New - Awaiting confirmation")))
+      .andExpect(jsonPath("cancellationReasonId").doesNotExist())
+      .andExpect(jsonPath("cancelledByUserId").doesNotExist())
+      .andExpect(jsonPath("cancellationAdditionalInformation").doesNotExist())
+      .andExpect(jsonPath("cancelledDate").doesNotExist())
+      .andExpect(jsonPath("position").doesNotExist())
+      .andExpect(jsonPath("fulfillmentPreference", is("Delivery")))
+      .andExpect(jsonPath("deliveryAddressTypeId").doesNotExist())
+      .andExpect(jsonPath("deliveryAddress").doesNotExist())
+      .andExpect(jsonPath("confirmedRequestId").doesNotExist())
+      .andExpect(jsonPath("pickupServicePointId").doesNotExist())
+      .andExpect(jsonPath("instance.title", is("ABA Journal")))
+      .andExpect(jsonPath("instance.identifiers", hasSize(2)))
+      .andExpect(jsonPath("instance.identifiers[0].value", is("0747-0088")))
+      .andExpect(jsonPath("instance.identifiers[0].identifierTypeId", is("913300b2-03ed-469a-8179-c1092c991227")))
+      .andExpect(jsonPath("instance.identifiers[1].value", is("84641839")))
+      .andExpect(jsonPath("instance.identifiers[1].identifierTypeId", is("c858e4f2-2b6b-4385-842b-60732ee14abb")))
+      .andExpect(jsonPath("instance.publication", hasSize(2)))
+      .andExpect(jsonPath("instance.publication[0].publisher", is("American Bar Association")))
+      .andExpect(jsonPath("instance.publication[0].place", is("Chicago, Ill.")))
+      .andExpect(jsonPath("instance.publication[0].dateOfPublication", is("1915-1983")))
+      .andExpect(jsonPath("instance.publication[0].role", is("role1")))
+      .andExpect(jsonPath("instance.publication[1].publisher", is("Penguin")))
+      .andExpect(jsonPath("instance.publication[1].place", is("Boston, Mass.")))
+      .andExpect(jsonPath("instance.publication[1].dateOfPublication", is("1916-1975")))
+      .andExpect(jsonPath("instance.publication[1].role", is("role2")))
+      .andExpect(jsonPath("instance.editions", contains("ed.1", "ed.2")))
+      .andExpect(jsonPath("instance.contributorNames", hasSize(2)))
+      .andExpect(jsonPath("instance.contributorNames[0].name", is("First, Author")))
+      .andExpect(jsonPath("instance.contributorNames[1].name", is("Second, Writer")))
+      .andExpect(jsonPath("item").doesNotExist())
+      .andExpect(jsonPath("requester.barcode", is("111")))
+      .andExpect(jsonPath("requester.firstName", is("Requester")))
+      .andExpect(jsonPath("requester.middleName", is("X")))
+      .andExpect(jsonPath("requester.lastName", is("Mediated")))
+      .andExpect(jsonPath("requester.patronGroupId", is("3684a786-6671-4268-8ed0-9db82ebca60b")))
+      .andExpect(jsonPath("requester.patronGroup.id", is("3684a786-6671-4268-8ed0-9db82ebca60b")))
+      .andExpect(jsonPath("requester.patronGroup.group", is("staff")))
+      .andExpect(jsonPath("requester.patronGroup.desc", is("Staff Member")))
+      .andExpect(jsonPath("proxy").doesNotExist())
+      .andExpect(jsonPath("pickupServicePoint").doesNotExist())
+      .andExpect(jsonPath("searchIndex").doesNotExist())
+      .andExpect(jsonPath("metadata.createdDate").exists())
+      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)))
+      .andExpect(jsonPath("metadata.createdByUsername").doesNotExist())
+      .andExpect(jsonPath("metadata.updatedDate").exists())
+      .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
+      .andExpect(jsonPath("metadata.updatedByUsername").doesNotExist())
+      .andReturn().getResponse().getContentAsString();
+
+    MediatedRequest mediatedRequest = OBJECT_MAPPER.readValue(responseBody, MediatedRequest.class);
+
+    MediatedRequestEntity entity = mediatedRequestsRepository.findById(
+      UUID.fromString(mediatedRequest.getId()))
+      .orElseThrow(() -> new AssertionError("Failed to find mediated request in DB"));
+
+    assertThat(entity.getId().toString(), is(mediatedRequest.getId()));
+    assertThat(entity.getRequestLevel(), is(RequestLevel.TITLE));
+    assertThat(entity.getRequestType(), is(RequestType.HOLD));
+    assertThat(entity.getRequestDate().getTime(), is(mediatedRequest.getRequestDate().getTime()));
+    assertThat(entity.getPatronComments(), nullValue());
+    assertThat(entity.getRequesterId(), is(UUID.fromString("9812e24b-0a66-457a-832c-c5e789797e35")));
+    assertThat(entity.getRequesterFirstName(), is("Requester"));
+    assertThat(entity.getRequesterMiddleName(), is("X"));
+    assertThat(entity.getRequesterLastName(), is("Mediated"));
+    assertThat(entity.getRequesterBarcode(), is("111"));
+    assertThat(entity.getProxyUserId(), nullValue());
+    assertThat(entity.getProxyFirstName(), nullValue());
+    assertThat(entity.getProxyMiddleName(), nullValue());
+    assertThat(entity.getProxyLastName(), nullValue());
+    assertThat(entity.getProxyBarcode(), nullValue());
+    assertThat(entity.getInstanceId(), is(UUID.fromString("69640328-788e-43fc-9c3c-af39e243f3b7")));
+    assertThat(entity.getHoldingsRecordId(), nullValue());
+    assertThat(entity.getItemId(), nullValue());
+    assertThat(entity.getItemBarcode(), nullValue());
+    assertThat(entity.getMediatedWorkflow(), is("Private request"));
+    assertThat(entity.getMediatedRequestStatus(), is(MediatedRequestStatus.NEW));
+    assertThat(entity.getMediatedRequestStep(), is("Awaiting confirmation"));
+    assertThat(entity.getStatus(), is("New - Awaiting confirmation"));
+    assertThat(entity.getCancellationReasonId(), nullValue());
+    assertThat(entity.getCancelledDate(), nullValue());
+    assertThat(entity.getCancelledByUserId(), nullValue());
+    assertThat(entity.getCancellationAdditionalInformation(), nullValue());
+    assertThat(entity.getPosition(), nullValue());
+    assertThat(entity.getDeliveryAddressTypeId(), nullValue());
+    assertThat(entity.getPickupServicePointId(), nullValue());
+    assertThat(entity.getConfirmedRequestId(), nullValue());
+    assertThat(entity.getCallNumber(), nullValue());
+    assertThat(entity.getCallNumberPrefix(), nullValue());
+    assertThat(entity.getCallNumberSuffix(), nullValue());
+    assertThat(entity.getFullCallNumber(), nullValue());
+    assertThat(entity.getShelvingOrder(), nullValue());
+    assertThat(entity.getPickupServicePointName(), nullValue());
     assertThat(entity.getCreatedDate(), notNullValue());
     assertThat(entity.getUpdatedDate(), notNullValue());
     assertThat(entity.getCreatedByUserId(), is(UUID.fromString(USER_ID)));
