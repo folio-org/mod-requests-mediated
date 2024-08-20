@@ -1,4 +1,4 @@
-package org.folio.mr.service.impl;
+package org.folio.mr.service;
 
 import org.folio.mr.domain.dto.User;
 import org.folio.mr.domain.dto.UserGroup;

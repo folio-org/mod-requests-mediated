@@ -39,7 +39,6 @@ public class MetadataServiceImpl implements MetadataService {
           .updatedDate(now)
           .updatedByUserId(userId);
         setMetadata.invoke(obj, newMetadata);
-        log.info("updateMetadata:: metadata initialized");
       }
     } catch (Exception e) {
       log.error("updateMetadata:: failed to update metadata", e);

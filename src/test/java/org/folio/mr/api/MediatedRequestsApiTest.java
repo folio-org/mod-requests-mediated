@@ -112,7 +112,6 @@ class MediatedRequestsApiTest extends BaseIT {
     assertThat(entity.getUpdatedByUsername(), nullValue());
   }
 
-
   @Test
   @SneakyThrows
   void mediatedRequestWithoutSomeDetailsShouldBeCreated() {

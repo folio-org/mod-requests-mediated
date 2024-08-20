@@ -4,6 +4,7 @@ import org.folio.mr.client.UserClient;
 import org.folio.mr.client.UserGroupClient;
 import org.folio.mr.domain.dto.User;
 import org.folio.mr.domain.dto.UserGroup;
+import org.folio.mr.service.UserService;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
