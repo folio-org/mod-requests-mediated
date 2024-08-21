@@ -3,7 +3,7 @@
   "name": "Folio mod-requests-mediated module",
   "provides": [
     {
-      "id": "requests-mediated",
+      "id": "requests-mediated-actions",
       "version": "1.0",
       "handlers": [
         {
