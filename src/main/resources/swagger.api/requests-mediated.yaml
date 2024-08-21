@@ -2,13 +2,15 @@ openapi: 3.0.0
 info:
   title: Request Mediated API
   version: v1
+tags:
+  - name: requestsMediated
 paths:
   /requests-mediated/mediated-requests:
     post:
       description: Create mediated request
       operationId: postMediatedRequest
       tags:
-        - mediatedRequest
+        - requestsMediated
       requestBody:
         content:
           application/json:
@@ -26,7 +28,7 @@ paths:
       description: Retrieve a collection of mediated requests
       operationId: getMediatedRequestCollection
       tags:
-        - mediatedRequest
+        - requestsMediated
       parameters:
         - $ref: '#/components/parameters/trait_queryable_query'
         - $ref: '#/components/parameters/trait_pageable_offset'
@@ -53,7 +55,7 @@ paths:
       description: Retrieve mediated request object by id
       operationId: getMediatedRequestById
       tags:
-        - mediatedRequest
+        - requestsMediated
       parameters:
         - $ref: '#/components/parameters/mediatedRequestId'
       responses:
@@ -84,7 +86,7 @@ paths:
       description: Update mediated request by ID
       operationId: putMediatedRequestById
       tags:
-        - mediatedRequest
+        - requestsMediated
       requestBody:
         content:
           application/json:
@@ -106,7 +108,7 @@ paths:
       description: Remove mediated request by ID
       operationId: deleteMediatedRequestById
       tags:
-        - mediatedRequest
+        - requestsMediated
       parameters:
         - $ref: '#/components/parameters/mediatedRequestId'
       responses:

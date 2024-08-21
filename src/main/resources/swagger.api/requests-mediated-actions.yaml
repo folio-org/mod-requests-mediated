@@ -2,13 +2,15 @@ openapi: 3.0.0
 info:
   title: Request Mediated Actions API
   version: v1
+tags:
+  - name: requestsMediatedActions
 paths:
   /request-mediated-actions/confirm-item-arrival:
     post:
       description: Confirm item arrival
       operationId: confirmItemArrival
       tags:
-        - mediatedRequestActions
+        - requestsMediatedActions
       requestBody:
         content:
           application/json:
@@ -27,7 +29,7 @@ paths:
       description: Send item in transit
       operationId: sendItemInTransit
       tags:
-        - mediatedRequestActions
+        - requestsMediatedActions
       requestBody:
         content:
           application/json:

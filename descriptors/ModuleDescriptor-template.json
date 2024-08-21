@@ -3,23 +3,23 @@
   "name": "Folio mod-requests-mediated module",
   "provides": [
     {
-      "id": "request-mediated-actions",
-      "version": "2.0",
+      "id": "requests-mediated",
+      "version": "1.0",
       "handlers": [
         {
           "methods": [
             "POST"
           ],
-          "pathPattern": "/request-mediated-actions/confirm-item-arrival",
-          "permissionsRequired": ["request-mediated-actions.confirm-item-arrival"],
+          "pathPattern": "/requests-mediated/confirm-item-arrival",
+          "permissionsRequired": ["requests-mediated.confirm-item-arrival.post"],
           "modulePermissions": []
         },
         {
           "methods": [
             "POST"
           ],
-          "pathPattern": "/request-mediated-actions/send-item-in-transit",
-          "permissionsRequired": ["request-mediated-actions.send-item-in-transit"],
+          "pathPattern": "/requests-mediated/send-item-in-transit",
+          "permissionsRequired": ["requests-mediated.send-item-in-transit.post"],
           "modulePermissions": []
         }
       ]
@@ -112,13 +112,13 @@
       "description": "Remove mediated request"
     },
     {
-      "permissionName": "request-mediated-actions.confirm-item-arrival",
-      "displayName": "requests-mediated action - arrival item to be confirmed",
+      "permissionName": "requests-mediated.confirm-item-arrival.post",
+      "displayName": "requests-mediated - arrival item to be confirmed",
       "description": "Arrival item to be confirmed"
     },
     {
-      "permissionName": "request-mediated-actions.send-item-in-transit",
-      "displayName": "requests-mediated action - send item in transit",
+      "permissionName": "requests-mediated.send-item-in-transit.post",
+      "displayName": "requests-mediated - send item in transit",
       "description": "Send item in transit"
     }
   ],

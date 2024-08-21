@@ -269,6 +269,7 @@
                 <dateLibrary>java</dateLibrary>
                 <interfaceOnly>true</interfaceOnly>
                 <useSpringBoot3>true</useSpringBoot3>
+                <useTags>true</useTags>
               </configOptions>
             </configuration>
           </execution>
@@ -278,7 +279,7 @@
               <goal>generate</goal>
             </goals>
             <configuration>
-              <inputSpec>${project.basedir}/src/main/resources/swagger.api/request-mediated-actions.yaml</inputSpec>
+              <inputSpec>${project.basedir}/src/main/resources/swagger.api/requests-mediated-actions.yaml</inputSpec>
               <output>${project.build.directory}/generated-sources</output>
               <generatorName>spring</generatorName>
               <modelPackage>${project.groupId}.mr.domain.dto</modelPackage>
@@ -295,6 +296,7 @@
                 <dateLibrary>java</dateLibrary>
                 <interfaceOnly>true</interfaceOnly>
                 <useSpringBoot3>true</useSpringBoot3>
+                <useTags>true</useTags>
               </configOptions>
             </configuration>
           </execution>

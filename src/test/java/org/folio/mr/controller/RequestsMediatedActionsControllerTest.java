@@ -12,10 +12,10 @@ import org.springframework.http.HttpStatus;
 import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
-public class RequestMediatedActionsControllerTest {
+public class RequestsMediatedActionsControllerTest {
 
   @InjectMocks
-  private RequestMediatedActionsController requestsController;
+  private RequestsMediatedActionsController requestsController;
 
   @Test
   void confirmItemArrival() {
