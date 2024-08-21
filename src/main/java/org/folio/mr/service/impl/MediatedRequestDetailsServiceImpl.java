@@ -6,7 +6,6 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CO
 
 import java.util.ArrayList;
 
-import org.folio.mr.domain.context.MediatedRequestContext;
 import org.folio.mr.domain.dto.Instance;
 import org.folio.mr.domain.dto.InstanceContributorsInner;
 import org.folio.mr.domain.dto.Item;
@@ -39,6 +38,7 @@ import org.folio.mr.service.MetadataService;
 import org.folio.mr.service.UserService;
 import org.springframework.stereotype.Service;
 
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -150,7 +150,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
   private static void addRequester(MediatedRequestContext context) {
     log.info("addRequester:: adding requester data");
-    User requester = context.getRequester();
+    User requester = context.requester();
     MediatedRequestRequester newRequester = new MediatedRequestRequester()
       .barcode(requester.getBarcode());
 
@@ -160,20 +160,20 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
         .middleName(personal.getMiddleName())
         .lastName(personal.getLastName());
     }
-    context.getRequest().requester(newRequester);
+    context.request().requester(newRequester);
   }
 
   private static void extendRequester(MediatedRequestContext context) {
     log.info("extendRequester:: extending requester data");
-    context.getRequest()
+    context.request()
       .getRequester()
-      .patronGroupId(context.getRequester().getPatronGroup());
+      .patronGroupId(context.requester().getPatronGroup());
   }
 
   private static void addRequesterGroup(MediatedRequestContext context) {
     log.info("addRequesterGroup:: adding requester user group data");
-    UserGroup userGroup = context.getRequesterGroup();
-    context.getRequest()
+    UserGroup userGroup = context.requesterGroup();
+    context.request()
       .getRequester()
       .patronGroup(new MediatedRequestRequesterPatronGroup()
         .id(userGroup.getId())
@@ -183,10 +183,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
   private static void addProxy(MediatedRequestContext context) {
     log.info("addProxy:: adding proxy user data");
-    User proxy = context.getProxy();
+    User proxy = context.proxy();
     if (proxy == null) {
       log.info("addProxy:: proxy user is null");
-      context.getRequest().proxy(null);
+      context.request().proxy(null);
       return;
     }
 
@@ -199,31 +199,31 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
         .middleName(personal.getMiddleName())
         .lastName(personal.getLastName());
     }
-    context.getRequest().proxy(newProxy);
+    context.request().proxy(newProxy);
   }
 
   private static void extendProxy(MediatedRequestContext context) {
     log.info("extendProxy:: extending proxy user data");
-    if (context.getProxy() == null) {
+    if (context.proxy() == null) {
       log.info("extendProxy:: proxy user is null");
-      context.getRequest().proxy(null);
+      context.request().proxy(null);
       return;
     }
 
-    context.getRequest()
+    context.request()
       .getProxy()
-      .patronGroupId(context.getProxy().getPatronGroup());
+      .patronGroupId(context.proxy().getPatronGroup());
   }
 
   private static void addProxyGroup(MediatedRequestContext context) {
     log.info("addProxyGroup:: adding proxy user group data");
-    if (context.getProxyGroup() == null) {
+    if (context.proxyGroup() == null) {
       log.info("addProxyGroup:: proxy user group is null");
       return;
     }
 
-    UserGroup userGroup = context.getProxyGroup();
-    context.getRequest()
+    UserGroup userGroup = context.proxyGroup();
+    context.request()
       .getProxy()
       .patronGroup(new MediatedRequestProxyPatronGroup()
         .id(userGroup.getId())
@@ -233,7 +233,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
   private static void addInstance(MediatedRequestContext context) {
     log.info("addInstance:: adding instance data");
-    Instance instance = context.getInstance();
+    Instance instance = context.instance();
     var identifiers = instance.getIdentifiers()
       .stream()
       .map(i -> new MediatedRequestInstanceIdentifiersInner()
@@ -245,12 +245,12 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .title(instance.getTitle())
       .identifiers(identifiers);
 
-    context.getRequest().instance(newInstance);
+    context.request().instance(newInstance);
   }
 
   private static void extendInstance(MediatedRequestContext context) {
     log.info("extendInstance:: extending instance data");
-    Instance instance = context.getInstance();
+    Instance instance = context.instance();
 
     var contributors = instance.getContributors()
       .stream()
@@ -267,7 +267,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
         .role(publication.getRole()))
       .toList();
 
-    context.getRequest()
+    context.request()
       .getInstance()
       .contributorNames(contributors)
       .publication(publications)
@@ -276,25 +276,25 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
   private static void addItem(MediatedRequestContext context) {
     log.info("addItem:: adding item data");
-    if (context.getItem() == null) {
+    if (context.item() == null) {
       log.info("addItem:: item is null");
-      context.getRequest().item(null);
+      context.request().item(null);
       return;
     }
-    context.getRequest()
-      .item(new MediatedRequestItem().barcode(context.getItem().getBarcode()));
+    context.request()
+      .item(new MediatedRequestItem().barcode(context.item().getBarcode()));
   }
 
   private static void extendItem(MediatedRequestContext context) {
     log.info("extendItem:: extending item data");
-    Item item = context.getItem();
+    Item item = context.item();
     if (item == null) {
       log.info("extendItem:: item is null");
-      context.getRequest().item(null);
+      context.request().item(null);
       return;
     }
 
-    context.getRequest().getItem()
+    context.request().getItem()
       .enumeration(item.getEnumeration())
       .volume(item.getVolume())
       .chronology(item.getChronology())
@@ -302,13 +302,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .status(item.getStatus().getName().getValue())
       .copyNumber(item.getCopyNumber())
       .location(new MediatedRequestItemLocation()
-        .name(context.getLocation().getName())
-        .code(context.getLocation().getCode())
-        .libraryName(context.getLibrary().getName()));
+        .name(context.location().getName())
+        .code(context.location().getCode())
+        .libraryName(context.library().getName()));
 
     var effectiveCallNumberComponents = item.getEffectiveCallNumberComponents();
     if (effectiveCallNumberComponents != null) {
-      context.getRequest().getItem()
+      context.request().getItem()
         .callNumber(effectiveCallNumberComponents.getCallNumber())
         .callNumberComponents(new MediatedRequestItemCallNumberComponents()
           .callNumber(effectiveCallNumberComponents.getCallNumber())
@@ -318,7 +318,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void addFulfillmentDetails(MediatedRequestContext context) {
-    var fulfillmentPreference = context.getRequest().getFulfillmentPreference();
+    var fulfillmentPreference = context.request().getFulfillmentPreference();
     log.info("addFulfillmentDetails:: fulfillment preference is '{}'", fulfillmentPreference.getValue());
 
     if (fulfillmentPreference == DELIVERY) {
@@ -330,14 +330,14 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
   private static void addPickupServicePoint(MediatedRequestContext context) {
     log.info("addPickupServicePoint:: adding pickup service point data");
-    ServicePoint pickupServicePoint = context.getPickupServicePoint();
+    ServicePoint pickupServicePoint = context.pickupServicePoint();
     if (pickupServicePoint == null) {
       log.info("addPickupServicePoint:: pickup service point is null");
-      context.getRequest().pickupServicePoint(null);
+      context.request().pickupServicePoint(null);
       return;
     }
 
-    context.getRequest().pickupServicePoint(new MediatedRequestPickupServicePoint()
+    context.request().pickupServicePoint(new MediatedRequestPickupServicePoint()
       .name(pickupServicePoint.getName())
       .code(pickupServicePoint.getCode())
       .discoveryDisplayName(pickupServicePoint.getDiscoveryDisplayName())
@@ -348,20 +348,20 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
   private static void addDeliveryAddress(MediatedRequestContext context) {
     log.info("addDeliveryAddress:: adding delivery address");
-    String deliveryAddressTypeId = context.getRequest().getDeliveryAddressTypeId();
+    String deliveryAddressTypeId = context.request().getDeliveryAddressTypeId();
     if (deliveryAddressTypeId == null) {
       log.info("addDeliveryAddress:: deliveryAddressTypeId is null");
-      context.getRequest().deliveryAddress(null);
+      context.request().deliveryAddress(null);
       return;
     }
 
-    context.getRequester()
+    context.requester()
       .getPersonal()
       .getAddresses()
       .stream()
       .filter(address -> deliveryAddressTypeId.equals(address.getAddressTypeId()))
       .findFirst()
-      .ifPresent(address -> context.getRequest().setDeliveryAddress(
+      .ifPresent(address -> context.request().setDeliveryAddress(
         new MediatedRequestDeliveryAddress()
           .addressTypeId(address.getAddressTypeId())
           .addressLine1(address.getAddressLine1())
@@ -377,7 +377,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     log.info("addSearchIndex:: adding search index");
     MediatedRequestSearchIndex searchIndex = new MediatedRequestSearchIndex();
 
-    Item item = context.getItem();
+    Item item = context.item();
     if (item != null) {
       log.info("addSearchIndex:: adding item data to search index");
       String shelvingOrder = item.getEffectiveShelvingOrder();
@@ -395,13 +395,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       }
     }
 
-    ServicePoint pickupServicePoint = context.getPickupServicePoint();
+    ServicePoint pickupServicePoint = context.pickupServicePoint();
     if (pickupServicePoint != null && pickupServicePoint.getName() != null) {
       log.info("addSearchIndex:: adding pickup service point data to search index");
       searchIndex.setPickupServicePointName(pickupServicePoint.getName());
     }
 
-    context.getRequest().searchIndex(searchIndex);
+    context.request().searchIndex(searchIndex);
   }
 
   private static void removeExistingRequestDetails(MediatedRequest request) {
@@ -436,6 +436,12 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     }
 
     log.warn("processRequestStatus:: invalid status: {}", mediatedRequest.getStatus());
+  }
+
+  @Builder
+  private record MediatedRequestContext(MediatedRequest request, User requester,
+    UserGroup requesterGroup, User proxy, UserGroup proxyGroup, Item item,
+    Instance instance, ServicePoint pickupServicePoint, Location location, Library library) {
   }
 
 }
