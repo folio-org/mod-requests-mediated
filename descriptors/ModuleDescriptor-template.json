@@ -113,8 +113,8 @@
     },
     {
       "permissionName": "requests-mediated.confirm-item-arrival.post",
-      "displayName": "requests-mediated - arrival item to be confirmed",
-      "description": "Arrival item to be confirmed"
+      "displayName": "requests-mediated - confirm item arrival",
+      "description": "Confirm item arrival"
     },
     {
       "permissionName": "requests-mediated.send-item-in-transit.post",
