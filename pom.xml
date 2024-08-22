@@ -35,7 +35,7 @@
 
     <!-- runtime dependencies -->
     <folio-spring-base.version>8.1.0</folio-spring-base.version>
-    <openapi-generator.version>7.3.0</openapi-generator.version>
+    <openapi-generator.version>7.8.0</openapi-generator.version>
     <mapstruct.version>1.5.3.Final</mapstruct.version>
 
     <!-- test dependencies -->
@@ -252,34 +252,7 @@
               <goal>generate</goal>
             </goals>
             <configuration>
-              <inputSpec>${project.basedir}/src/main/resources/swagger.api/requests-mediated.yaml</inputSpec>
-              <output>${project.build.directory}/generated-sources</output>
-              <generatorName>spring</generatorName>
-              <modelPackage>${project.groupId}.mr.domain.dto</modelPackage>
-              <apiPackage>${project.groupId}.mr.rest.resource</apiPackage>
-              <generateApis>true</generateApis>
-              <generateApiTests>true</generateApiTests>
-              <generateApiDocumentation>true</generateApiDocumentation>
-              <generateModels>true</generateModels>
-              <generateModelTests>false</generateModelTests>
-              <generateSupportingFiles>true</generateSupportingFiles>
-              <supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
-              <generateModelDocumentation>true</generateModelDocumentation>
-              <configOptions>
-                <dateLibrary>java</dateLibrary>
-                <interfaceOnly>true</interfaceOnly>
-                <useSpringBoot3>true</useSpringBoot3>
-                <useTags>true</useTags>
-              </configOptions>
-            </configuration>
-          </execution>
-          <execution>
-            <id>request-mediated-actions</id>
-            <goals>
-              <goal>generate</goal>
-            </goals>
-            <configuration>
-              <inputSpec>${project.basedir}/src/main/resources/swagger.api/requests-mediated-actions.yaml</inputSpec>
+              <inputSpecRootDirectory>${project.basedir}/src/main/resources/swagger.api</inputSpecRootDirectory>
               <output>${project.build.directory}/generated-sources</output>
               <generatorName>spring</generatorName>
               <modelPackage>${project.groupId}.mr.domain.dto</modelPackage>
