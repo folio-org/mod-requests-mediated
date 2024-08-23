@@ -121,7 +121,7 @@ paths:
           $ref: '#/components/responses/notFoundResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
-  /request-mediated-actions/confirm-item-arrival:
+  /requests-mediated/confirm-item-arrival:
     post:
       description: Confirm item arrival
       operationId: confirmItemArrival
@@ -140,7 +140,7 @@ paths:
           $ref: '#/components/responses/badRequestResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
-  /request-mediated-actions/send-item-in-transit:
+  /requests-mediated/send-item-in-transit:
     post:
       description: Send item in transit
       operationId: sendItemInTransit
