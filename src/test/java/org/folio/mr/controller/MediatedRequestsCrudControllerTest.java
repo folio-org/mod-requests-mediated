@@ -1,6 +1,5 @@
 package org.folio.mr.controller;
 
-import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.service.MediatedRequestsService;
 import org.junit.jupiter.api.Assertions;
@@ -13,17 +12,16 @@ import org.springframework.http.HttpStatus;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class MediatedRequestsControllerTest {
+class MediatedRequestsCrudControllerTest {
   @Mock
   private MediatedRequestsService requestsService;
 
   @InjectMocks
-  private MediatedRequestsController requestsController;
+  private MediatedRequestsCrudController requestsController;
 
   @Test
   void getByIdNotFoundWhenNull() {
@@ -38,11 +36,5 @@ class MediatedRequestsControllerTest {
     when(requestsService.get(any())).thenReturn(Optional.of(new MediatedRequest()));
     var response = requestsController.getMediatedRequestById(any());
     Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
-  }
-
-  @Test
-  void confirmItemArrival() {
-    var response = requestsController.confirmItemArrival(mock(ConfirmItemArrivalRequest.class));
-    Assertions.assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
   }
 }
