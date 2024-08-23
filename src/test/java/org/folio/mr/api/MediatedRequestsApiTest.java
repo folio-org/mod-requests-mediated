@@ -9,6 +9,7 @@ import static org.folio.mr.domain.dto.MediatedRequest.RequestTypeEnum.PAGE;
 import static org.folio.mr.util.TestUtils.dateToString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.emptyIterable;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.iterableWithSize;
@@ -59,6 +60,14 @@ class MediatedRequestsApiTest extends BaseIT {
   void getByIdNotFound() throws Exception {
     getRequestById(randomId())
       .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void getReturnsEmptyArrayWhenNoRequestsAreFound() throws Exception {
+    getAllRequests()
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("mediatedRequests", emptyIterable()))
+      .andExpect(jsonPath("totalRecords", is(0)));
   }
 
   @Test
