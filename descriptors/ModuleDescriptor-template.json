@@ -3,28 +3,6 @@
   "name": "Folio mod-requests-mediated module",
   "provides": [
     {
-      "id": "requests-mediated-actions",
-      "version": "1.0",
-      "handlers": [
-        {
-          "methods": [
-            "POST"
-          ],
-          "pathPattern": "/requests-mediated/confirm-item-arrival",
-          "permissionsRequired": ["requests-mediated.confirm-item-arrival.post"],
-          "modulePermissions": []
-        },
-        {
-          "methods": [
-            "POST"
-          ],
-          "pathPattern": "/requests-mediated/send-item-in-transit",
-          "permissionsRequired": ["requests-mediated.send-item-in-transit.post"],
-          "modulePermissions": []
-        }
-      ]
-    },
-    {
       "id": "requests-mediated",
       "version": "2.0",
       "handlers": [
@@ -60,6 +38,28 @@
           "methods": ["DELETE"],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
           "permissionsRequired": ["requests-mediated.mediated-request.item.delete"],
+          "modulePermissions": []
+        }
+      ]
+    },
+    {
+      "id": "requests-mediated-actions",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/requests-mediated/confirm-item-arrival",
+          "permissionsRequired": ["requests-mediated.confirm-item-arrival.post"],
+          "modulePermissions": []
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/requests-mediated/send-item-in-transit",
+          "permissionsRequired": ["requests-mediated.send-item-in-transit.post"],
           "modulePermissions": []
         }
       ]

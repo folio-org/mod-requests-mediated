@@ -16,12 +16,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class MediatedRequestsControllerTest {
+class MediatedRequestsCrudControllerTest {
   @Mock
   private MediatedRequestsService requestsService;
 
   @InjectMocks
-  private MediatedRequestsController requestsController;
+  private MediatedRequestsCrudController requestsController;
 
   @Test
   void getByIdNotFoundWhenNull() {

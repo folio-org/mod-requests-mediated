@@ -11,7 +11,7 @@ paths:
       description: Create mediated request
       operationId: postMediatedRequest
       tags:
-        - requestsMediated
+        - mediatedRequestsCrud
       requestBody:
         content:
           application/json:
@@ -29,7 +29,7 @@ paths:
       description: Retrieve a collection of mediated requests
       operationId: getMediatedRequestCollection
       tags:
-        - requestsMediated
+        - mediatedRequestsCrud
       parameters:
         - $ref: '#/components/parameters/trait_queryable_query'
         - $ref: '#/components/parameters/trait_pageable_offset'
@@ -56,7 +56,7 @@ paths:
       description: Retrieve mediated request object by id
       operationId: getMediatedRequestById
       tags:
-        - requestsMediated
+        - mediatedRequestsCrud
       parameters:
         - $ref: '#/components/parameters/mediatedRequestId'
       responses:
@@ -87,7 +87,7 @@ paths:
       description: Update mediated request by ID
       operationId: putMediatedRequestById
       tags:
-        - requestsMediated
+        - mediatedRequestsCrud
       requestBody:
         content:
           application/json:
@@ -109,7 +109,7 @@ paths:
       description: Remove mediated request by ID
       operationId: deleteMediatedRequestById
       tags:
-        - requestsMediated
+        - mediatedRequestsCrud
       parameters:
         - $ref: '#/components/parameters/mediatedRequestId'
       responses:
@@ -126,7 +126,7 @@ paths:
       description: Confirm item arrival
       operationId: confirmItemArrival
       tags:
-        - requestsMediatedActions
+        - mediatedRequestsActions
       requestBody:
         content:
           application/json:
@@ -145,7 +145,7 @@ paths:
       description: Send item in transit
       operationId: sendItemInTransit
       tags:
-        - requestsMediatedActions
+        - mediatedRequestsActions
       requestBody:
         content:
           application/json:

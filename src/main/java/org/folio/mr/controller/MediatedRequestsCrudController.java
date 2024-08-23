@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.MediatedRequests;
-import org.folio.mr.rest.resource.RequestsMediatedApi;
+import org.folio.mr.rest.resource.MediatedRequestsCrudApi;
 import org.folio.mr.service.MediatedRequestsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import lombok.extern.log4j.Log4j2;
 @RestController
 @Log4j2
 @AllArgsConstructor
-public class MediatedRequestsController implements RequestsMediatedApi {
+public class MediatedRequestsCrudController implements MediatedRequestsCrudApi {
 
   private final MediatedRequestsService mediatedRequestsService;
 
