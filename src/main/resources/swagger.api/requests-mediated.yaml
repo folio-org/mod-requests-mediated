@@ -2,13 +2,16 @@ openapi: 3.0.0
 info:
   title: Request Mediated API
   version: v1
+tags:
+  - name: requestsMediated
+  - name: requestsMediatedActions
 paths:
   /requests-mediated/mediated-requests:
     post:
       description: Create mediated request
       operationId: postMediatedRequest
       tags:
-        - mediatedRequest
+        - mediatedRequestsCrud
       requestBody:
         content:
           application/json:
@@ -26,7 +29,7 @@ paths:
       description: Retrieve a collection of mediated requests
       operationId: getMediatedRequestCollection
       tags:
-        - mediatedRequest
+        - mediatedRequestsCrud
       parameters:
         - $ref: '#/components/parameters/trait_queryable_query'
         - $ref: '#/components/parameters/trait_pageable_offset'
@@ -53,7 +56,7 @@ paths:
       description: Retrieve mediated request object by id
       operationId: getMediatedRequestById
       tags:
-        - mediatedRequest
+        - mediatedRequestsCrud
       parameters:
         - $ref: '#/components/parameters/mediatedRequestId'
       responses:
@@ -84,7 +87,7 @@ paths:
       description: Update mediated request by ID
       operationId: putMediatedRequestById
       tags:
-        - mediatedRequest
+        - mediatedRequestsCrud
       requestBody:
         content:
           application/json:
@@ -106,7 +109,7 @@ paths:
       description: Remove mediated request by ID
       operationId: deleteMediatedRequestById
       tags:
-        - mediatedRequest
+        - mediatedRequestsCrud
       parameters:
         - $ref: '#/components/parameters/mediatedRequestId'
       responses:
@@ -123,12 +126,31 @@ paths:
       description: Confirm item arrival
       operationId: confirmItemArrival
       tags:
-        - mediatedRequest
+        - mediatedRequestsActions
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/confirmItemArrivalRequest'
+        required: true
+      responses:
+        '204':
+          description: Successful operation, no content returned
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
+  /requests-mediated/send-item-in-transit:
+    post:
+      description: Send item in transit
+      operationId: sendItemInTransit
+      tags:
+        - mediatedRequestsActions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/sendItemInTransitRequest'
         required: true
       responses:
         '204':
@@ -143,6 +165,8 @@ components:
       $ref: 'schemas/mediatedRequest.yaml#/MediatedRequest'
     confirmItemArrivalRequest:
       $ref: 'schemas/confirmItemArrivalRequest.yaml#/ConfirmItemArrivalRequest'
+    sendItemInTransitRequest:
+      $ref: 'schemas/sendItemInTransitRequest.yaml#/SendItemInTransitRequest'
     errorResponse:
       $ref: 'schemas/errors.json'
     user:

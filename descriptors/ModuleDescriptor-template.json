@@ -43,6 +43,28 @@
       ]
     },
     {
+      "id": "requests-mediated-actions",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/requests-mediated/confirm-item-arrival",
+          "permissionsRequired": ["requests-mediated.confirm-item-arrival.post"],
+          "modulePermissions": []
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/requests-mediated/send-item-in-transit",
+          "permissionsRequired": ["requests-mediated.send-item-in-transit.post"],
+          "modulePermissions": []
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "2.0",
       "interfaceType": "system",
@@ -88,6 +110,16 @@
       "permissionName": "requests-mediated.mediated-request.item.delete",
       "displayName": "requests-mediated - remove mediated request",
       "description": "Remove mediated request"
+    },
+    {
+      "permissionName": "requests-mediated.confirm-item-arrival.post",
+      "displayName": "requests-mediated - confirm item arrival",
+      "description": "Confirm item arrival"
+    },
+    {
+      "permissionName": "requests-mediated.send-item-in-transit.post",
+      "displayName": "requests-mediated - send item in transit",
+      "description": "Send item in transit"
     },
     {
       "permissionName": "requests-mediated.internal.fetch-request-details",
