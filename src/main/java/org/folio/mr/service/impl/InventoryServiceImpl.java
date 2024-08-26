@@ -10,10 +10,15 @@ import org.folio.mr.client.LocationClient;
 import org.folio.mr.client.LibraryClient;
 import org.folio.mr.client.ServicePointClient;
 import org.folio.mr.domain.dto.Instance;
+import org.folio.mr.domain.dto.Instances;
 import org.folio.mr.domain.dto.Item;
+import org.folio.mr.domain.dto.Items;
+import org.folio.mr.domain.dto.Libraries;
 import org.folio.mr.domain.dto.Library;
 import org.folio.mr.domain.dto.Location;
+import org.folio.mr.domain.dto.Locations;
 import org.folio.mr.domain.dto.ServicePoint;
+import org.folio.mr.domain.dto.ServicePoints;
 import org.folio.mr.service.InventoryService;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +45,7 @@ public class InventoryServiceImpl implements InventoryService {
   @Override
   public Map<String, Item> fetchItems(Set<String> ids) {
     log.info("fetchItems:: fetching {} items by IDs", ids::size);
-    return bulkFetcher.getMapped(itemClient, ids, Item::getId);
+    return bulkFetcher.getMapped(itemClient, ids, Items::getItems, Item::getId);
   }
 
   @Override
@@ -52,7 +57,7 @@ public class InventoryServiceImpl implements InventoryService {
   @Override
   public Map<String, Instance> fetchInstances(Set<String> ids) {
     log.info("fetchInstances:: fetching {} instances by IDs", ids::size);
-    return bulkFetcher.getMapped(instanceClient, ids, Instance::getId);
+    return bulkFetcher.getMapped(instanceClient, ids, Instances::getInstances, Instance::getId);
   }
 
   @Override
@@ -64,7 +69,7 @@ public class InventoryServiceImpl implements InventoryService {
   @Override
   public Map<String, Location> fetchLocations(Set<String> ids) {
     log.info("fetchLocations:: fetching {} locations by IDs", ids::size);
-    return bulkFetcher.getMapped(locationClient, ids, Location::getId);
+    return bulkFetcher.getMapped(locationClient, ids, Locations::getLocations, Location::getId);
   }
 
   @Override
@@ -76,7 +81,7 @@ public class InventoryServiceImpl implements InventoryService {
   @Override
   public Map<String, Library> fetchLibraries(Set<String> ids) {
     log.info("fetchLibraries:: fetching {} libraries by IDs", ids::size);
-    return bulkFetcher.getMapped(libraryClient, ids, Library::getId);
+    return bulkFetcher.getMapped(libraryClient, ids, Libraries::getLoclibs, Library::getId);
   }
 
   @Override
@@ -88,6 +93,7 @@ public class InventoryServiceImpl implements InventoryService {
   @Override
   public Map<String, ServicePoint> fetchServicePoints(Set<String> ids) {
     log.info("fetchServicePoints:: fetching {} service points by IDs", ids::size);
-    return bulkFetcher.getMapped(servicePointClient, ids, ServicePoint::getId);
+    return bulkFetcher.getMapped(servicePointClient, ids, ServicePoints::getServicepoints,
+      ServicePoint::getId);
   }
 }
