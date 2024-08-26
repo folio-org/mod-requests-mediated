@@ -11,6 +11,7 @@ import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.MediatedRequestDetailsService;
 import org.folio.mr.service.MediatedRequestsService;
 import org.folio.spring.data.OffsetRequest;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -35,30 +36,12 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
 
   @Override
   public MediatedRequests findBy(String query, Integer offset, Integer limit) {
-    var mediatedRequests =
-      mediatedRequestsRepository.findByCql(query, OffsetRequest.of(offset, limit)).stream()
-        .map(requestsMapper::mapEntityToDto)
-        .map(requestDetailsService::addRequestDetailsForGet)
-        .map(MediatedRequestsServiceImpl::removeSearchIndex)
-        .toList();
-
-    var totalRecords = mediatedRequestsRepository.count(query);
-
-    return new MediatedRequests().mediatedRequests(mediatedRequests).totalRecords(totalRecords);
+    return buildForGet(mediatedRequestsRepository.findByCql(query, OffsetRequest.of(offset, limit)));
   }
 
   @Override
   public MediatedRequests findAll(Integer offset, Integer limit) {
-    var mediatedRequests = mediatedRequestsRepository.findAll(OffsetRequest.of(offset, limit))
-      .stream()
-      .map(requestsMapper::mapEntityToDto)
-      .map(requestDetailsService::addRequestDetailsForGet)
-      .map(MediatedRequestsServiceImpl::removeSearchIndex)
-      .toList();
-
-    var totalRecords = mediatedRequestsRepository.count();
-
-    return new MediatedRequests().mediatedRequests(mediatedRequests).totalRecords(totalRecords);
+    return buildForGet(mediatedRequestsRepository.findAll(OffsetRequest.of(offset, limit)));
   }
 
   @Override
@@ -66,7 +49,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
     MediatedRequest extendedRequest = requestDetailsService.addRequestDetailsForCreate(
       mediatedRequest);
     MediatedRequestEntity savedEntity = mediatedRequestsRepository.save(
-      requestsMapper.mapDtoToEntity(mediatedRequest));
+      requestsMapper.mapDtoToEntity(extendedRequest));
     removeSearchIndex(extendedRequest);
 
     return extendedRequest.id(savedEntity.getId().toString());
@@ -96,6 +79,19 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   private static MediatedRequest removeSearchIndex(MediatedRequest request) {
     log.debug("removeSearchIndex:: removing search index");
     return request.searchIndex(null);
+  }
+
+  private MediatedRequests buildForGet(Page<MediatedRequestEntity> entities) {
+    var requests = entities.stream()
+        .map(requestsMapper::mapEntityToDto)
+        .toList();
+
+    requestDetailsService.addRequestDetailsForGet(requests)
+      .forEach(MediatedRequestsServiceImpl::removeSearchIndex);
+
+    return new MediatedRequests()
+      .mediatedRequests(requests)
+      .totalRecords(mediatedRequestsRepository.count());
   }
 
 }
