@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(name = "groups", url = "groups", configuration = FeignClientConfiguration.class)
-public interface UserGroupClient {
+public interface UserGroupClient extends GetByQueryClient<UserGroup> {
 
   @GetMapping("/{id}")
   UserGroup get(@PathVariable String id);

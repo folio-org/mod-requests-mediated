@@ -1,10 +1,18 @@
 package org.folio.mr.service.impl;
 
+import static java.util.stream.Collectors.toSet;
 import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.DELIVERY;
 import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.HOLD_SHELF;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CONFIRMATION;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 
 import org.folio.mr.domain.dto.Instance;
 import org.folio.mr.domain.dto.InstanceContributorsInner;
@@ -62,10 +70,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
     addRequester(context);
     extendRequester(context);
-    addRequesterGroup(context);
-    addProxy(context);
-    extendProxy(context);
-    addProxyGroup(context);
+    addRequesterUserGroup(context);
+    addProxyUser(context);
+    extendProxyUser(context);
+    addProxyUserGroup(context);
     addInstance(context);
     extendInstance(context);
     addItem(context);
@@ -85,9 +93,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     MediatedRequestContext context = buildRequestContext(request);
 
     addRequester(context);
-    addRequesterGroup(context);
-    addProxy(context);
-    addProxyGroup(context);
+    addRequesterUserGroup(context);
+    addProxyUser(context);
+    addProxyUserGroup(context);
     addInstance(context);
     addItem(context);
     addSearchIndex(context);
@@ -98,18 +106,89 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   @Override
-  public MediatedRequest addRequestDetailsForGet(MediatedRequest request) {
-    MediatedRequestContext context = buildRequestContext(request);
+  public Collection<MediatedRequest> addRequestDetailsForGet(Collection<MediatedRequest> requests) {
+    buildRequestContexts(requests)
+      .forEach(this::addRequestDetailsForGet);
 
+    return requests;
+  }
+
+  @Override
+  public MediatedRequest addRequestDetailsForGet(MediatedRequest request) {
+    return addRequestDetailsForGet(buildRequestContext(request));
+  }
+
+  private MediatedRequest addRequestDetailsForGet(MediatedRequestContext context) {
     extendRequester(context);
-    addRequesterGroup(context);
-    extendProxy(context);
-    addProxyGroup(context);
+    addRequesterUserGroup(context);
+    extendProxyUser(context);
+    addProxyUserGroup(context);
     extendInstance(context);
     extendItem(context);
     addFulfillmentDetails(context);
 
-    return request;
+    return context.request();
+  }
+
+  private Collection<MediatedRequestContext> buildRequestContexts(Collection<MediatedRequest> requests) {
+    Set<String> instanceIds = new HashSet<>();
+    Set<String> itemIds = new HashSet<>();
+    Set<String> servicePointIds = new HashSet<>();
+    Set<String> userIds = new HashSet<>();
+
+    requests.forEach(request -> {
+      addIfNotNull(instanceIds, request.getInstanceId());
+      addIfNotNull(itemIds, request.getItemId());
+      addIfNotNull(servicePointIds, request.getPickupServicePointId());
+      addIfNotNull(userIds, request.getRequesterId());
+      addIfNotNull(userIds, request.getProxyUserId());
+    });
+
+    Map<String, Instance> instances = inventoryService.fetchInstances(instanceIds);
+    Map<String, Item> items = inventoryService.fetchItems(itemIds);
+    Map<String, ServicePoint> servicePoints = inventoryService.fetchServicePoints(servicePointIds);
+    Map<String, User> users = userService.fetchUsers(userIds);
+    Map<String, UserGroup> userGroups = userService.fetchUserGroups(
+      extractValues(users, User::getPatronGroup));
+    Map<String, Location> locations = inventoryService.fetchLocations(
+      extractValues(items, Item::getEffectiveLocationId));
+    Map<String, Library> libraries = inventoryService.fetchLibraries(
+      extractValues(locations, Location::getLibraryId));
+
+    return requests.stream()
+      .map(request -> {
+        Instance instance = instances.get(request.getInstanceId());
+        Item item = items.get(request.getItemId());
+        ServicePoint servicePoint = servicePoints.get(request.getPickupServicePointId());
+        User requester = users.get(request.getRequesterId());
+        UserGroup requesterUserGroup = userGroups.get(requester.getPatronGroup());
+        User proxyUser = users.get(request.getProxyUserId());
+        Location location = Optional.ofNullable(item)
+          .map(Item::getEffectiveLocationId)
+          .map(locations::get)
+          .orElse(null);
+        Library library = Optional.ofNullable(location)
+          .map(Location::getLibraryId)
+          .map(libraries::get)
+          .orElse(null);
+        UserGroup proxyUserGroup = Optional.ofNullable(proxyUser)
+          .map(User::getPatronGroup)
+          .map(userGroups::get)
+          .orElse(null);
+
+        return MediatedRequestContext.builder()
+          .request(request)
+          .instance(instance)
+          .item(item)
+          .location(location)
+          .library(library)
+          .pickupServicePoint(servicePoint)
+          .requester(requester)
+          .requesterUserGroup(requesterUserGroup)
+          .proxyUser(proxyUser)
+          .proxyUserGroup(proxyUserGroup)
+          .build();
+      }).toList();
   }
 
   private MediatedRequestContext buildRequestContext(MediatedRequest request) {
@@ -121,13 +200,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
     contextBuilder.instance(instance)
       .requester(requester)
-      .requesterGroup(requesterGroup);
+      .requesterUserGroup(requesterGroup);
 
     if (request.getProxyUserId() != null) {
       User proxy = userService.fetchUser(request.getProxyUserId());
       UserGroup proxyGroup = userService.fetchUserGroup(proxy.getPatronGroup());
-      contextBuilder.proxy(proxy)
-        .proxyGroup(proxyGroup);
+      contextBuilder.proxyUser(proxy)
+        .proxyUserGroup(proxyGroup);
     }
 
     if (request.getItemId() != null) {
@@ -170,9 +249,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .patronGroupId(context.requester().getPatronGroup());
   }
 
-  private static void addRequesterGroup(MediatedRequestContext context) {
-    log.info("addRequesterGroup:: adding requester user group data");
-    UserGroup userGroup = context.requesterGroup();
+  private static void addRequesterUserGroup(MediatedRequestContext context) {
+    log.info("addRequesterUserGroup:: adding requester user group data");
+    UserGroup userGroup = context.requesterUserGroup();
     context.request()
       .getRequester()
       .patronGroup(new MediatedRequestRequesterPatronGroup()
@@ -181,11 +260,11 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
         .desc(userGroup.getDesc()));
   }
 
-  private static void addProxy(MediatedRequestContext context) {
-    log.info("addProxy:: adding proxy user data");
-    User proxy = context.proxy();
+  private static void addProxyUser(MediatedRequestContext context) {
+    log.info("addProxyUser:: adding proxyUser user data");
+    User proxy = context.proxyUser();
     if (proxy == null) {
-      log.info("addProxy:: proxy user is null");
+      log.info("addProxyUser:: proxyUser user is null");
       context.request().proxy(null);
       return;
     }
@@ -202,27 +281,27 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     context.request().proxy(newProxy);
   }
 
-  private static void extendProxy(MediatedRequestContext context) {
-    log.info("extendProxy:: extending proxy user data");
-    if (context.proxy() == null) {
-      log.info("extendProxy:: proxy user is null");
+  private static void extendProxyUser(MediatedRequestContext context) {
+    log.info("extendProxyUser:: extending proxyUser user data");
+    if (context.proxyUser() == null) {
+      log.info("extendProxyUser:: proxyUser user is null");
       context.request().proxy(null);
       return;
     }
 
     context.request()
       .getProxy()
-      .patronGroupId(context.proxy().getPatronGroup());
+      .patronGroupId(context.proxyUser().getPatronGroup());
   }
 
-  private static void addProxyGroup(MediatedRequestContext context) {
-    log.info("addProxyGroup:: adding proxy user group data");
-    if (context.proxyGroup() == null) {
-      log.info("addProxyGroup:: proxy user group is null");
+  private static void addProxyUserGroup(MediatedRequestContext context) {
+    log.info("addProxyUserGroup:: adding proxyUser user group data");
+    if (context.proxyUserGroup() == null) {
+      log.info("addProxyUserGroup:: proxyUser user group is null");
       return;
     }
 
-    UserGroup userGroup = context.proxyGroup();
+    UserGroup userGroup = context.proxyUserGroup();
     context.request()
       .getProxy()
       .patronGroup(new MediatedRequestProxyPatronGroup()
@@ -438,10 +517,23 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     log.warn("processRequestStatus:: invalid status: {}", mediatedRequest.getStatus());
   }
 
-  @Builder
-  private record MediatedRequestContext(MediatedRequest request, User requester,
-    UserGroup requesterGroup, User proxy, UserGroup proxyGroup, Item item,
-    Instance instance, ServicePoint pickupServicePoint, Location location, Library library) {
+  private static <T> void addIfNotNull(Collection<T> collection, T obj) {
+    Optional.ofNullable(obj)
+      .ifPresent(collection::add);
   }
 
+  private static <T> Set<String> extractValues(Map<String, T> objects,
+    Function<T, String> valueExtractor) {
+
+    return objects.values().stream()
+      .map(valueExtractor)
+      .filter(Objects::nonNull)
+      .collect(toSet());
+  }
+
+  @Builder
+  private record MediatedRequestContext(MediatedRequest request, User requester,
+    UserGroup requesterUserGroup, User proxyUser, UserGroup proxyUserGroup, Item item,
+    Instance instance, ServicePoint pickupServicePoint, Location location, Library library) {
+  }
 }
