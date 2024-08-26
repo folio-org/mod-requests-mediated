@@ -8,6 +8,8 @@ import org.folio.mr.client.UserClient;
 import org.folio.mr.client.UserGroupClient;
 import org.folio.mr.domain.dto.User;
 import org.folio.mr.domain.dto.UserGroup;
+import org.folio.mr.domain.dto.UserGroups;
+import org.folio.mr.domain.dto.Users;
 import org.folio.mr.service.UserService;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +34,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public Map<String, User> fetchUsers(Set<String> ids) {
     log.info("fetchUsers:: fetching {} users by IDs", ids::size);
-    return bulkFetcher.getMapped(userClient, ids, User::getId);
+    return bulkFetcher.getMapped(userClient, ids, Users::getUsers, User::getId);
   }
 
   @Override
@@ -44,6 +46,6 @@ public class UserServiceImpl implements UserService {
   @Override
   public Map<String, UserGroup> fetchUserGroups(Set<String> ids) {
     log.info("fetchUserGroups:: fetching {} user groups by IDs", ids::size);
-    return bulkFetcher.getMapped(userGroupClient, ids, UserGroup::getId);
+    return bulkFetcher.getMapped(userGroupClient, ids, UserGroups::getUsergroups, UserGroup::getId);
   }
 }
