@@ -3,7 +3,7 @@ package org.folio.mr.service.impl;
 import java.util.Map;
 import java.util.Set;
 
-import org.folio.mr.client.BulkFetchingService;
+import org.folio.mr.client.BulkFetcher;
 import org.folio.mr.client.UserClient;
 import org.folio.mr.client.UserGroupClient;
 import org.folio.mr.domain.dto.User;
@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
 
   private final UserClient userClient;
   private final UserGroupClient userGroupClient;
-  private final BulkFetchingService bulkFetchingService;
+  private final BulkFetcher bulkFetcher;
 
   @Override
   public User fetchUser(String id) {
@@ -34,7 +34,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public Map<String, User> fetchUsers(Set<String> ids) {
     log.info("fetchUsers:: fetching {} users by IDs", ids::size);
-    return bulkFetchingService.fetch(userClient, ids, Users::getUsers, User::getId);
+    return bulkFetcher.getMapped(userClient, ids, Users::getUsers, User::getId);
   }
 
   @Override
@@ -46,6 +46,6 @@ public class UserServiceImpl implements UserService {
   @Override
   public Map<String, UserGroup> fetchUserGroups(Set<String> ids) {
     log.info("fetchUserGroups:: fetching {} user groups by IDs", ids::size);
-    return bulkFetchingService.fetch(userGroupClient, ids, UserGroups::getUsergroups, UserGroup::getId);
+    return bulkFetcher.getMapped(userGroupClient, ids, UserGroups::getUsergroups, UserGroup::getId);
   }
 }

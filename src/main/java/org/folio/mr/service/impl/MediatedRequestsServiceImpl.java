@@ -36,12 +36,12 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
 
   @Override
   public MediatedRequests findBy(String query, Integer offset, Integer limit) {
-    return buildResponseForGet(mediatedRequestsRepository.findByCql(query, OffsetRequest.of(offset, limit)));
+    return buildForGet(mediatedRequestsRepository.findByCql(query, OffsetRequest.of(offset, limit)));
   }
 
   @Override
   public MediatedRequests findAll(Integer offset, Integer limit) {
-    return buildResponseForGet(mediatedRequestsRepository.findAll(OffsetRequest.of(offset, limit)));
+    return buildForGet(mediatedRequestsRepository.findAll(OffsetRequest.of(offset, limit)));
   }
 
   @Override
@@ -81,7 +81,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
     return request.searchIndex(null);
   }
 
-  private MediatedRequests buildResponseForGet(Page<MediatedRequestEntity> entities) {
+  private MediatedRequests buildForGet(Page<MediatedRequestEntity> entities) {
     var requests = entities.stream()
         .map(requestsMapper::mapEntityToDto)
         .toList();
