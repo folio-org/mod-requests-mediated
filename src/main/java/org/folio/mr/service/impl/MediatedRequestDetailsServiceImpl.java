@@ -157,44 +157,44 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     Map<String, Library> libraries = inventoryService.fetchLibraries(
       extractValues(locations, Location::getLibraryId));
 
-    return requests.stream()
-      .map(request -> {
-        Instance instance = instances.get(request.getInstanceId());
-        Item item = items.get(request.getItemId());
-        ServicePoint servicePoint = servicePoints.get(request.getPickupServicePointId());
-        User requester = users.get(request.getRequesterId());
-        UserGroup requesterUserGroup = userGroups.get(requester.getPatronGroup());
-        User proxyUser = users.get(request.getProxyUserId());
-        Location location = Optional.ofNullable(item)
-          .map(Item::getEffectiveLocationId)
-          .map(locations::get)
-          .orElse(null);
-        Library library = Optional.ofNullable(location)
-          .map(Location::getLibraryId)
-          .map(libraries::get)
-          .orElse(null);
-        UserGroup proxyUserGroup = Optional.ofNullable(proxyUser)
-          .map(User::getPatronGroup)
-          .map(userGroups::get)
-          .orElse(null);
+    return requests.stream().map(request -> {
+      log.info("buildRequestContexts:: building context for request {}", request::getId);
+      Instance instance = instances.get(request.getInstanceId());
+      Item item = items.get(request.getItemId());
+      ServicePoint servicePoint = servicePoints.get(request.getPickupServicePointId());
+      User requester = users.get(request.getRequesterId());
+      UserGroup requesterUserGroup = userGroups.get(requester.getPatronGroup());
+      User proxyUser = users.get(request.getProxyUserId());
+      Location location = Optional.ofNullable(item)
+        .map(Item::getEffectiveLocationId)
+        .map(locations::get)
+        .orElse(null);
+      Library library = Optional.ofNullable(location)
+        .map(Location::getLibraryId)
+        .map(libraries::get)
+        .orElse(null);
+      UserGroup proxyUserGroup = Optional.ofNullable(proxyUser)
+        .map(User::getPatronGroup)
+        .map(userGroups::get)
+        .orElse(null);
 
-        return MediatedRequestContext.builder()
-          .request(request)
-          .instance(instance)
-          .item(item)
-          .location(location)
-          .library(library)
-          .pickupServicePoint(servicePoint)
-          .requester(requester)
-          .requesterUserGroup(requesterUserGroup)
-          .proxyUser(proxyUser)
-          .proxyUserGroup(proxyUserGroup)
-          .build();
+      return MediatedRequestContext.builder()
+        .request(request)
+        .instance(instance)
+        .item(item)
+        .location(location)
+        .library(library)
+        .pickupServicePoint(servicePoint)
+        .requester(requester)
+        .requesterUserGroup(requesterUserGroup)
+        .proxyUser(proxyUser)
+        .proxyUserGroup(proxyUserGroup)
+        .build();
       }).toList();
   }
 
   private MediatedRequestContext buildRequestContext(MediatedRequest request) {
-    log.info("buildRequestContext:: building request context");
+    log.info("buildRequestContext:: building context for request {}", request.getId());
     var contextBuilder = MediatedRequestContext.builder().request(request);
     Instance instance = inventoryService.fetchInstance(request.getInstanceId());
     User requester = userService.fetchUser(request.getRequesterId());
@@ -224,7 +224,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       ServicePoint servicePoint = inventoryService.fetchServicePoint(request.getPickupServicePointId());
       contextBuilder.pickupServicePoint(servicePoint);
     }
-    log.info("buildRequestContext:: request context is built");
+    log.info("buildRequestContext:: context for request {} is built", request::getId);
 
     return contextBuilder.build();
   }
