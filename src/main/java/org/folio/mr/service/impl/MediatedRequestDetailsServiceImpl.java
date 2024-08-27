@@ -131,8 +131,6 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private Collection<MediatedRequestContext> buildRequestContexts(Collection<MediatedRequest> requests) {
-    log.info("buildRequestContexts:: building contexts for {} mediated requests", requests.size());
-
     Set<String> instanceIds = new HashSet<>();
     Set<String> itemIds = new HashSet<>();
     Set<String> servicePointIds = new HashSet<>();
@@ -527,8 +525,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private static <T> Set<String> extractValues(Map<String, T> objects,
     Function<T, String> valueExtractor) {
 
-    return objects.values()
-      .stream()
+    return objects.values().stream()
       .map(valueExtractor)
       .filter(Objects::nonNull)
       .collect(toSet());

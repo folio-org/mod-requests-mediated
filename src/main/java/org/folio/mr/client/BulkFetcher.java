@@ -25,29 +25,24 @@ import lombok.extern.log4j.Log4j2;
 public class BulkFetcher {
   private static final int MAX_ID_COUNT = 80;
 
-  public <C, E> Collection<E> get(GetByQueryClient<C> client, Set<String> ids,
-    Function<C, Collection<E>> responseTransformer) {
-
-    return getAsStream(client, ids, responseTransformer)
+  public <T> List<T> get(GetByQueryClient<T> client, Set<String> ids) {
+    return getAsStream(client, ids)
       .toList();
   }
 
-  public <C, E> Map<String, E> getMapped(GetByQueryClient<C> client, Set<String> ids,
-    Function<C, Collection<E>> responseTransformer, Function<E, String> idExtractor) {
+  public <T> Map<String, T> getMapped(GetByQueryClient<T> client, Set<String> ids,
+    Function<T, String> idExtractor) {
 
-    return getAsStream(client, ids, responseTransformer)
+    return getAsStream(client, ids)
       .collect(toMap(idExtractor, identity()));
   }
 
-  private <C, E> Stream<E> getAsStream(GetByQueryClient<C> client, Set<String> ids,
-    Function<C, Collection<E>> responseTransformer) {
-
+  private <T> Stream<T> getAsStream(GetByQueryClient<T> client, Set<String> ids) {
     log.debug("getAsStream:: ids={}", ids);
     return Lists.partition(new ArrayList<>(ids), MAX_ID_COUNT)
       .stream()
       .map(BulkFetcher::toCqlQuery)
       .map(client::getByQuery)
-      .map(responseTransformer)
       .flatMap(Collection::stream);
   }
 
