@@ -1,0 +1,28 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/location-units/libraries/5d78803e-ca04-4b4a-aeae-2c63b924518b"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "id": "5d78803e-ca04-4b4a-aeae-2c63b924518b",
+          "name": "Datalogisk Institut",
+          "code": "DI",
+          "campusId": "62cf76b7-cca5-4d33-9217-edf42ce1a848",
+          "metadata": {
+            "createdDate": "2024-03-26T16:50:30.443+00:00",
+            "createdByUserId": "9baa8167-61bd-4f7d-b384-4b981ab415b1",
+            "updatedDate": "2024-03-26T16:50:30.443+00:00",
+            "updatedByUserId": "9baa8167-61bd-4f7d-b384-4b981ab415b1"
+          }
+        }
+      }
+    }
+  ]
+}

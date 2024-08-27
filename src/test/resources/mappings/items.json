@@ -1,0 +1,57 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/item-storage/items/9428231b-dd31-4f70-8406-fe22fbdeabc2"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "id": "9428231b-dd31-4f70-8406-fe22fbdeabc2",
+          "_version": 7,
+          "hrid": "item000000000005",
+          "holdingsRecordId": "0c45bb50-7c9b-48b0-86eb-178a494e25fe",
+          "formerIds": [],
+          "displaySummary": "test summary",
+          "barcode": "A14837334314",
+          "effectiveShelvingOrder": "CN vol.1 v.70:no.7-12 1984:July-Dec. cp.1 SFX",
+          "itemLevelCallNumber": "CN",
+          "itemLevelCallNumberPrefix": "PFX",
+          "itemLevelCallNumberSuffix": "SFX",
+          "effectiveCallNumberComponents": {
+            "callNumber": "CN",
+            "prefix": "PFX",
+            "suffix": "SFX"
+          },
+          "volume": "vol.1",
+          "enumeration": "v.70:no.7-12",
+          "chronology": "1984:July-Dec.",
+          "yearCaption": [],
+          "copyNumber": "cp.1",
+          "administrativeNotes": [],
+          "notes": [],
+          "circulationNotes": [],
+          "status": {
+            "name": "Available",
+            "date": "2024-08-02T11:38:44.537+00:00"
+          },
+          "materialTypeId": "d9acad2f-2aac-4b48-9097-e6ab85906b25",
+          "permanentLoanTypeId": "2b94c631-fca9-4892-a730-03ee529ffe27",
+          "effectiveLocationId": "fcd64ce1-6995-48f0-840e-89ffa2288371",
+          "electronicAccess": [],
+          "statisticalCodeIds": [],
+          "metadata": {
+            "createdDate": "2024-03-26T16:50:32.861+00:00",
+            "createdByUserId": "9baa8167-61bd-4f7d-b384-4b981ab415b1",
+            "updatedDate": "2024-08-13T10:21:09.467+00:00",
+            "updatedByUserId": "731c4da7-2aac-40ea-9104-393003dcc6a8"
+          }
+        }
+      }
+    }
+  ]
+}

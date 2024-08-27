@@ -169,6 +169,26 @@ components:
       $ref: 'schemas/sendItemInTransitRequest.yaml#/SendItemInTransitRequest'
     errorResponse:
       $ref: 'schemas/errors.json'
+    user:
+      $ref: 'schemas/users/user.json'
+    users:
+      $ref: 'schemas/users/users.json'
+    userGroup:
+      $ref: 'schemas/users/userGroup.json'
+    userGroups:
+      $ref: 'schemas/users/userGroups.json'
+    instance:
+      $ref: 'schemas/inventory/instance.json'
+    instances:
+      $ref: 'schemas/inventory/instances.json'
+    servicePoint:
+      $ref: 'schemas/inventory/servicePoint.json'
+    item:
+      $ref: 'schemas/inventory/item.json'
+    location:
+      $ref: 'schemas/inventory/location.json'
+    library:
+      $ref: 'schemas/inventory/library.json'
   parameters:
     mediatedRequestId:
       name: mediatedRequestId
