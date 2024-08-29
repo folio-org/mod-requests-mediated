@@ -13,7 +13,7 @@ import org.folio.mr.domain.dto.ConfirmItemArrivalResponseRequester;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.rest.resource.MediatedRequestsActionsApi;
-import org.folio.mr.service.impl.MediatedRequestActionsServiceImpl;
+import org.folio.mr.service.MediatedRequestActionsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class MediatedRequestActionsController implements MediatedRequestsActionsApi {
 
-  private final MediatedRequestActionsServiceImpl mediatedRequestActionsService;
+  private final MediatedRequestActionsService mediatedRequestActionsService;
 
   @Override
   public ResponseEntity<ConfirmItemArrivalResponse> confirmItemArrival(ConfirmItemArrivalRequest request) {

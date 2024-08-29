@@ -1,6 +1,6 @@
 package org.folio.mr.api;
 
-import static java.util.UUID.randomUUID;
+import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequestForItemArrivalConfirmation;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.iterableWithSize;
@@ -9,12 +9,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Date;
-
-import org.folio.mr.domain.FulfillmentPreference;
-import org.folio.mr.domain.MediatedRequestStatus;
-import org.folio.mr.domain.RequestLevel;
-import org.folio.mr.domain.RequestType;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.repository.MediatedRequestsRepository;
@@ -79,7 +73,7 @@ public class MediatedRequestActionsApiTest extends BaseIT {
   @Test
   @SneakyThrows
   void itemArrivalConfirmationFailsWhenMediatedRequestIsNotFoundByStatus() {
-    mediatedRequestsRepository.save(buildMediatedRequest()
+    mediatedRequestsRepository.save(buildMediatedRequestForItemArrivalConfirmation()
       .withItemBarcode("real-barcode")
       .withMediatedRequestStep("Item arrived")
       .withStatus("Open - Item arrived")); // wrong status
@@ -92,29 +86,10 @@ public class MediatedRequestActionsApiTest extends BaseIT {
         .value(is("Mediated request for item with barcode 'real-barcode' was not found")));
   }
 
-  private static MediatedRequestEntity buildMediatedRequest() {
-    return new MediatedRequestEntity()
-      .withRequestDate(new Date())
-      .withRequestLevel(RequestLevel.TITLE)
-      .withRequestType(RequestType.HOLD)
-      .withFulfillmentPreference(FulfillmentPreference.DELIVERY)
-      .withInstanceId(randomUUID())
-      .withInstanceTitle("test-title")
-      .withItemId(randomUUID())
-      .withItemBarcode("test-item-barcode")
-      .withShelvingOrder("test-shelving-order")
-      .withMediatedRequestStatus(MediatedRequestStatus.OPEN)
-      .withMediatedWorkflow("Private request")
-      .withMediatedRequestStep("In transit for approval")
-      .withStatus("Open - In transit for approval")
-      .withRequesterId(randomUUID())
-      .withRequesterBarcode("test-requester-barcode")
-      .withRequesterFirstName("First")
-      .withRequesterLastName("Last");
-  }
+
 
   private MediatedRequestEntity createMediatedRequest() {
-    return mediatedRequestsRepository.save(buildMediatedRequest());
+    return mediatedRequestsRepository.save(buildMediatedRequestForItemArrivalConfirmation());
   }
 
   @SneakyThrows
