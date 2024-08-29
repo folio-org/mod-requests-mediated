@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Log4j2
 @AllArgsConstructor
-public class MediatedRequestActionsController implements MediatedRequestsActionsApi {
+public class RequestsMediatedActionsController implements MediatedRequestsActionsApi {
 
   private final MediatedRequestActionsService mediatedRequestActionsService;
 

@@ -1,8 +1,9 @@
-description: Send item in transit request
-type: object
-properties:
-  itemBarcode:
-    description: Barcode of the sent item in transit
-    type: string
-required:
-  - itemBarcode
+SendItemInTransitRequest:
+  description: Send item in transit request
+  type: object
+  properties:
+    itemBarcode:
+      description: Barcode of the sent item in transit
+      type: string
+  required:
+    - itemBarcode

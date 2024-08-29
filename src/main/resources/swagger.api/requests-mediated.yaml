@@ -131,11 +131,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: 'schemas/confirmItemArrivalRequest.yaml'
+              $ref: '#/components/schemas/confirmItemArrivalRequest'
         required: true
       responses:
         '200':
-          description: Successful item arrival confirmation response
+          description: Successful item arrival confirmation
           content:
             application/json:
               schema:
@@ -158,7 +158,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: 'schemas/sendItemInTransitRequest.yaml'
+              $ref: '#/components/schemas/sendItemInTransitRequest'
         required: true
       responses:
         '204':
@@ -170,7 +170,11 @@ paths:
 components:
   schemas:
     mediatedRequest:
-      $ref: 'schemas/mediatedRequest.yaml'
+      $ref: 'schemas/mediatedRequest.yaml#/MediatedRequest'
+    confirmItemArrivalRequest:
+      $ref: 'schemas/confirmItemArrivalRequest.yaml#/ConfirmItemArrivalRequest'
+    sendItemInTransitRequest:
+      $ref: 'schemas/sendItemInTransitRequest.yaml#/SendItemInTransitRequest'
     errorResponse:
       $ref: 'schemas/errors.json'
     user:
@@ -231,7 +235,7 @@ components:
         content:
           application/json:
             schema:
-              $ref: 'schemas/mediatedRequest.yaml'
+              $ref: 'schemas/mediatedRequest.yaml#/MediatedRequest'
             examples:
               objectExample:
                 externalValue: 'examples/mediatedRequest.json'
@@ -240,7 +244,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: 'schemas/mediatedRequests.yaml'
+            $ref: 'schemas/mediatedRequests.yaml#/MediatedRequests'
           examples:
             objectExample:
               externalValue: 'examples/mediatedRequests.json'
