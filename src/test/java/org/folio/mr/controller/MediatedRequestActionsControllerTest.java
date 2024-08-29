@@ -21,13 +21,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
-class RequestsMediatedActionsControllerTest {
+class MediatedRequestActionsControllerTest {
 
   @Mock
   private MediatedRequestActionsService mediatedRequestActionsService;
 
   @InjectMocks
-  private RequestsMediatedActionsController requestsController;
+  private MediatedRequestActionsController requestsController;
 
   @Test
   void confirmItemArrivalTest() {
