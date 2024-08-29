@@ -86,8 +86,6 @@ class MediatedRequestActionsApiTest extends BaseIT {
         .value(is("Mediated request for item with barcode 'real-barcode' was not found")));
   }
 
-
-
   private MediatedRequestEntity createMediatedRequest() {
     return mediatedRequestsRepository.save(buildMediatedRequestForItemArrivalConfirmation());
   }
