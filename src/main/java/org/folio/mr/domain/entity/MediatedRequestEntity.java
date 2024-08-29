@@ -24,18 +24,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.With;
 
+@Data
 @Table(name = "mediated_request")
 @Entity
-@Setter
-@Getter
 @With
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class MediatedRequestEntity {
 
   @Id
