@@ -22,7 +22,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import lombok.SneakyThrows;
 
 @IntegrationTest
-public class MediatedRequestActionsApiTest extends BaseIT {
+class MediatedRequestActionsApiTest extends BaseIT {
 
   private static final String CONFIRM_ITEM_ARRIVAL_URL = "/requests-mediated/confirm-item-arrival";
 
