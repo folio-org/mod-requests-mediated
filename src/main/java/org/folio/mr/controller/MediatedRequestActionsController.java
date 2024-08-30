@@ -13,6 +13,7 @@ import org.folio.mr.domain.dto.ConfirmItemArrivalResponseRequester;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.MediatedRequestItem;
 import org.folio.mr.domain.dto.MediatedRequestItemCallNumberComponents;
+import org.folio.mr.domain.dto.MediatedRequestRequester;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.rest.resource.MediatedRequestsActionsApi;
@@ -46,6 +47,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
 
   private static ConfirmItemArrivalResponse buildConfirmItemArrivalResponse(MediatedRequest request) {
     MediatedRequestItem item = request.getItem();
+    MediatedRequestRequester requester = request.getRequester();
 
     ConfirmItemArrivalResponse response = new ConfirmItemArrivalResponse()
       .arrivalDate(new Date())
@@ -65,10 +67,10 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
         .status(request.getStatus().getValue()))
       .requester(new ConfirmItemArrivalResponseRequester()
         .id(UUID.fromString(request.getRequesterId()))
-        .barcode(request.getRequester().getBarcode())
-        .firstName(request.getRequester().getFirstName())
-        .middleName(request.getRequester().getMiddleName())
-        .lastName(request.getRequester().getLastName()));
+        .barcode(requester.getBarcode())
+        .firstName(requester.getFirstName())
+        .middleName(requester.getMiddleName())
+        .lastName(requester.getLastName()));
 
     Optional.ofNullable(request.getSearchIndex())
       .map(MediatedRequestSearchIndex::getCallNumberComponents)
