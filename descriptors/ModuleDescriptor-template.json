@@ -52,7 +52,10 @@
           ],
           "pathPattern": "/requests-mediated/confirm-item-arrival",
           "permissionsRequired": ["requests-mediated.confirm-item-arrival.post"],
-          "modulePermissions": []
+          "modulePermissions": [
+            "inventory-storage.items.collection.get",
+            "inventory-storage.items.item.get"
+          ]
         },
         {
           "methods": [

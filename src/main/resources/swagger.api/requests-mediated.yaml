@@ -134,10 +134,18 @@ paths:
               $ref: '#/components/schemas/confirmItemArrivalRequest'
         required: true
       responses:
-        '204':
-          description: Successful operation, no content returned
+        '200':
+          description: Successful item arrival confirmation
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas/confirmItemArrivalResponse.yaml'
+              example:
+                $ref: 'examples/confirmItemArrivalResponse.json'
         '400':
           $ref: '#/components/responses/badRequestResponse'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
   /requests-mediated/send-item-in-transit:
