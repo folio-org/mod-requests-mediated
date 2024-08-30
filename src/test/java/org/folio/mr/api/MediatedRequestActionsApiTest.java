@@ -1,6 +1,7 @@
 package org.folio.mr.api;
 
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequestEntity;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -83,9 +84,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @Test
   @SneakyThrows
   void itemArrivalConfirmationFailsWhenMediatedRequestIsNotFoundByStatus() {
-    mediatedRequestsRepository.save(buildMediatedRequestEntity(OPEN_IN_TRANSIT_FOR_APPROVAL)
-      .withMediatedRequestStep("Item arrived")
-      .withStatus("Open - Item arrived")); // wrong status
+    mediatedRequestsRepository.save(buildMediatedRequestEntity(OPEN_ITEM_ARRIVED)); // wrong status
 
     confirmItemArrival("A14837334314")
       .andExpect(status().isNotFound())

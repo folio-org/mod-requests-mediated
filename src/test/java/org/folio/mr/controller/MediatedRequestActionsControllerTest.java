@@ -34,8 +34,7 @@ class MediatedRequestActionsControllerTest {
 
   @Test
   void confirmItemArrivalTest() {
-    MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED)
-      .mediatedRequestStep("Item arrived");
+    MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
     String itemBarcode = mediatedRequest.getItem().getBarcode();
     when(mediatedRequestActionsService.confirmItemArrival(itemBarcode))
       .thenReturn(mediatedRequest);

@@ -1,5 +1,7 @@
 package org.folio.mr.domain.entity;
 
+import java.util.Arrays;
+
 import org.folio.mr.domain.dto.MediatedRequest;
 
 import lombok.Getter;
@@ -21,12 +23,10 @@ public enum MediatedRequestStep {
   private final String value;
 
   public static MediatedRequestStep fromValue(String value) {
-    for (MediatedRequestStep step : values()) {
-      if (step.value.equals(value)) {
-        return step;
-      }
-    }
-    throw new IllegalArgumentException("Unexpected value: '" + value + "'");
+    return Arrays.stream(values())
+      .filter(step -> step.getValue().equals(value))
+      .findFirst()
+      .orElseThrow(() -> new IllegalArgumentException("Unexpected value: '" + value + "'"));
   }
 
   public static MediatedRequestStep from(MediatedRequest.StatusEnum status) {
