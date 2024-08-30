@@ -76,7 +76,7 @@ class MediatedRequestActionsServiceTest {
     EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
       () -> mediatedRequestActionsService.confirmItemArrival("item-barcode"));
     assertThat(exception.getMessage(),
-      is("Mediated request for item with barcode 'item-barcode' was not found"));
+      is("Mediated request for arrival confirmation of item with barcode 'item-barcode' was not found"));
   }
 
 }

@@ -42,7 +42,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       itemBarcode);
     var entity = mediatedRequestsRepository.findRequestForItemArrivalConfirmation(itemBarcode)
       .orElseThrow(() -> new EntityNotFoundException(String.format(
-        "Mediated request for item with barcode '%s' was not found", itemBarcode)));
+        "Mediated request for arrival confirmation of item with barcode '%s' was not found", itemBarcode)));
 
     log.info("findMediatedRequestForItemArrival:: mediated request found: {}", entity::getId);
     return entity;
@@ -51,7 +51,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   private MediatedRequestEntity updateMediatedRequestStatus(MediatedRequestEntity request,
     MediatedRequest.StatusEnum newStatus) {
 
-    log.info("updateMediatedRequestStatus:: changing mediated request status from '{}' to '{}'.",
+    log.info("updateMediatedRequestStatus:: changing mediated request status from '{}' to '{}'",
       request::getStatus, newStatus::getValue);
     request.setStatus(newStatus.getValue());
     request.setMediatedRequestStep(from(newStatus).getValue());

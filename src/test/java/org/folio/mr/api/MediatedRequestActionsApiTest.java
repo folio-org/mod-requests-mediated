@@ -78,7 +78,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
       .andExpect(jsonPath("errors[0].type").value("EntityNotFoundException"))
       .andExpect(jsonPath("errors[0].message")
-        .value(is("Mediated request for item with barcode 'random-barcode' was not found")));
+        .value(is("Mediated request for arrival confirmation of item with barcode 'random-barcode' was not found")));
   }
 
   @Test
@@ -91,7 +91,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
       .andExpect(jsonPath("errors[0].type").value("EntityNotFoundException"))
       .andExpect(jsonPath("errors[0].message")
-        .value(is("Mediated request for item with barcode 'A14837334314' was not found")));
+        .value(is("Mediated request for arrival confirmation of item with barcode 'A14837334314' was not found")));
   }
 
   private MediatedRequestEntity createMediatedRequestEntity() {
