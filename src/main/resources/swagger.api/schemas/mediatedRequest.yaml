@@ -232,8 +232,8 @@ MediatedRequest:
     status:
       description: Status of the mediated request
       type: string
-      enum: [ 'New - Awaiting confirmation', 'Open - Not yet filled', 'Open - In transit 1',
-              'Open - Item arrived', 'Open - In transit 2','Open - Awaiting pickup',
+      enum: [ 'New - Awaiting confirmation', 'Open - Not yet filled', 'Open - In transit for approval',
+              'Open - Item arrived', 'Open - In transit to be checked out','Open - Awaiting pickup',
               'Closed - Cancelled', 'Closed - Declined', 'Closed - Filled'
       ]
     cancellationReasonId:

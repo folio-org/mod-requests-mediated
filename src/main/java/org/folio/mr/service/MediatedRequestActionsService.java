@@ -1,7 +1,7 @@
 package org.folio.mr.service;
 
-import org.folio.mr.domain.entity.MediatedRequestEntity;
+import org.folio.mr.domain.dto.MediatedRequest;
 
 public interface MediatedRequestActionsService {
-  MediatedRequestEntity confirmItemArrival(String itemBarcode);
+  MediatedRequest confirmItemArrival(String itemBarcode);
 }
