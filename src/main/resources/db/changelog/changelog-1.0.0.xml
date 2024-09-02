@@ -8,4 +8,5 @@
     <include file="changes/v1.0.0/2024-07-24-create-mediated_workflow-table.xml" relativeToChangelogFile="true"/>
     <include file="changes/v1.0.0/2024-07-29-create-mediated_request_step-table.xml" relativeToChangelogFile="true"/>
     <include file="changes/v1.0.0/2024-08-06-add-awaiting-delivery-step.xml" relativeToChangelogFile="true"/>
+    <include file="changes/v1.0.0/2024-08-30-create-mediated_request_workflow_log-table.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
