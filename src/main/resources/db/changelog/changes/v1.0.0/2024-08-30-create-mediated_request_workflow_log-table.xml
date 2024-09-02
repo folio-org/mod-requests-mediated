@@ -10,6 +10,9 @@
         </comment>
 
         <createTable tableName="mediated_request_workflow_log">
+            <column name="id" type="uuid" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true"/>
+            </column>
             <column name="mediated_request_id" type="uuid">
                 <constraints nullable="false"/>
             </column>
