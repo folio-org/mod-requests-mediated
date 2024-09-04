@@ -19,4 +19,14 @@ public interface MediatedRequestsRepository extends JpaCqlRepository<MediatedReq
     AND mr.mediatedRequestStep = 'In transit for approval'
     """)
   Optional<MediatedRequestEntity> findRequestForItemArrivalConfirmation(String itemBarcode);
+
+  @Query("""
+    SELECT mr from MediatedRequestEntity mr
+    WHERE mr.itemBarcode = ?1
+    AND mr.mediatedWorkflow = 'Private request'
+    AND mr.mediatedRequestStatus = 'Open'
+    AND mr.mediatedRequestStep = 'Item arrived'
+    """)
+  Optional<MediatedRequestEntity> findRequestForSendingInTransit(String itemBarcode);
+
 }
