@@ -3,6 +3,7 @@ package org.folio.mr.domain.entity;
 import java.util.Date;
 import java.util.UUID;
 
+import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.converter.MediatedRequestStatusJdbcType;
 import org.hibernate.annotations.JdbcType;
 
@@ -27,19 +28,29 @@ public class MediatedRequestWorkflowLog {
   private UUID id;
 
   private UUID mediatedRequestId;
+
   private String mediatedWorkflow;
+
   @Column(name = "mediated_request_status", columnDefinition = "MediatedRequestStatus")
   @JdbcType(MediatedRequestStatusJdbcType.class)
-  private String mediatedRequestStatus;
+  private MediatedRequestStatus mediatedRequestStatus;
+
   private String mediatedRequestStep;
+
   private Date actionDate;
+
   // Metadata
+
   @Column(name = "created_date")
   private Date createdDate;
+
   @Column(name = "created_by")
   private UUID createdBy;
+
   @Column(name = "updated_date")
   private Date updatedDate;
+
   @Column(name = "updated_by")
   private UUID updatedBy;
+
 }
