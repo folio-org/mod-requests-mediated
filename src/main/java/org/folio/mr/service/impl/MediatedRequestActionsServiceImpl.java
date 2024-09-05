@@ -1,5 +1,6 @@
 package org.folio.mr.service.impl;
 
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.domain.entity.MediatedRequestStep.from;
 
@@ -38,13 +39,38 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private MediatedRequestEntity findMediatedRequestForItemArrival(String itemBarcode) {
-    log.info("findMediatedRequestForItemArrival:: looking for mediated request with item barcode '{}'",
-      itemBarcode);
+    log.info("findMediatedRequestForItemArrival:: looking for mediated " +
+        "request with item barcode '{}'", itemBarcode);
     var entity = mediatedRequestsRepository.findRequestForItemArrivalConfirmation(itemBarcode)
       .orElseThrow(() -> new EntityNotFoundException(String.format(
         "Mediated request for arrival confirmation of item with barcode '%s' was not found", itemBarcode)));
 
     log.info("findMediatedRequestForItemArrival:: mediated request found: {}", entity::getId);
+    return entity;
+  }
+
+  @Override
+  public MediatedRequest sendItemInTransit(String itemBarcode) {
+    log.info("sendItemInTransit:: item barcode: {}", itemBarcode);
+    var entity = findMediatedRequestForSendingInTransit(itemBarcode);
+    var updatedEntity = updateMediatedRequestStatus(entity, OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
+    var dto = mediatedRequestMapper.mapEntityToDto(updatedEntity);
+    extendMediatedRequest(dto);
+    log.debug("sendItemInTransit:: result: {}", dto);
+
+    return dto;
+  }
+
+  private MediatedRequestEntity findMediatedRequestForSendingInTransit(String itemBarcode) {
+    log.info("findMediatedRequestForSendingInTransit:: looking for mediated " +
+        "request with item barcode '{}'", itemBarcode);
+    var entity = mediatedRequestsRepository.findRequestForSendingInTransit(itemBarcode)
+      .orElseThrow(() -> new EntityNotFoundException(String.format(
+        "Mediated request for in transit sending of item with barcode '%s' was not found",
+          itemBarcode)));
+
+    log.info("findMediatedRequestForSendingInTransit:: mediated request found: {}", entity::getId);
+
     return entity;
   }
 

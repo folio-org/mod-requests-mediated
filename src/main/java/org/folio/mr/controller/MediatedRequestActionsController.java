@@ -16,9 +16,9 @@ import org.folio.mr.domain.dto.MediatedRequestItemCallNumberComponents;
 import org.folio.mr.domain.dto.MediatedRequestRequester;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
+import org.folio.mr.domain.dto.SendItemInTransitResponse;
 import org.folio.mr.rest.resource.MediatedRequestsActionsApi;
 import org.folio.mr.service.MediatedRequestActionsService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -38,11 +38,6 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     MediatedRequest mediatedRequest = actionsService.confirmItemArrival(request.getItemBarcode());
 
     return ResponseEntity.ok(buildConfirmItemArrivalResponse(mediatedRequest));
-  }
-
-  @Override
-  public ResponseEntity<Void> sendItemInTransit(SendItemInTransitRequest mediatedRequest) {
-    return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 
   private static ConfirmItemArrivalResponse buildConfirmItemArrivalResponse(MediatedRequest request) {
@@ -82,4 +77,53 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
 
     return response;
   }
+
+  @Override
+  public ResponseEntity<SendItemInTransitResponse> sendItemInTransit(
+    SendItemInTransitRequest request) {
+    
+    log.info("sendItemInTransit:: request={}", request);
+    MediatedRequest mediatedRequest = actionsService.sendItemInTransit(request.getItemBarcode());
+
+    return ResponseEntity.ok(buildSendItemInTransitResponse(mediatedRequest));
+  }
+
+  private static SendItemInTransitResponse buildSendItemInTransitResponse(MediatedRequest request) {
+    MediatedRequestItem item = request.getItem();
+    MediatedRequestRequester requester = request.getRequester();
+
+    SendItemInTransitResponse response = new SendItemInTransitResponse()
+      .inTransitDate(new Date())
+      .instance(new ConfirmItemArrivalResponseInstance()
+        .id(UUID.fromString(request.getInstanceId()))
+        .title(request.getInstance().getTitle()))
+      .item(new ConfirmItemArrivalResponseItem()
+        .id(UUID.fromString(request.getItemId()))
+        .barcode(item.getBarcode())
+        .enumeration(item.getEnumeration())
+        .volume(item.getVolume())
+        .chronology(item.getChronology())
+        .displaySummary(item.getDisplaySummary())
+        .copyNumber(item.getCopyNumber()))
+      .mediatedRequest(new ConfirmItemArrivalResponseMediatedRequest()
+        .id(UUID.fromString(request.getId()))
+        .status(request.getStatus().getValue()))
+      .requester(new ConfirmItemArrivalResponseRequester()
+        .id(UUID.fromString(request.getRequesterId()))
+        .barcode(requester.getBarcode())
+        .firstName(requester.getFirstName())
+        .middleName(requester.getMiddleName())
+        .lastName(requester.getLastName()));
+
+    Optional.ofNullable(request.getSearchIndex())
+      .map(MediatedRequestSearchIndex::getCallNumberComponents)
+      .ifPresent(components -> response.getItem().callNumberComponents(
+        new MediatedRequestItemCallNumberComponents()
+          .prefix(components.getPrefix())
+          .callNumber(components.getCallNumber())
+          .suffix(components.getSuffix())));
+
+    return response;
+  }
+
 }
