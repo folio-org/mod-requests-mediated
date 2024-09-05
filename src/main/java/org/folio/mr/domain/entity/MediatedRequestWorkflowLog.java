@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.converter.MediatedRequestStatusJdbcType;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcType;
 
 import jakarta.persistence.Column;
@@ -37,6 +38,7 @@ public class MediatedRequestWorkflowLog {
 
   private String mediatedRequestStep;
 
+  @
   private Date actionDate;
 
   // Metadata
