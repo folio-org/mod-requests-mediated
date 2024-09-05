@@ -39,8 +39,8 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private MediatedRequestEntity findMediatedRequestForItemArrival(String itemBarcode) {
-    log.info("findMediatedRequestForItemArrival:: looking for mediated request with item barcode '{}'",
-      itemBarcode);
+    log.info("findMediatedRequestForItemArrival:: looking for mediated " +
+        "request with item barcode '{}'", itemBarcode);
     var entity = mediatedRequestsRepository.findRequestForItemArrivalConfirmation(itemBarcode)
       .orElseThrow(() -> new EntityNotFoundException(String.format(
         "Mediated request for arrival confirmation of item with barcode '%s' was not found", itemBarcode)));
@@ -52,23 +52,25 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   @Override
   public MediatedRequest sendItemInTransit(String itemBarcode) {
     log.info("sendItemInTransit:: item barcode: {}", itemBarcode);
-    MediatedRequestEntity entity = findMediatedRequestForSendingInTransit(itemBarcode);
-    MediatedRequestEntity updatedEntity = updateMediatedRequestStatus(entity, OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
-    MediatedRequest dto = mediatedRequestMapper.mapEntityToDto(updatedEntity);
+    var entity = findMediatedRequestForSendingInTransit(itemBarcode);
+    var updatedEntity = updateMediatedRequestStatus(entity, OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
+    var dto = mediatedRequestMapper.mapEntityToDto(updatedEntity);
     extendMediatedRequest(dto);
-
     log.debug("sendItemInTransit:: result: {}", dto);
+
     return dto;
   }
 
   private MediatedRequestEntity findMediatedRequestForSendingInTransit(String itemBarcode) {
-    log.info("findMediatedRequestForSendingInTransit:: looking for mediated request with item barcode '{}'",
-      itemBarcode);
+    log.info("findMediatedRequestForSendingInTransit:: looking for mediated " +
+        "request with item barcode '{}'", itemBarcode);
     var entity = mediatedRequestsRepository.findRequestForSendingInTransit(itemBarcode)
       .orElseThrow(() -> new EntityNotFoundException(String.format(
-        "Mediated request for in transit sending of item with barcode '%s' was not found", itemBarcode)));
+        "Mediated request for in transit sending of item with barcode '%s' was not found",
+          itemBarcode)));
 
     log.info("findMediatedRequestForSendingInTransit:: mediated request found: {}", entity::getId);
+
     return entity;
   }
 

@@ -79,7 +79,9 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
   }
 
   @Override
-  public ResponseEntity<SendItemInTransitResponse> sendItemInTransit(SendItemInTransitRequest request) {
+  public ResponseEntity<SendItemInTransitResponse> sendItemInTransit(
+    SendItemInTransitRequest request) {
+    
     log.info("sendItemInTransit:: request={}", request);
     MediatedRequest mediatedRequest = actionsService.sendItemInTransit(request.getItemBarcode());
 
