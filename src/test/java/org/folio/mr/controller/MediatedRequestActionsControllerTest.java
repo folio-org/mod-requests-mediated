@@ -1,11 +1,14 @@
 package org.folio.mr.controller;
 
+import static java.util.UUID.randomUUID;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -22,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 @ExtendWith(MockitoExtension.class)
 class MediatedRequestActionsControllerTest {
@@ -59,6 +63,13 @@ class MediatedRequestActionsControllerTest {
     assertThat(response.getRequester().getFirstName(), is("Requester"));
     assertThat(response.getRequester().getMiddleName(), is("X"));
     assertThat(response.getRequester().getLastName(), is("Mediated"));
+  }
+
+  @Test
+  void confirmMediatedRequest() {
+    doNothing().when(mediatedRequestActionsService).confirm(any(UUID.class));
+    ResponseEntity<Void> response = requestsController.confirmMediatedRequest(randomUUID());
+    assertThat(response.getStatusCode(), is(HttpStatus.NO_CONTENT));
   }
 
   @Test

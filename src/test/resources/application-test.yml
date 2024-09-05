@@ -10,7 +10,7 @@ spring:
   liquibase:
     enabled: true
   jpa:
-    show-sql: true
+    show-sql: false
 folio:
   tenant:
     validation:

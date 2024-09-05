@@ -1,5 +1,7 @@
 package org.folio.mr.service.impl;
 
+import java.util.Collection;
+
 import org.folio.mr.client.InstanceClient;
 import org.folio.mr.client.ItemClient;
 import org.folio.mr.client.LocationClient;
@@ -11,6 +13,7 @@ import org.folio.mr.domain.dto.Library;
 import org.folio.mr.domain.dto.Location;
 import org.folio.mr.domain.dto.ServicePoint;
 import org.folio.mr.service.InventoryService;
+import org.folio.mr.support.CqlQuery;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -30,6 +33,12 @@ public class InventoryServiceImpl implements InventoryService {
   public Item fetchItem(String id) {
     log.info("fetchItem:: fetching item {}", id);
     return itemClient.get(id);
+  }
+
+  @Override
+  public Collection<Item> fetchItems(CqlQuery query) {
+    log.info("fetchItems:: fetching items by query: {}", query);
+    return itemClient.get(query).getItems();
   }
 
   @Override

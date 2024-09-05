@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Search instance",
+  "type": "object",
+  "allOf": [{ "$ref": "../inventory/instance.json" }],
+  "properties": {
+    "tenantId": {
+      "description": "Tenant ID",
+      "type": "string"
+    },
+    "shared": {
+      "description": "Is instance shared",
+      "type": "boolean"
+    }
+  },
+  "items": {
+    "type": "array",
+    "description": "List of instance items",
+    "items": {
+      "$ref": "searchItem.json"
+    }
+  },
+  "holdings": {
+    "type": "array",
+    "description": "List of instance holding records",
+    "items": {
+      "$ref": "searchHoldingsRecord.json"
+    }
+  }
+}

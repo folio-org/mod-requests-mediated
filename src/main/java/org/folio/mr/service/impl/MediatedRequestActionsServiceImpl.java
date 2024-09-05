@@ -2,16 +2,25 @@ package org.folio.mr.service.impl;
 
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.domain.entity.MediatedRequestStep.from;
+import static org.folio.mr.support.CqlQuery.exactMatch;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
+import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.mapper.MediatedRequestMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
+import org.folio.mr.service.CirculationRequestService;
+import org.folio.mr.service.EcsRequestService;
 import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestActionsService;
 import org.springframework.stereotype.Service;
 
+import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -21,9 +30,35 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class MediatedRequestActionsServiceImpl implements MediatedRequestActionsService {
 
+//  @Value("${folio.secure-tenant-id}")
+//  private String secureTenantId;
+
   private final MediatedRequestsRepository mediatedRequestsRepository;
   private final InventoryService inventoryService;
   private final MediatedRequestMapper mediatedRequestMapper;
+  private final CirculationRequestService circulationRequestService;
+  private final EcsRequestService ecsRequestService;
+
+  @Override
+  public void confirm(UUID id) {
+    log.info("confirm:: looking for mediated request: {}", id);
+    MediatedRequestEntity mediatedRequest = mediatedRequestsRepository.findById(id)
+      .orElseThrow(() -> new EntityNotFoundException("Mediated request was not found: " + id));
+    log.info("confirm:: mediated request found: {}", id);
+
+    if (localInstanceExists(mediatedRequest) && localItemsExist(mediatedRequest)) {
+      log.info("confirm:: creating circulation request in local tenant");
+      Request request = circulationRequestService.create(mediatedRequest);
+      mediatedRequest.setConfirmedRequestId(UUID.fromString(request.getId()));
+    } else {
+      log.info("confirm:: creating ECS title-level request");
+      EcsTlr ecsTlr = ecsRequestService.create(mediatedRequest);
+      mediatedRequest.setConfirmedRequestId(UUID.fromString(ecsTlr.getPrimaryRequestId()));
+    }
+
+    log.info("confirm:: confirmed request ID: {}", mediatedRequest.getConfirmedRequestId());
+    mediatedRequestsRepository.save(mediatedRequest);
+  }
 
   @Override
   public MediatedRequest confirmItemArrival(String itemBarcode) {
@@ -71,4 +106,33 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       .copyNumber(item.getCopyNumber());
   }
 
+  private boolean localInstanceExists(MediatedRequestEntity mediatedRequest) {
+    final String instanceId = mediatedRequest.getInstanceId().toString();
+    log.info("localInstanceExists:: searching to instance {} in local tenant", instanceId);
+    try {
+      inventoryService.fetchInstance(instanceId);
+      log.info("localInstanceExists:: instance {} found in local tenant", instanceId);
+      return true;
+    } catch (FeignException.NotFound e) {
+      log.info("localInstanceExists:: instance {} not found in local tenant", instanceId);
+      return false;
+    }
+  }
+
+  private boolean localItemsExist(MediatedRequestEntity mediatedRequest) {
+    log.info("localItemsExist:: searching for items in local tenant");
+    String instanceId = mediatedRequest.getInstanceId().toString();
+    String itemId = mediatedRequest.getItemId().toString();
+
+    List<String> localItemIds = inventoryService.fetchItems(exactMatch("instanceId", instanceId))
+      .stream()
+      .map(Item::getId)
+      .toList();
+
+    log.info("localItemsExist:: found {} items in local tenant", localItemIds.size());
+    log.debug("localItemsExist:: itemId={}, localItemIds={}", itemId, localItemIds);
+
+    return (itemId != null && localItemIds.contains(itemId))
+      || (itemId == null && !localItemIds.isEmpty());
+  }
 }

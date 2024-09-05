@@ -2,6 +2,7 @@ package org.folio.mr.api;
 
 import static java.util.stream.Collectors.toMap;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.util.TestSocketUtils.findAvailableTcpPort;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -12,12 +13,12 @@ import java.util.UUID;
 
 import org.folio.mr.util.DbInitializer;
 import org.folio.mr.util.TestUtils;
-import org.folio.mr.util.WireMockInitializer;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.folio.test.extensions.EnablePostgres;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -44,7 +47,7 @@ import lombok.SneakyThrows;
 
 @EnablePostgres
 @ActiveProfiles("test")
-@ContextConfiguration(initializers = {WireMockInitializer.class, DbInitializer.class})
+@ContextConfiguration(initializers = {DbInitializer.class})
 @EnableAutoConfiguration(exclude = {FlywayAutoConfiguration.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -52,6 +55,7 @@ public class BaseIT {
   protected static final String TOKEN = "test_token";
   protected static final String TENANT_ID_CONSORTIUM = "consortium";
   protected static final String USER_ID = randomId();
+  protected static final String HEADER_TENANT = "x-okapi-tenant";
 
   @Autowired
   private WebTestClient webClient;
@@ -59,14 +63,23 @@ public class BaseIT {
   protected MockMvc mockMvc;
   @Autowired
   private FolioModuleMetadata moduleMetadata;
-  @Autowired
-  public WireMockServer wireMockServer;
+
+  protected static WireMockServer wireMockServer = new WireMockServer(findAvailableTcpPort());
+  static {
+    wireMockServer.start();
+  }
+
   private FolioExecutionContextSetter contextSetter;
 
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
     .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+  @DynamicPropertySource
+  static void overrideProperties(DynamicPropertyRegistry registry) {
+    registry.add("folio.okapi-url", wireMockServer::baseUrl);
+  }
 
   @BeforeAll
   static void beforeAll(@Autowired MockMvc mockMvc) {
@@ -79,13 +92,18 @@ public class BaseIT {
     wireMockServer.resetAll();
   }
 
+  @AfterAll
+  public static void afterAll() {
+    wireMockServer.stop();
+  }
+
   @AfterEach
   public void afterEachTest() {
     contextSetter.close();
   }
 
   protected FolioExecutionContextSetter initFolioContext() {
-    HashMap<String, Collection<String>> headers = new HashMap<>(buildHeaders().entrySet()
+    HashMap<String, Collection<String>> headers = new HashMap<>(defaultHeaders().entrySet()
       .stream()
       .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
@@ -105,15 +123,10 @@ public class BaseIT {
 
     httpHeaders.setContentType(APPLICATION_JSON);
     httpHeaders.add(XOkapiHeaders.TENANT, TENANT_ID_CONSORTIUM);
+    httpHeaders.add(XOkapiHeaders.URL, (wireMockServer.baseUrl()));
     httpHeaders.add(XOkapiHeaders.TOKEN, TOKEN);
     httpHeaders.add(XOkapiHeaders.USER_ID, USER_ID);
 
-    return httpHeaders;
-  }
-
-  protected HttpHeaders buildHeaders() {
-    HttpHeaders httpHeaders = defaultHeaders();
-    httpHeaders.add(XOkapiHeaders.URL, (wireMockServer.baseUrl()));
     return httpHeaders;
   }
 

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Instance search response",
+  "type": "object",
+  "properties": {
+    "totalRecords": {
+      "type": "integer",
+      "description": "Instance count"
+    },
+    "instances": {
+      "type": "array",
+      "description": "Found instances",
+      "items": {
+        "$ref": "searchInstance.json"
+      }
+    }
+  }
+}
