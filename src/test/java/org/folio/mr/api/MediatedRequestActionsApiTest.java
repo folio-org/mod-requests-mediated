@@ -11,8 +11,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.UUID;
+
+import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
+import org.folio.mr.domain.entity.MediatedRequestWorkflowLog;
+import org.folio.mr.repository.MediatedRequestWorkflowLogRepository;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.test.types.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,9 +36,25 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @Autowired
   private MediatedRequestsRepository mediatedRequestsRepository;
 
+  @Autowired
+  private MediatedRequestWorkflowLogRepository workflowLogRepository;
+
   @BeforeEach
   public void beforeEach() {
     mediatedRequestsRepository.deleteAll();
+  }
+
+  @Test
+  void mediatedRequestWorkflowLogRepositoryTest() {
+//    MediatedRequestEntity request = createMediatedRequestEntity();
+//    MediatedRequestWorkflowLog log = new MediatedRequestWorkflowLog();
+//    log.setMediatedRequestId(request.getId());
+//    log.setMediatedWorkflow(request.getMediatedWorkflow());
+//    log.setMediatedRequestStep(request.getMediatedRequestStep());
+//    log.setMediatedRequestStatus(request.getMediatedRequestStatus());
+//    MediatedRequestWorkflowLog saved = workflowLogRepository.save(log);
+    MediatedRequestEntity request = createMediatedRequestEntity();
+    confirmItemArrival("A14837334314");
   }
 
   @Test

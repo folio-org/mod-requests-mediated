@@ -1,9 +1,11 @@
 package org.folio.mr.controller;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.ConfirmItemArrivalResponse;
 import org.folio.mr.domain.dto.ConfirmItemArrivalResponseInstance;
@@ -16,6 +18,8 @@ import org.folio.mr.domain.dto.MediatedRequestItemCallNumberComponents;
 import org.folio.mr.domain.dto.MediatedRequestRequester;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
+import org.folio.mr.domain.entity.MediatedRequestWorkflowLog;
+import org.folio.mr.repository.MediatedRequestWorkflowLogRepository;
 import org.folio.mr.rest.resource.MediatedRequestsActionsApi;
 import org.folio.mr.service.MediatedRequestActionsService;
 import org.springframework.http.HttpStatus;
@@ -31,11 +35,21 @@ import lombok.extern.log4j.Log4j2;
 public class MediatedRequestActionsController implements MediatedRequestsActionsApi {
 
   private final MediatedRequestActionsService actionsService;
+  private final MediatedRequestWorkflowLogRepository repository;
 
   @Override
   public ResponseEntity<ConfirmItemArrivalResponse> confirmItemArrival(ConfirmItemArrivalRequest request) {
     log.info("confirmItemArrival:: request={}", request);
     MediatedRequest mediatedRequest = actionsService.confirmItemArrival(request.getItemBarcode());
+    //TODO: tmp for testing
+    MediatedRequestWorkflowLog log = new MediatedRequestWorkflowLog();
+    log.setMediatedRequestId(UUID.fromString(mediatedRequest.getId()));
+    log.setMediatedWorkflow(mediatedRequest.getMediatedWorkflow());
+    log.setMediatedRequestStep(mediatedRequest.getMediatedRequestStep());
+    log.setMediatedRequestStatus(Arrays.stream(MediatedRequestStatus.values())
+      .filter(s -> s.name().equals(mediatedRequest.getMediatedRequestStatus().name())).findFirst()
+      .orElseThrow());
+    MediatedRequestWorkflowLog saved = repository.save(log);
 
     return ResponseEntity.ok(buildConfirmItemArrivalResponse(mediatedRequest));
   }
