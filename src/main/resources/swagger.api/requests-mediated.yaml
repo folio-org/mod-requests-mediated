@@ -178,8 +178,14 @@ paths:
               $ref: '#/components/schemas/sendItemInTransitRequest'
         required: true
       responses:
-        '204':
-          description: Successful operation, no content returned
+        '200':
+          description: Successful send item in transit confirmation
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas/sendItemInTransitResponse.yaml'
+              example:
+                $ref: 'examples/sendItemInTransitResponse.json'
         '400':
           $ref: '#/components/responses/badRequestResponse'
         '500':

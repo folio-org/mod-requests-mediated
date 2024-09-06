@@ -1,5 +1,5 @@
 {
-  "arrivalDate": "2024-08-22T13:03:12.440Z",
+  "inTransitDate": "2024-08-22T13:03:12.440Z",
   "instance": {
     "id": "5bf370e0-8cca-4d9c-82e4-5170ab2a0a39",
     "title": "A semantic web primer"
@@ -20,7 +20,7 @@
   },
   "mediatedRequest": {
     "id": "91c310f4-ad32-4c0d-8ab9-53bf09634a34",
-    "status": "Open - Item arrived"
+    "status": "Open - In transit to be checked out"
   },
   "requester": {
     "id": "9812e24b-0a66-457a-832c-c5e789797e35",

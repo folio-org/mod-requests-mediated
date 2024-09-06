@@ -1,0 +1,89 @@
+description: Send item in transit response
+type: object
+properties:
+  inTransitDate:
+    description: Date and time of item sent in transit
+    type: string
+    format: date-time
+  instance:
+    description: Instance data
+    type: object
+    properties:
+      id:
+        description: ID of the requested instance
+        type: string
+        format: uuid
+      title:
+        description: Title of the requested instance
+        type: string
+  item:
+    description: Item data
+    type: object
+    properties:
+      id:
+        description: ID of the requested item
+        type: string
+        format: uuid
+      barcode:
+        description: Barcode of the requested item
+        type: string
+      enumeration:
+        description: Enumeration of the item
+        type: string
+      volume:
+        description: Volume of the item
+        type: string
+      chronology:
+        description: Chronology of the item
+        type: string
+      displaySummary:
+        description: Display summary of the item
+        type: string
+      copyNumber:
+        description: Copy number of the item
+        type: string
+      callNumberComponents:
+        description: Components of the item's call number
+        type: object
+        properties:
+          callNumber:
+            description: Call number of the item
+            type: string
+          prefix:
+            description: Prefix of the item's call number
+            type: string
+          suffix:
+            description: Suffix of the item's call number
+            type: string
+        additionalProperties: false
+  mediatedRequest:
+    description: Information about affected mediated request
+    type: object
+    properties:
+      id:
+        description: ID of the affected mediated request
+        type: string
+        format: uuid
+      status:
+        description: Status of the affected mediated request
+        type: string
+  requester:
+    description: Requester data
+    type: object
+    properties:
+      id:
+        description: ID of the requester
+        type: string
+        format: uuid
+      barcode:
+        description: Barcode of the requester
+        type: string
+      firstName:
+        description: First name of the requester
+        type: string
+      lastName:
+        description: Last name of the requester
+        type: string
+      middleName:
+        description: Middle name of the requester
+        type: string
