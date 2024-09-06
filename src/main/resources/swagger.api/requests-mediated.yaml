@@ -131,7 +131,7 @@ paths:
         - $ref: '#/components/parameters/mediatedRequestId'
       responses:
         '204':
-          description: Mediated request successfully removed
+          description: Mediated request successfully confirmed
         '400':
           $ref: '#/components/responses/badRequestResponse'
         '404':

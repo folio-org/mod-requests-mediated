@@ -37,6 +37,5 @@ public class CirculationRequestServiceImpl implements CirculationRequestService 
       .requestDate(mediatedRequest.getRequestDate())
       .deliveryAddressTypeId(asString(mediatedRequest.getDeliveryAddressTypeId()))
       .patronComments(mediatedRequest.getPatronComments());
-
   }
 }

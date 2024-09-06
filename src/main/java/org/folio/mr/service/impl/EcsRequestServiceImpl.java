@@ -28,14 +28,6 @@ public class EcsRequestServiceImpl implements EcsRequestService {
       () -> ecsTlrClient.post(buildEcsTlr(mediatedRequest)));
   }
 
-//  @Override
-//  public EcsTlr create(MediatedRequestEntity mediatedRequest, String centralTenantId) {
-//    log.info("create:: creating ECS TLR for mediated request {}", mediatedRequest::getId);
-//
-//    return executionService.executeSystemUserScoped(centralTenantId,
-//      () -> ecsTlrClient.post(buildEcsTlr(mediatedRequest)));
-//  }
-
   private static EcsTlr buildEcsTlr(MediatedRequestEntity mediatedRequest) {
     return new EcsTlr()
       .requestType(EcsTlr.RequestTypeEnum.fromValue(mediatedRequest.getRequestType().getValue()))
@@ -44,7 +36,6 @@ public class EcsRequestServiceImpl implements EcsRequestService {
       .instanceId(asString(mediatedRequest.getInstanceId()))
       .requesterId(asString(mediatedRequest.getRequesterId()))
       .pickupServicePointId(asString(mediatedRequest.getPickupServicePointId()))
-//      .deliveryAddressTypeId(asString(mediatedRequest.getDeliveryAddressTypeId()))
       .requestDate(mediatedRequest.getRequestDate())
       .patronComments(mediatedRequest.getPatronComments());
   }
