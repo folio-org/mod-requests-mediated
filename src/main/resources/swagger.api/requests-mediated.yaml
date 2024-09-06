@@ -216,8 +216,6 @@ components:
       $ref: 'schemas/inventory/location.json'
     library:
       $ref: 'schemas/inventory/library.json'
-    searchInstancesResponse:
-      $ref: 'schemas/search/searchInstancesResponse.json'
     request:
       $ref: 'schemas/circulation/request.json'
     ecsTlr:
