@@ -18,7 +18,6 @@ import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.folio.test.extensions.EnablePostgres;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -90,11 +89,6 @@ public class BaseIT {
   void beforeEachTest() {
     contextSetter = initFolioContext();
     wireMockServer.resetAll();
-  }
-
-  @AfterAll
-  public static void afterAll() {
-    wireMockServer.stop();
   }
 
   @AfterEach

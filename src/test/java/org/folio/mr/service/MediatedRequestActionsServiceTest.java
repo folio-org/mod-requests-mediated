@@ -1,5 +1,6 @@
 package org.folio.mr.service;
 
+import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CONFIRMATION;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
@@ -10,28 +11,32 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.folio.mr.client.SearchClient;
+import org.folio.mr.domain.dto.EcsTlr;
+import org.folio.mr.domain.dto.Instance;
+import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
-import org.folio.mr.domain.dto.SearchInstance;
-import org.folio.mr.domain.dto.SearchInstancesResponse;
+import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.mapper.MediatedRequestMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.impl.MediatedRequestActionsServiceImpl;
+import org.folio.mr.support.CqlQuery;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,9 +50,6 @@ class MediatedRequestActionsServiceTest {
 
   @Mock
   private InventoryService inventoryService;
-
-  @Mock
-  private SearchClient searchClient;
 
   @Mock
   private CirculationRequestService circulationRequestService;
@@ -72,8 +74,8 @@ class MediatedRequestActionsServiceTest {
       .thenReturn(Optional.of(initialRequest));
     when(mediatedRequestsRepository.save(any(MediatedRequestEntity.class)))
       .thenReturn(updatedRequest);
-//    when(inventoryService.fetchItem(initialRequest.getItemId().toString()))
-//      .thenReturn(new Item());
+    when(inventoryService.fetchItem(initialRequest.getItemId().toString()))
+      .thenReturn(new Item());
     when(mediatedRequestMapper.mapEntityToDto(any(MediatedRequestEntity.class)))
       .thenReturn(mappedRequest);
 
@@ -95,36 +97,91 @@ class MediatedRequestActionsServiceTest {
   }
 
   @Test
-  void successfulMediatedRequestConfirmationForNonSecureTenant() {
-
-  }
-
-  @Test
-  void successfulMediatedRequestConfirmationForInstanceInSecureTenant() {
-    final String secureTenantId = "secure-tenant";
+  void mediatedRequestConfirmationForLocalInstanceAndItem() {
     final UUID mediatedRequestId = randomUUID();
     final UUID instanceId = randomUUID();
+    final UUID circulationRequestId = randomUUID();
 
-    MediatedRequestEntity requestEntity = buildMediatedRequestEntity(NEW_AWAITING_CONFIRMATION)
+    MediatedRequestEntity mediatedRequest = buildMediatedRequestEntity(NEW_AWAITING_CONFIRMATION)
       .withId(mediatedRequestId)
       .withInstanceId(instanceId);
 
-    SearchInstancesResponse searchInstancesResponse = new SearchInstancesResponse()
-      .instances(List.of(new SearchInstance()
-        .id(instanceId.toString())
-        .tenantId(secureTenantId)));
+    Item requestedItem = new Item().id(mediatedRequest.getItemId().toString());
+    Request circulationRequest = new Request().id(circulationRequestId.toString());
 
     when(mediatedRequestsRepository.findById(mediatedRequestId))
-      .thenReturn(Optional.of(requestEntity));
-
-//    when(searchClient.findInstance(instanceId.toString()))
-//      .thenReturn(searchInstancesResponse);
-
-    doNothing().when(circulationRequestService).create(requestEntity);
+      .thenReturn(Optional.of(mediatedRequest));
+    when(inventoryService.fetchInstance(instanceId.toString()))
+      .thenReturn(new Instance());
+    when(inventoryService.fetchItems(new CqlQuery("instanceId==\"" + instanceId + "\"")))
+      .thenReturn(List.of(requestedItem));
+    when(circulationRequestService.create(mediatedRequest))
+      .thenReturn(circulationRequest);
 
     mediatedRequestActionsService.confirm(mediatedRequestId);
 
-    verify(circulationRequestService).create(requestEntity);
+    verify(mediatedRequestsRepository).save(mediatedRequest.withConfirmedRequestId(circulationRequestId));
+    verifyNoInteractions(ecsRequestService);
+  }
+
+  @Test
+  void mediatedRequestConfirmationForLocalInstanceAndRemoteItem() {
+    final UUID mediatedRequestId = randomUUID();
+    final UUID instanceId = randomUUID();
+    final UUID ecsTlrId = randomUUID();
+    final UUID primaryRequestId = randomUUID();
+
+    MediatedRequestEntity mediatedRequest = buildMediatedRequestEntity(NEW_AWAITING_CONFIRMATION)
+      .withId(mediatedRequestId)
+      .withInstanceId(instanceId);
+
+    EcsTlr ecsTlr = new EcsTlr()
+      .id(ecsTlrId.toString())
+      .primaryRequestId(primaryRequestId.toString());
+
+    when(mediatedRequestsRepository.findById(mediatedRequestId))
+      .thenReturn(Optional.of(mediatedRequest));
+    when(inventoryService.fetchInstance(instanceId.toString()))
+      .thenReturn(new Instance());
+    when(inventoryService.fetchItems(new CqlQuery("instanceId==\"" + instanceId + "\"")))
+      .thenReturn(emptyList());
+    when(ecsRequestService.create(mediatedRequest))
+      .thenReturn(ecsTlr);
+
+    mediatedRequestActionsService.confirm(mediatedRequestId);
+
+    verify(mediatedRequestsRepository).save(mediatedRequest.withConfirmedRequestId(primaryRequestId));
+    verifyNoInteractions(circulationRequestService);
+  }
+
+  @Test
+  void mediatedRequestConfirmationForRemoteInstanceAndItem() {
+    final UUID mediatedRequestId = randomUUID();
+    final UUID instanceId = randomUUID();
+    final UUID ecsTlrId = randomUUID();
+    final UUID primaryRequestId = randomUUID();
+
+    MediatedRequestEntity mediatedRequest = buildMediatedRequestEntity(NEW_AWAITING_CONFIRMATION)
+      .withId(mediatedRequestId)
+      .withInstanceId(instanceId);
+
+    EcsTlr ecsTlr = new EcsTlr()
+      .id(ecsTlrId.toString())
+      .primaryRequestId(primaryRequestId.toString());
+
+    when(mediatedRequestsRepository.findById(mediatedRequestId))
+      .thenReturn(Optional.of(mediatedRequest));
+    when(inventoryService.fetchInstance(instanceId.toString()))
+      .thenThrow(FeignException.NotFound.class);
+    when(ecsRequestService.create(mediatedRequest))
+      .thenReturn(ecsTlr);
+
+    mediatedRequestActionsService.confirm(mediatedRequestId);
+
+    verify(mediatedRequestsRepository).save(mediatedRequest.withConfirmedRequestId(primaryRequestId));
+    verifyNoInteractions(circulationRequestService);
+    verify(inventoryService).fetchInstance(instanceId.toString());
+    verifyNoMoreInteractions(inventoryService);
   }
 
 }

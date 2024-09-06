@@ -15,6 +15,6 @@ public interface ItemClient {
   @GetMapping("/{id}")
   Item get(@PathVariable String id);
 
-  @GetMapping()
+  @GetMapping
   Items get(@RequestParam("query") CqlQuery cqlQuery);
 }

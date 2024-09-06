@@ -30,9 +30,6 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class MediatedRequestActionsServiceImpl implements MediatedRequestActionsService {
 
-//  @Value("${folio.secure-tenant-id}")
-//  private String secureTenantId;
-
   private final MediatedRequestsRepository mediatedRequestsRepository;
   private final InventoryService inventoryService;
   private final MediatedRequestMapper mediatedRequestMapper;
@@ -44,20 +41,28 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     log.info("confirm:: looking for mediated request: {}", id);
     MediatedRequestEntity mediatedRequest = mediatedRequestsRepository.findById(id)
       .orElseThrow(() -> new EntityNotFoundException("Mediated request was not found: " + id));
-    log.info("confirm:: mediated request found: {}", id);
+    log.info("confirm:: mediated request found");
 
-    if (localInstanceExists(mediatedRequest) && localItemsExist(mediatedRequest)) {
-      log.info("confirm:: creating circulation request in local tenant");
-      Request request = circulationRequestService.create(mediatedRequest);
-      mediatedRequest.setConfirmedRequestId(UUID.fromString(request.getId()));
+    if (localInstanceExists(mediatedRequest) && localItemExists(mediatedRequest)) {
+      createLocalCirculationRequest(mediatedRequest);
     } else {
-      log.info("confirm:: creating ECS title-level request");
-      EcsTlr ecsTlr = ecsRequestService.create(mediatedRequest);
-      mediatedRequest.setConfirmedRequestId(UUID.fromString(ecsTlr.getPrimaryRequestId()));
+      createEcsTlr(mediatedRequest);
     }
 
     log.info("confirm:: confirmed request ID: {}", mediatedRequest.getConfirmedRequestId());
     mediatedRequestsRepository.save(mediatedRequest);
+  }
+
+  private void createEcsTlr(MediatedRequestEntity mediatedRequest) {
+    log.info("confirm:: creating ECS title-level request");
+    EcsTlr ecsTlr = ecsRequestService.create(mediatedRequest);
+    mediatedRequest.setConfirmedRequestId(UUID.fromString(ecsTlr.getPrimaryRequestId()));
+  }
+
+  private void createLocalCirculationRequest(MediatedRequestEntity mediatedRequest) {
+    log.info("confirm:: creating circulation request in local tenant");
+    Request request = circulationRequestService.create(mediatedRequest);
+    mediatedRequest.setConfirmedRequestId(UUID.fromString(request.getId()));
   }
 
   @Override
@@ -108,7 +113,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
   private boolean localInstanceExists(MediatedRequestEntity mediatedRequest) {
     final String instanceId = mediatedRequest.getInstanceId().toString();
-    log.info("localInstanceExists:: searching to instance {} in local tenant", instanceId);
+    log.info("localInstanceExists:: searching for instance {} in local tenant", instanceId);
     try {
       inventoryService.fetchInstance(instanceId);
       log.info("localInstanceExists:: instance {} found in local tenant", instanceId);
@@ -119,9 +124,9 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     }
   }
 
-  private boolean localItemsExist(MediatedRequestEntity mediatedRequest) {
-    log.info("localItemsExist:: searching for items in local tenant");
+  private boolean localItemExists(MediatedRequestEntity mediatedRequest) {
     String instanceId = mediatedRequest.getInstanceId().toString();
+    log.info("localItemsExist:: searching for items of instance {} in local tenant", instanceId);
     String itemId = mediatedRequest.getItemId().toString();
 
     List<String> localItemIds = inventoryService.fetchItems(exactMatch("instanceId", instanceId))

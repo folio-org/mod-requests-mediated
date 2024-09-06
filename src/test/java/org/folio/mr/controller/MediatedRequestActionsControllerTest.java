@@ -66,7 +66,7 @@ class MediatedRequestActionsControllerTest {
   }
 
   @Test
-  void confirmMediatedRequest() {
+  void successfulMediatedRequestConfirmation() {
     doNothing().when(mediatedRequestActionsService).confirm(any(UUID.class));
     ResponseEntity<Void> response = requestsController.confirmMediatedRequest(randomUUID());
     assertThat(response.getStatusCode(), is(HttpStatus.NO_CONTENT));

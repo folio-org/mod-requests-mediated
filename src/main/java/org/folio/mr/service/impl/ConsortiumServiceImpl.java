@@ -3,6 +3,7 @@ package org.folio.mr.service.impl;
 import org.folio.mr.client.UserTenantsClient;
 import org.folio.mr.domain.dto.UserTenant;
 import org.folio.mr.service.ConsortiumService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ public class ConsortiumServiceImpl implements ConsortiumService {
   private final UserTenantsClient userTenantsClient;
 
   @Override
+  @Cacheable("centralTenant") // implement caching
   public String getCentralTenantId() {
     log.info("getCentralTenantId:: resolving central tenant ID");
     String centralTenantId = userTenantsClient.getUserTenants(1)
@@ -23,7 +25,7 @@ public class ConsortiumServiceImpl implements ConsortiumService {
       .stream()
       .findFirst()
       .map(UserTenant::getCentralTenantId)
-      .orElseThrow();// TODO: custom exception
+      .orElseThrow();
 
     log.info("getCentralTenantId:: central tenant ID: {}", centralTenantId);
     return centralTenantId;
