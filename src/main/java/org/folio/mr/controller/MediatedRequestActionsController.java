@@ -41,15 +41,6 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
   public ResponseEntity<ConfirmItemArrivalResponse> confirmItemArrival(ConfirmItemArrivalRequest request) {
     log.info("confirmItemArrival:: request={}", request);
     MediatedRequest mediatedRequest = actionsService.confirmItemArrival(request.getItemBarcode());
-    //TODO: tmp for testing
-    MediatedRequestWorkflowLog log = new MediatedRequestWorkflowLog();
-    log.setMediatedRequestId(UUID.fromString(mediatedRequest.getId()));
-    log.setMediatedWorkflow(mediatedRequest.getMediatedWorkflow());
-    log.setMediatedRequestStep(mediatedRequest.getMediatedRequestStep());
-    log.setMediatedRequestStatus(Arrays.stream(MediatedRequestStatus.values())
-      .filter(s -> s.name().equals(mediatedRequest.getMediatedRequestStatus().name())).findFirst()
-      .orElseThrow());
-    MediatedRequestWorkflowLog saved = repository.save(log);
 
     return ResponseEntity.ok(buildConfirmItemArrivalResponse(mediatedRequest));
   }

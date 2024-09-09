@@ -7,13 +7,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Date;
 import java.util.UUID;
 
-import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.entity.MediatedRequestWorkflowLog;
@@ -45,16 +46,15 @@ class MediatedRequestActionsApiTest extends BaseIT {
   }
 
   @Test
-  void mediatedRequestWorkflowLogRepositoryTest() {
-//    MediatedRequestEntity request = createMediatedRequestEntity();
-//    MediatedRequestWorkflowLog log = new MediatedRequestWorkflowLog();
-//    log.setMediatedRequestId(request.getId());
-//    log.setMediatedWorkflow(request.getMediatedWorkflow());
-//    log.setMediatedRequestStep(request.getMediatedRequestStep());
-//    log.setMediatedRequestStatus(request.getMediatedRequestStatus());
-//    MediatedRequestWorkflowLog saved = workflowLogRepository.save(log);
+  @SneakyThrows
+  void workflowLogGenerateActionDateTest() {
     MediatedRequestEntity request = createMediatedRequestEntity();
-    confirmItemArrival("A14837334314");
+    MediatedRequestWorkflowLog log = buildLogByRequest(request);
+    Date logActionDate = log.getActionDate();
+    Date savedLogActionDate = workflowLogRepository.save(log).getActionDate();
+
+    assertThat(logActionDate, nullValue());
+    assertThat(savedLogActionDate, notNullValue());
   }
 
   @Test
@@ -117,6 +117,15 @@ class MediatedRequestActionsApiTest extends BaseIT {
 
   private MediatedRequestEntity createMediatedRequestEntity() {
     return mediatedRequestsRepository.save(buildMediatedRequestEntity(OPEN_IN_TRANSIT_FOR_APPROVAL));
+  }
+
+  private MediatedRequestWorkflowLog buildLogByRequest(MediatedRequestEntity request) {
+    MediatedRequestWorkflowLog log = new MediatedRequestWorkflowLog();
+    log.setMediatedRequestId(request.getId());
+    log.setMediatedRequestStep(request.getMediatedRequestStep());
+    log.setMediatedRequestStatus(request.getMediatedRequestStatus());
+    log.setMediatedWorkflow(request.getMediatedWorkflow());
+    return log;
   }
 
   @SneakyThrows
