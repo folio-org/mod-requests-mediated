@@ -3,6 +3,7 @@ package org.folio.mr.service.impl;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.domain.entity.MediatedRequestStep.from;
+import static org.folio.mr.support.ConversionUtils.asString;
 import static org.folio.mr.support.CqlQuery.exactMatch;
 
 import java.util.List;
@@ -19,6 +20,7 @@ import org.folio.mr.service.CirculationRequestService;
 import org.folio.mr.service.EcsRequestService;
 import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestActionsService;
+import org.folio.mr.support.ConversionUtils;
 import org.springframework.stereotype.Service;
 
 import feign.FeignException;
@@ -152,16 +154,16 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
   private boolean localItemExists(MediatedRequestEntity mediatedRequest) {
     String instanceId = mediatedRequest.getInstanceId().toString();
-    log.info("localItemsExist:: searching for items of instance {} in local tenant", instanceId);
-    String itemId = mediatedRequest.getItemId().toString();
+    log.info("localItemExists:: searching for items of instance {} in local tenant", instanceId);
+    String itemId = asString(mediatedRequest.getItemId());
 
     List<String> localItemIds = inventoryService.fetchItems(exactMatch("instanceId", instanceId))
       .stream()
       .map(Item::getId)
       .toList();
 
-    log.info("localItemsExist:: found {} items in local tenant", localItemIds.size());
-    log.debug("localItemsExist:: itemId={}, localItemIds={}", itemId, localItemIds);
+    log.info("localItemExists:: found {} items in local tenant", localItemIds.size());
+    log.debug("localItemExists:: itemId={}, localItemIds={}", itemId, localItemIds);
 
     return (itemId != null && localItemIds.contains(itemId))
       || (itemId == null && !localItemIds.isEmpty());
