@@ -13,7 +13,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Date;
-import java.util.UUID;
 
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
@@ -42,6 +41,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
 
   @BeforeEach
   public void beforeEach() {
+    workflowLogRepository.deleteAll();
     mediatedRequestsRepository.deleteAll();
   }
 
