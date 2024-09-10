@@ -8,17 +8,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Date;
+import java.util.Objects;
 
+import org.folio.mr.controller.MediatedRequestActionsController;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
-import org.folio.mr.domain.entity.MediatedRequestWorkflowLog;
 import org.folio.mr.repository.MediatedRequestWorkflowLogRepository;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.test.types.IntegrationTest;
@@ -42,6 +42,9 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @Autowired
   private MediatedRequestWorkflowLogRepository workflowLogRepository;
 
+  @Autowired
+  private MediatedRequestActionsController requestsController;
+
   @BeforeEach
   public void beforeEach() {
     workflowLogRepository.deleteAll();
@@ -50,18 +53,25 @@ class MediatedRequestActionsApiTest extends BaseIT {
 
   @Test
   @SneakyThrows
-  void workflowLogGenerateActionDateTest() {
-    MediatedRequestEntity request = mediatedRequestsRepository.save(
-      buildMediatedRequestEntity(OPEN_IN_TRANSIT_FOR_APPROVAL)
-    );
-    MediatedRequestWorkflowLog log = buildLogByRequest(request);
-    Date logActionDate = log.getActionDate();
-    Date savedLogActionDate = workflowLogRepository.save(log).getActionDate();
-
-    assertThat(logActionDate, nullValue());
-    assertThat(savedLogActionDate, notNullValue());
+  void workflowLogGenerateActionDateWhenConfirmItemArrivalTest() {
+    mediatedRequestsRepository.save(buildMediatedRequestEntity(OPEN_IN_TRANSIT_FOR_APPROVAL));
+    Date arrivalDate = Objects.requireNonNull(requestsController.confirmItemArrival(
+      new ConfirmItemArrivalRequest("A14837334314")).getBody()).getArrivalDate();
+    Date actionDate = workflowLogRepository.findAll().iterator().next().getActionDate();
+    assertThat(actionDate.compareTo(arrivalDate), is(0));
   }
 
+  @Test
+  @SneakyThrows
+  void workflowLogGenerateActionDateWhenSendItemInTransitTest() {
+    MediatedRequestEntity request = buildMediatedRequestEntity(OPEN_IN_TRANSIT_FOR_APPROVAL);
+    request.setMediatedRequestStep("Item arrived");
+    mediatedRequestsRepository.save(request);
+    Date inTransitDate = Objects.requireNonNull(requestsController.sendItemInTransit(
+      new SendItemInTransitRequest("A14837334314")).getBody()).getInTransitDate();
+    Date actionDate = workflowLogRepository.findAll().iterator().next().getActionDate();
+    assertThat(actionDate.compareTo(inTransitDate), is(0));
+  }
   @Test
   @SneakyThrows
   void successfulItemArrivalConfirmation() {
@@ -199,14 +209,4 @@ class MediatedRequestActionsApiTest extends BaseIT {
         .contentType(MediaType.APPLICATION_JSON)
         .content(asJsonString(new SendItemInTransitRequest().itemBarcode(itemBarcode))));
   }
-
-  private MediatedRequestWorkflowLog buildLogByRequest(MediatedRequestEntity request) {
-    MediatedRequestWorkflowLog log = new MediatedRequestWorkflowLog();
-    log.setMediatedRequestId(request.getId());
-    log.setMediatedRequestStep(request.getMediatedRequestStep());
-    log.setMediatedRequestStatus(request.getMediatedRequestStatus());
-    log.setMediatedWorkflow(request.getMediatedWorkflow());
-    return log;
-  }
-
 }

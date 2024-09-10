@@ -4,10 +4,15 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.domain.entity.MediatedRequestStep.from;
 
+import java.util.UUID;
+
+import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
+import org.folio.mr.domain.entity.MediatedRequestWorkflowLog;
 import org.folio.mr.domain.mapper.MediatedRequestMapper;
+import org.folio.mr.repository.MediatedRequestWorkflowLogRepository;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestActionsService;
@@ -25,6 +30,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   private final MediatedRequestsRepository mediatedRequestsRepository;
   private final InventoryService inventoryService;
   private final MediatedRequestMapper mediatedRequestMapper;
+  private final MediatedRequestWorkflowLogRepository workflowLogRepository;
 
   @Override
   public MediatedRequest confirmItemArrival(String itemBarcode) {
@@ -36,6 +42,11 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
     log.debug("confirmItemArrival:: result: {}", dto);
     return dto;
+  }
+
+  @Override
+  public MediatedRequestWorkflowLog saveMediatedRequestWorkflowLog(MediatedRequest request) {
+    return workflowLogRepository.save(buildLogByRequest(request));
   }
 
   private MediatedRequestEntity findMediatedRequestForItemArrival(String itemBarcode) {
@@ -95,6 +106,15 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       .chronology(item.getChronology())
       .displaySummary(item.getDisplaySummary())
       .copyNumber(item.getCopyNumber());
+  }
+
+  private static MediatedRequestWorkflowLog buildLogByRequest(MediatedRequest request) {
+    MediatedRequestWorkflowLog log = new MediatedRequestWorkflowLog();
+    log.setMediatedRequestId(UUID.fromString(request.getId()));
+    log.setMediatedRequestStep(request.getMediatedRequestStep());
+    log.setMediatedRequestStatus(MediatedRequestStatus.fromValue(request.getMediatedRequestStatus().getValue()));
+    log.setMediatedWorkflow(request.getMediatedWorkflow());
+    return log;
   }
 
 }

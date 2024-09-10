@@ -37,15 +37,18 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     log.info("confirmItemArrival:: request={}", request);
     MediatedRequest mediatedRequest = actionsService.confirmItemArrival(request.getItemBarcode());
 
-    return ResponseEntity.ok(buildConfirmItemArrivalResponse(mediatedRequest));
+    return ResponseEntity.ok(
+      buildConfirmItemArrivalResponse(mediatedRequest, getActionDate(mediatedRequest)));
   }
 
-  private static ConfirmItemArrivalResponse buildConfirmItemArrivalResponse(MediatedRequest request) {
+  private static ConfirmItemArrivalResponse buildConfirmItemArrivalResponse(MediatedRequest request,
+    Date arrivalDate) {
+
     MediatedRequestItem item = request.getItem();
     MediatedRequestRequester requester = request.getRequester();
 
     ConfirmItemArrivalResponse response = new ConfirmItemArrivalResponse()
-      .arrivalDate(new Date())
+      .arrivalDate(arrivalDate)
       .instance(new ConfirmItemArrivalResponseInstance()
         .id(UUID.fromString(request.getInstanceId()))
         .title(request.getInstance().getTitle()))
@@ -79,21 +82,25 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
   }
 
   @Override
-  public ResponseEntity<SendItemInTransitResponse> sendItemInTransit(
-    SendItemInTransitRequest request) {
-    
+  public ResponseEntity<SendItemInTransitResponse> sendItemInTransit(SendItemInTransitRequest request) {
     log.info("sendItemInTransit:: request={}", request);
     MediatedRequest mediatedRequest = actionsService.sendItemInTransit(request.getItemBarcode());
 
-    return ResponseEntity.ok(buildSendItemInTransitResponse(mediatedRequest));
+    return ResponseEntity.ok(buildSendItemInTransitResponse(mediatedRequest, getActionDate(mediatedRequest)));
   }
 
-  private static SendItemInTransitResponse buildSendItemInTransitResponse(MediatedRequest request) {
+  private Date getActionDate(MediatedRequest request) {
+    return actionsService.saveMediatedRequestWorkflowLog(request).getActionDate();
+  }
+
+  private static SendItemInTransitResponse buildSendItemInTransitResponse(MediatedRequest request,
+    Date inTransitDate) {
+
     MediatedRequestItem item = request.getItem();
     MediatedRequestRequester requester = request.getRequester();
 
     SendItemInTransitResponse response = new SendItemInTransitResponse()
-      .inTransitDate(new Date())
+      .inTransitDate(inTransitDate)
       .instance(new ConfirmItemArrivalResponseInstance()
         .id(UUID.fromString(request.getInstanceId()))
         .title(request.getInstance().getTitle()))
