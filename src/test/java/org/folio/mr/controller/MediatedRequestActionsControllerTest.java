@@ -49,8 +49,10 @@ class MediatedRequestActionsControllerTest {
     MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
 
     //mock
-    when(mediatedRequestActionsService.saveMediatedRequestWorkflowLog(any())).thenReturn(log);
-    when(mediatedRequestActionsService.confirmItemArrival(any())).thenReturn(mediatedRequest);
+    when(mediatedRequestActionsService.saveMediatedRequestWorkflowLog(any()))
+      .thenReturn(log);
+    when(mediatedRequestActionsService.confirmItemArrival(any()))
+      .thenReturn(mediatedRequest);
 
     //when
     String barcode = mediatedRequest.getItem().getBarcode();
@@ -69,8 +71,10 @@ class MediatedRequestActionsControllerTest {
     MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
 
     //mock
-    when(mediatedRequestActionsService.saveMediatedRequestWorkflowLog(any())).thenReturn(log);
-    when(mediatedRequestActionsService.sendItemInTransit(any())).thenReturn(mediatedRequest);
+    when(mediatedRequestActionsService.saveMediatedRequestWorkflowLog(any()))
+      .thenReturn(log);
+    when(mediatedRequestActionsService.sendItemInTransit(any()))
+      .thenReturn(mediatedRequest);
 
     //when
     String barcode = mediatedRequest.getItem().getBarcode();
@@ -84,10 +88,13 @@ class MediatedRequestActionsControllerTest {
   @Test
   void confirmItemArrivalTest() {
     // given
+    MediatedRequestWorkflowLog log = buildLogWithDate(DATE_PATTERN, DATE);
     MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
     String itemBarcode = mediatedRequest.getItem().getBarcode();
     when(mediatedRequestActionsService.confirmItemArrival(itemBarcode))
       .thenReturn(mediatedRequest);
+    when(mediatedRequestActionsService.saveMediatedRequestWorkflowLog(any()))
+      .thenReturn(log);
 
     // when
     var responseEntity = requestsController.confirmItemArrival(
@@ -118,10 +125,13 @@ class MediatedRequestActionsControllerTest {
   @Test
   void sendItemInTransitTest() {
     // given
+    MediatedRequestWorkflowLog log = buildLogWithDate(DATE_PATTERN, DATE);
     MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
     String itemBarcode = mediatedRequest.getItem().getBarcode();
     when(mediatedRequestActionsService.sendItemInTransit(itemBarcode))
       .thenReturn(mediatedRequest);
+    when(mediatedRequestActionsService.saveMediatedRequestWorkflowLog(any()))
+      .thenReturn(log);
 
     // when
     var responseEntity = requestsController.sendItemInTransit(
