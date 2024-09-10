@@ -1,5 +1,6 @@
 package org.folio.mr.util;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
@@ -15,7 +16,9 @@ import org.folio.mr.domain.dto.MediatedRequestRequester;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndexCallNumberComponents;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
+import org.folio.mr.domain.entity.MediatedRequestWorkflowLog;
 
+import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -77,5 +80,14 @@ public class TestEntityBuilder {
         .prefix("PFX")
         .callNumber("CN")
         .suffix("SFX")));
+  }
+
+  @SneakyThrows
+  public static MediatedRequestWorkflowLog buildLogWithDate(String datePattern, String date) {
+    SimpleDateFormat formatter = new SimpleDateFormat(datePattern);
+    Date actionDate = formatter.parse(date);
+    MediatedRequestWorkflowLog mediatedRequestWorkflowLog = new MediatedRequestWorkflowLog();
+    mediatedRequestWorkflowLog.setActionDate(actionDate);
+    return mediatedRequestWorkflowLog;
   }
 }

@@ -12,14 +12,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Date;
-import java.util.Objects;
-
-import org.folio.mr.controller.MediatedRequestActionsController;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
-import org.folio.mr.repository.MediatedRequestWorkflowLogRepository;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.test.types.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,39 +34,11 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @Autowired
   private MediatedRequestsRepository mediatedRequestsRepository;
 
-  @Autowired
-  private MediatedRequestWorkflowLogRepository workflowLogRepository;
-
-  @Autowired
-  private MediatedRequestActionsController requestsController;
-
   @BeforeEach
   public void beforeEach() {
-    workflowLogRepository.deleteAll();
     mediatedRequestsRepository.deleteAll();
   }
 
-  @Test
-  @SneakyThrows
-  void workflowLogGenerateActionDateWhenConfirmItemArrivalTest() {
-    mediatedRequestsRepository.save(buildMediatedRequestEntity(OPEN_IN_TRANSIT_FOR_APPROVAL));
-    Date arrivalDate = Objects.requireNonNull(requestsController.confirmItemArrival(
-      new ConfirmItemArrivalRequest("A14837334314")).getBody()).getArrivalDate();
-    Date actionDate = workflowLogRepository.findAll().iterator().next().getActionDate();
-    assertThat(actionDate.compareTo(arrivalDate), is(0));
-  }
-
-  @Test
-  @SneakyThrows
-  void workflowLogGenerateActionDateWhenSendItemInTransitTest() {
-    MediatedRequestEntity request = buildMediatedRequestEntity(OPEN_IN_TRANSIT_FOR_APPROVAL);
-    request.setMediatedRequestStep("Item arrived");
-    mediatedRequestsRepository.save(request);
-    Date inTransitDate = Objects.requireNonNull(requestsController.sendItemInTransit(
-      new SendItemInTransitRequest("A14837334314")).getBody()).getInTransitDate();
-    Date actionDate = workflowLogRepository.findAll().iterator().next().getActionDate();
-    assertThat(actionDate.compareTo(inTransitDate), is(0));
-  }
   @Test
   @SneakyThrows
   void successfulItemArrivalConfirmation() {
@@ -209,4 +176,5 @@ class MediatedRequestActionsApiTest extends BaseIT {
         .contentType(MediaType.APPLICATION_JSON)
         .content(asJsonString(new SendItemInTransitRequest().itemBarcode(itemBarcode))));
   }
+
 }
