@@ -46,7 +46,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
   @Override
   public MediatedRequestWorkflowLog saveMediatedRequestWorkflowLog(MediatedRequest request) {
-    return workflowLogRepository.save(buildLogByRequest(request));
+    return workflowLogRepository.save(buildMediatedRequestWorkflowLog(request));
   }
 
   private MediatedRequestEntity findMediatedRequestForItemArrival(String itemBarcode) {
@@ -108,7 +108,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       .copyNumber(item.getCopyNumber());
   }
 
-  private static MediatedRequestWorkflowLog buildLogByRequest(MediatedRequest request) {
+  private static MediatedRequestWorkflowLog buildMediatedRequestWorkflowLog(MediatedRequest request) {
     MediatedRequestWorkflowLog log = new MediatedRequestWorkflowLog();
     log.setMediatedRequestId(UUID.fromString(request.getId()));
     log.setMediatedRequestStep(request.getMediatedRequestStep());

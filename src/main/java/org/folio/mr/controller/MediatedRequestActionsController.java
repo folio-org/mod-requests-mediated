@@ -38,7 +38,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     MediatedRequest mediatedRequest = actionsService.confirmItemArrival(request.getItemBarcode());
 
     return ResponseEntity.ok(
-      buildConfirmItemArrivalResponse(mediatedRequest, getActionDate(mediatedRequest)));
+      buildConfirmItemArrivalResponse(mediatedRequest, logActionAndGetActionDate(mediatedRequest)));
   }
 
   private static ConfirmItemArrivalResponse buildConfirmItemArrivalResponse(MediatedRequest request,
@@ -86,10 +86,12 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     log.info("sendItemInTransit:: request={}", request);
     MediatedRequest mediatedRequest = actionsService.sendItemInTransit(request.getItemBarcode());
 
-    return ResponseEntity.ok(buildSendItemInTransitResponse(mediatedRequest, getActionDate(mediatedRequest)));
+    return ResponseEntity.ok(buildSendItemInTransitResponse(mediatedRequest, logActionAndGetActionDate(mediatedRequest)));
   }
 
-  private Date getActionDate(MediatedRequest request) {
+  private Date logActionAndGetActionDate(MediatedRequest request) {
+    log.info("Creating mediated request workflow log entry for request with id: {}",
+      request.getId());
     return actionsService.saveMediatedRequestWorkflowLog(request).getActionDate();
   }
 

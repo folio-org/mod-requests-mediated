@@ -83,7 +83,7 @@ public class TestEntityBuilder {
   }
 
   @SneakyThrows
-  public static MediatedRequestWorkflowLog buildLogWithDate(String datePattern, String date) {
+  public static MediatedRequestWorkflowLog buildMediatedRequestWorkflowLog(String datePattern, String date) {
     SimpleDateFormat formatter = new SimpleDateFormat(datePattern);
     Date actionDate = formatter.parse(date);
     MediatedRequestWorkflowLog mediatedRequestWorkflowLog = new MediatedRequestWorkflowLog();

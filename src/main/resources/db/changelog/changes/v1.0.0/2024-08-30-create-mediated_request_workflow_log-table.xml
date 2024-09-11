@@ -34,7 +34,7 @@
     </changeSet>
 
     <changeSet id="addMediatedRequestIdForeignKey" author="AntonyHruschev">
-        <addForeignKeyConstraint constraintName="fk_medreqworkflowlog_medreq"
+        <addForeignKeyConstraint constraintName="fk_medreqwflog_medreq"
                                  baseTableName="mediated_request_workflow_log"
                                  baseColumnNames="mediated_request_id"
                                  referencedTableName="mediated_request"
@@ -46,7 +46,7 @@
     </changeSet>
 
     <changeSet id="addMediatedRequestWorkflowLogForeignKey" author="AntonyHruschev">
-        <addForeignKeyConstraint constraintName="fk_medreqworkflowlog_medreqstep"
+        <addForeignKeyConstraint constraintName="fk_medreqwflog_medreqstep"
                                  baseTableName="mediated_request_workflow_log"
                                  baseColumnNames="mediated_workflow, mediated_request_status, mediated_request_step"
                                  referencedTableName="mediated_request_step"

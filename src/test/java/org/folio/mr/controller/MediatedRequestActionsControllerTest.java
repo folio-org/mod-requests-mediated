@@ -1,12 +1,15 @@
 package org.folio.mr.controller;
 
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
-import static org.folio.mr.util.TestEntityBuilder.buildLogWithDate;
+import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequestWorkflowLog;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Date;
@@ -45,7 +48,7 @@ class MediatedRequestActionsControllerTest {
   @SneakyThrows
   void workflowLogGenerateActionDateWhenConfirmItemArrivalTest() {
     //given
-    MediatedRequestWorkflowLog log = buildLogWithDate(DATE_PATTERN, DATE);
+    MediatedRequestWorkflowLog log = buildMediatedRequestWorkflowLog(DATE_PATTERN, DATE);
     MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
 
     //mock
@@ -60,6 +63,8 @@ class MediatedRequestActionsControllerTest {
       new ConfirmItemArrivalRequest(barcode)).getBody()).getArrivalDate();
 
     //then
+    verify(mediatedRequestActionsService, times(1))
+      .saveMediatedRequestWorkflowLog(any());
     assertThat(log.getActionDate(), is(arrivalDate));
   }
 
@@ -67,8 +72,8 @@ class MediatedRequestActionsControllerTest {
   @SneakyThrows
   void workflowLogGenerateActionDateWhenSendItemInTransitTest() {
     //given
-    MediatedRequestWorkflowLog log = buildLogWithDate(DATE_PATTERN, DATE);
-    MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
+    MediatedRequestWorkflowLog log = buildMediatedRequestWorkflowLog(DATE_PATTERN, DATE);
+    MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_IN_TRANSIT_FOR_APPROVAL);
 
     //mock
     when(mediatedRequestActionsService.saveMediatedRequestWorkflowLog(any()))
@@ -82,13 +87,15 @@ class MediatedRequestActionsControllerTest {
       new SendItemInTransitRequest(barcode)).getBody()).getInTransitDate();
 
     //then
+    verify(mediatedRequestActionsService, times(1))
+      .saveMediatedRequestWorkflowLog(any());
     assertThat(log.getActionDate(), is(inTransitDate));
   }
 
   @Test
   void confirmItemArrivalTest() {
     // given
-    MediatedRequestWorkflowLog log = buildLogWithDate(DATE_PATTERN, DATE);
+    MediatedRequestWorkflowLog log = buildMediatedRequestWorkflowLog(DATE_PATTERN, DATE);
     MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
     String itemBarcode = mediatedRequest.getItem().getBarcode();
     when(mediatedRequestActionsService.confirmItemArrival(itemBarcode))
@@ -125,7 +132,7 @@ class MediatedRequestActionsControllerTest {
   @Test
   void sendItemInTransitTest() {
     // given
-    MediatedRequestWorkflowLog log = buildLogWithDate(DATE_PATTERN, DATE);
+    MediatedRequestWorkflowLog log = buildMediatedRequestWorkflowLog(DATE_PATTERN, DATE);
     MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
     String itemBarcode = mediatedRequest.getItem().getBarcode();
     when(mediatedRequestActionsService.sendItemInTransit(itemBarcode))
