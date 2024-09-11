@@ -27,18 +27,28 @@ public class MediatedRequestWorkflowLog {
   @Id
   @GeneratedValue
   private UUID id;
+
   private UUID mediatedRequestId;
+
   private String mediatedWorkflow;
+
   @Column(name = "mediated_request_status", columnDefinition = "MediatedRequestStatus")
   @JdbcType(MediatedRequestStatusJdbcType.class)
   private MediatedRequestStatus mediatedRequestStatus;
+
   private String mediatedRequestStep;
+
   @CreationTimestamp
   private Date actionDate;
+
   // Metadata
+
   private Date createdDate;
+
   private UUID createdBy;
+
   private Date updatedDate;
+
   private UUID updatedBy;
 
 }
