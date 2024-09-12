@@ -4,11 +4,11 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.domain.entity.MediatedRequestStep.from;
 import static org.folio.mr.support.ConversionUtils.asString;
-import static org.folio.mr.support.CqlQuery.exactMatch;
 
 import java.util.List;
 import java.util.UUID;
 
+import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
@@ -20,7 +20,8 @@ import org.folio.mr.service.CirculationRequestService;
 import org.folio.mr.service.EcsRequestService;
 import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestActionsService;
-import org.folio.mr.support.ConversionUtils;
+import org.folio.mr.service.SearchService;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
 
 import feign.FeignException;
@@ -38,22 +39,32 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   private final MediatedRequestMapper mediatedRequestMapper;
   private final CirculationRequestService circulationRequestService;
   private final EcsRequestService ecsRequestService;
+  private final FolioExecutionContext folioExecutionContext;
+  private final SearchService searchService;
 
   @Override
   public void confirm(UUID id) {
-    log.info("confirm:: looking for mediated request: {}", id);
+    MediatedRequestEntity mediatedRequest = findMediatedRequest(id);
+    createRequest(mediatedRequest);
+    log.info("confirm:: confirmed request ID: {}", mediatedRequest.getConfirmedRequestId());
+    mediatedRequestsRepository.save(mediatedRequest);
+    log.info("");
+  }
+
+  private MediatedRequestEntity findMediatedRequest(UUID id) {
+    log.info("findMediatedRequest:: looking for mediated request: {}", id);
     MediatedRequestEntity mediatedRequest = mediatedRequestsRepository.findById(id)
       .orElseThrow(() -> new EntityNotFoundException("Mediated request was not found: " + id));
-    log.info("confirm:: mediated request found");
+    log.info("findMediatedRequest:: mediated request found");
+    return mediatedRequest;
+  }
 
+  private void createRequest(MediatedRequestEntity mediatedRequest) {
     if (localInstanceExists(mediatedRequest) && localItemExists(mediatedRequest)) {
       createLocalCirculationRequest(mediatedRequest);
     } else {
       createEcsTlr(mediatedRequest);
     }
-
-    log.info("confirm:: confirmed request ID: {}", mediatedRequest.getConfirmedRequestId());
-    mediatedRequestsRepository.save(mediatedRequest);
   }
 
   private void createEcsTlr(MediatedRequestEntity mediatedRequest) {
@@ -81,8 +92,9 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private MediatedRequestEntity findMediatedRequestForItemArrival(String itemBarcode) {
-    log.info("findMediatedRequestForItemArrival:: looking for mediated " +
-        "request with item barcode '{}'", itemBarcode);
+    log.info("findMediatedRequestForItemArrival:: looking for mediated request with item barcode '{}'",
+      itemBarcode);
+
     var entity = mediatedRequestsRepository.findRequestForItemArrivalConfirmation(itemBarcode)
       .orElseThrow(() -> new EntityNotFoundException(String.format(
         "Mediated request for arrival confirmation of item with barcode '%s' was not found", itemBarcode)));
@@ -144,10 +156,10 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     log.info("localInstanceExists:: searching for instance {} in local tenant", instanceId);
     try {
       inventoryService.fetchInstance(instanceId);
-      log.info("localInstanceExists:: instance {} found in local tenant", instanceId);
+      log.info("localInstanceExists:: instance found");
       return true;
     } catch (FeignException.NotFound e) {
-      log.info("localInstanceExists:: instance {} not found in local tenant", instanceId);
+      log.info("localInstanceExists:: instance not found");
       return false;
     }
   }
@@ -156,10 +168,11 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     String instanceId = mediatedRequest.getInstanceId().toString();
     log.info("localItemExists:: searching for items of instance {} in local tenant", instanceId);
     String itemId = asString(mediatedRequest.getItemId());
+    String localTenantId = folioExecutionContext.getTenantId();
 
-    List<String> localItemIds = inventoryService.fetchItems(exactMatch("instanceId", instanceId))
+    List<String> localItemIds = searchService.searchItems(instanceId, localTenantId)
       .stream()
-      .map(Item::getId)
+      .map(ConsortiumItem::getId)
       .toList();
 
     log.info("localItemExists:: found {} items in local tenant", localItemIds.size());

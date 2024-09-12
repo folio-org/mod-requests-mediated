@@ -228,6 +228,8 @@ components:
       $ref: 'schemas/ecs/ecsTlr.yaml'
     userTenantsResponse:
       $ref: 'schemas/users/getUserTenantsResponse.yaml'
+    consortiumItems:
+      $ref: 'schemas/search/consortiumItems.yaml'
   parameters:
     mediatedRequestId:
       name: mediatedRequestId

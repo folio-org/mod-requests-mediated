@@ -21,10 +21,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.http.HttpStatus;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
+import org.folio.mr.domain.dto.ConsortiumItem;
+import org.folio.mr.domain.dto.ConsortiumItems;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Items;
@@ -52,9 +56,9 @@ class MediatedRequestActionsApiTest extends BaseIT {
     "/requests-mediated/mediated-requests/%s/confirm";
   private static final String CIRCULATION_REQUESTS_URL = "/circulation/requests";
   private static final String ITEMS_URL = "/item-storage/items";
-  private static final String ITEMS_BY_INSTANCE_URL = "/item-storage/items";
   private static final String INSTANCES_URL = "/instance-storage/instances";
   private static final String ECS_TLR_URL = "/tlr/ecs-tlr";
+  private static final String SEARCH_ITEMS_URL = "/search/consortium/items";
 
   @Autowired
   private MediatedRequestsRepository mediatedRequestsRepository;
@@ -73,6 +77,17 @@ class MediatedRequestActionsApiTest extends BaseIT {
     UUID circulationRequestId = UUID.randomUUID();
     UUID instanceId = initialRequest.getInstanceId();
 
+    ConsortiumItems consortiumItems = new ConsortiumItems()
+      .items(List.of(new ConsortiumItem()
+        .id("9428231b-dd31-4f70-8406-fe22fbdeabc2")
+        .tenantId(TENANT_ID_CONSORTIUM)));
+
+    wireMockServer.stubFor(WireMock.get(urlPathMatching(SEARCH_ITEMS_URL))
+      .withQueryParam("instanceId", equalTo(instanceId.toString()))
+      .withQueryParam("tenantId", equalTo(TENANT_ID_CONSORTIUM))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
+      .willReturn(jsonResponse(consortiumItems, HttpStatus.SC_OK)));
+
     wireMockServer.stubFor(WireMock.post(urlMatching(CIRCULATION_REQUESTS_URL))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(jsonResponse(new Request().id(circulationRequestId.toString()), HttpStatus.SC_OK)));
@@ -86,9 +101,10 @@ class MediatedRequestActionsApiTest extends BaseIT {
 
     wireMockServer.verify(getRequestedFor(urlMatching(INSTANCES_URL + "/" + instanceId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
-    wireMockServer.verify(getRequestedFor(urlPathMatching(ITEMS_BY_INSTANCE_URL))
-      .withQueryParam("query", equalTo("instanceId==\"" + instanceId + "\""))
-      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
+    wireMockServer.verify(getRequestedFor(urlPathMatching(SEARCH_ITEMS_URL))
+        .withQueryParam("instanceId", equalTo(instanceId.toString()))
+        .withQueryParam("tenantId", equalTo(TENANT_ID_CONSORTIUM))
+        .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
     wireMockServer.verify(postRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
     wireMockServer.verify(0, postRequestedFor(urlMatching(ECS_TLR_URL)));
@@ -99,6 +115,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
   void mediatedRequestConfirmationForLocalInstanceAndRemoteItem() {
     MediatedRequestEntity initialRequest = mediatedRequestsRepository.save(
       buildMediatedRequestEntity(NEW_AWAITING_CONFIRMATION));
+    UUID instanceId = initialRequest.getInstanceId();
 
     wireMockServer.stubFor(WireMock.get(urlMatching(ITEMS_URL + ".*"))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
@@ -112,6 +129,12 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
       .willReturn(jsonResponse(ecsTlr, HttpStatus.SC_OK)));
 
+    wireMockServer.stubFor(WireMock.get(urlPathMatching(SEARCH_ITEMS_URL))
+      .withQueryParam("instanceId", equalTo(instanceId.toString()))
+      .withQueryParam("tenantId", equalTo(TENANT_ID_CONSORTIUM))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
+      .willReturn(jsonResponse(new ConsortiumItems().items(new ArrayList<>()), HttpStatus.SC_OK)));
+
     confirmMediatedRequest(initialRequest.getId())
       .andExpect(status().isNoContent());
 
@@ -119,12 +142,12 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .orElseThrow();
     assertThat(updatedRequest.getConfirmedRequestId(), is(primaryRequestId));
 
-    UUID instanceId = initialRequest.getInstanceId();
     wireMockServer.verify(getRequestedFor(urlMatching(INSTANCES_URL + "/" + instanceId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
-    wireMockServer.verify(getRequestedFor(urlPathMatching(ITEMS_BY_INSTANCE_URL))
-      .withQueryParam("query", equalTo("instanceId==\"" + instanceId + "\""))
-      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
+    wireMockServer.verify(getRequestedFor(urlPathMatching(SEARCH_ITEMS_URL))
+      .withQueryParam("instanceId", equalTo(instanceId.toString()))
+      .withQueryParam("tenantId", equalTo(TENANT_ID_CONSORTIUM))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
     wireMockServer.verify(0, postRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL)));
     wireMockServer.verify(postRequestedFor(urlMatching(ECS_TLR_URL))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
@@ -154,7 +177,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
 
     wireMockServer.verify(getRequestedFor(urlMatching(INSTANCES_URL + "/" + instanceId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
-    wireMockServer.verify(0, getRequestedFor(urlPathMatching(ITEMS_BY_INSTANCE_URL)));
+    wireMockServer.verify(0, getRequestedFor(urlPathMatching(SEARCH_ITEMS_URL)));
     wireMockServer.verify(0, postRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL)));
     wireMockServer.verify(postRequestedFor(urlMatching(ECS_TLR_URL))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
@@ -173,7 +196,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
         .value(is("Mediated request was not found: " + mediatedRequestId)));
 
     wireMockServer.verify(0, getRequestedFor(urlMatching(INSTANCES_URL)));
-    wireMockServer.verify(0, getRequestedFor(urlPathMatching(ITEMS_BY_INSTANCE_URL)));
+    wireMockServer.verify(0, getRequestedFor(urlPathMatching(SEARCH_ITEMS_URL)));
     wireMockServer.verify(0, postRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL)));
     wireMockServer.verify(0, postRequestedFor(urlMatching(ECS_TLR_URL)));
   }
