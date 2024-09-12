@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Instance;
 import org.folio.mr.domain.dto.Item;
@@ -30,7 +31,7 @@ import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.mapper.MediatedRequestMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.impl.MediatedRequestActionsServiceImpl;
-import org.folio.mr.support.CqlQuery;
+import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -57,6 +58,12 @@ class MediatedRequestActionsServiceTest {
 
   @Mock
   private EcsRequestService ecsRequestService;
+
+  @Mock
+  private FolioExecutionContext folioExecutionContext;
+
+  @Mock
+  private SearchService searchService;
 
   @InjectMocks
   private MediatedRequestActionsServiceImpl mediatedRequestActionsService;
@@ -155,14 +162,16 @@ class MediatedRequestActionsServiceTest {
       .withId(mediatedRequestId)
       .withInstanceId(instanceId);
 
-    Item requestedItem = new Item().id(mediatedRequest.getItemId().toString());
+    ConsortiumItem requestedItem = new ConsortiumItem().id(mediatedRequest.getItemId().toString());
     Request circulationRequest = new Request().id(circulationRequestId.toString());
 
     when(mediatedRequestsRepository.findById(mediatedRequestId))
       .thenReturn(Optional.of(mediatedRequest));
     when(inventoryService.fetchInstance(instanceId.toString()))
       .thenReturn(new Instance());
-    when(inventoryService.fetchItems(new CqlQuery("instanceId==\"" + instanceId + "\"")))
+    when(folioExecutionContext.getTenantId())
+      .thenReturn("consortium");
+    when(searchService.searchItems(instanceId.toString(), "consortium"))
       .thenReturn(List.of(requestedItem));
     when(circulationRequestService.create(mediatedRequest))
       .thenReturn(circulationRequest);
@@ -192,7 +201,9 @@ class MediatedRequestActionsServiceTest {
       .thenReturn(Optional.of(mediatedRequest));
     when(inventoryService.fetchInstance(instanceId.toString()))
       .thenReturn(new Instance());
-    when(inventoryService.fetchItems(new CqlQuery("instanceId==\"" + instanceId + "\"")))
+    when(folioExecutionContext.getTenantId())
+      .thenReturn("consortium");
+    when(searchService.searchItems(instanceId.toString(), "consortium"))
       .thenReturn(emptyList());
     when(ecsRequestService.create(mediatedRequest))
       .thenReturn(ecsTlr);

@@ -46,9 +46,9 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   public void confirm(UUID id) {
     MediatedRequestEntity mediatedRequest = findMediatedRequest(id);
     createRequest(mediatedRequest);
-    log.info("confirm:: confirmed request ID: {}", mediatedRequest.getConfirmedRequestId());
+    log.info("confirm:: request created: {}", mediatedRequest.getConfirmedRequestId());
     mediatedRequestsRepository.save(mediatedRequest);
-    log.info("");
+    log.info("confirm:: mediated request {} was successfully confirmed", id);
   }
 
   private MediatedRequestEntity findMediatedRequest(UUID id) {
