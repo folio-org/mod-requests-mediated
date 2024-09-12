@@ -89,7 +89,7 @@
     {
       "request": {
         "method": "GET",
-        "urlPathPattern": "/user-tenants",
+        "urlPath": "/user-tenants",
         "queryParameters": {
           "limit": {
             "equalTo": "1"
@@ -119,7 +119,12 @@
     {
       "request": {
         "method": "GET",
-        "url": "/users?query=username%3D%3Dmod-requests-mediated"
+        "urlPath": "/users",
+        "queryParameters": {
+          "query": {
+            "equalTo": "username==mod-requests-mediated"
+          }
+        }
       },
       "response": {
         "status": 200,
