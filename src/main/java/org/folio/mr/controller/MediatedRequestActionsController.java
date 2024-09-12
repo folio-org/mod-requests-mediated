@@ -90,7 +90,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
   }
 
   private Date logActionAndGetActionDate(MediatedRequest request) {
-    log.info("Creating mediated request workflow log entry for request with id: {}",
+    log.info("logActionAndGetActionDate:: creating mediated request workflow log entry for request with id: {}",
       request.getId());
     return actionsService.saveMediatedRequestWorkflowLog(request).getActionDate();
   }

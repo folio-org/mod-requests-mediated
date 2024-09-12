@@ -49,7 +49,7 @@ class MediatedRequestActionsControllerTest {
   void workflowLogGenerateActionDateWhenConfirmItemArrivalTest() {
     //given
     MediatedRequestWorkflowLog log = buildMediatedRequestWorkflowLog(DATE_PATTERN, DATE);
-    MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
+    MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_IN_TRANSIT_FOR_APPROVAL);
 
     //mock
     when(mediatedRequestActionsService.saveMediatedRequestWorkflowLog(any()))
@@ -73,7 +73,7 @@ class MediatedRequestActionsControllerTest {
   void workflowLogGenerateActionDateWhenSendItemInTransitTest() {
     //given
     MediatedRequestWorkflowLog log = buildMediatedRequestWorkflowLog(DATE_PATTERN, DATE);
-    MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_IN_TRANSIT_FOR_APPROVAL);
+    MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
 
     //mock
     when(mediatedRequestActionsService.saveMediatedRequestWorkflowLog(any()))
