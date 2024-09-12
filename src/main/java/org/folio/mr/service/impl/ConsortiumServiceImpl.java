@@ -17,7 +17,7 @@ public class ConsortiumServiceImpl implements ConsortiumService {
   private final UserTenantsClient userTenantsClient;
 
   @Override
-  @Cacheable("centralTenant") // implement caching
+  @Cacheable("centralTenant") // TODO: implement caching
   public String getCentralTenantId() {
     log.info("getCentralTenantId:: resolving central tenant ID");
     String centralTenantId = userTenantsClient.getUserTenants(1)

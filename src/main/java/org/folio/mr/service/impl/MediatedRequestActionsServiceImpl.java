@@ -53,30 +53,18 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
   private MediatedRequestEntity findMediatedRequest(UUID id) {
     log.info("findMediatedRequest:: looking for mediated request: {}", id);
-    MediatedRequestEntity mediatedRequest = mediatedRequestsRepository.findById(id)
+    return mediatedRequestsRepository.findById(id)
       .orElseThrow(() -> new EntityNotFoundException("Mediated request was not found: " + id));
-    log.info("findMediatedRequest:: mediated request found");
-    return mediatedRequest;
   }
 
   private void createRequest(MediatedRequestEntity mediatedRequest) {
     if (localInstanceExists(mediatedRequest) && localItemExists(mediatedRequest)) {
-      createLocalCirculationRequest(mediatedRequest);
+      Request request = circulationRequestService.create(mediatedRequest);
+      mediatedRequest.setConfirmedRequestId(UUID.fromString(request.getId()));
     } else {
-      createEcsTlr(mediatedRequest);
+      EcsTlr ecsTlr = ecsRequestService.create(mediatedRequest);
+      mediatedRequest.setConfirmedRequestId(UUID.fromString(ecsTlr.getPrimaryRequestId()));
     }
-  }
-
-  private void createEcsTlr(MediatedRequestEntity mediatedRequest) {
-    log.info("confirm:: creating ECS title-level request");
-    EcsTlr ecsTlr = ecsRequestService.create(mediatedRequest);
-    mediatedRequest.setConfirmedRequestId(UUID.fromString(ecsTlr.getPrimaryRequestId()));
-  }
-
-  private void createLocalCirculationRequest(MediatedRequestEntity mediatedRequest) {
-    log.info("confirm:: creating circulation request in local tenant");
-    Request request = circulationRequestService.create(mediatedRequest);
-    mediatedRequest.setConfirmedRequestId(UUID.fromString(request.getId()));
   }
 
   @Override

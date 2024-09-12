@@ -44,10 +44,6 @@ folio:
     password: ${SYSTEM_USER_PASSWORD:mod-requests-mediated}
     lastname: System
     permissionsFilePath: permissions/mod-requests-mediated.csv
-  logging:
-    feign:
-      enabled: true
-      level: full
 management:
   endpoints:
     web:

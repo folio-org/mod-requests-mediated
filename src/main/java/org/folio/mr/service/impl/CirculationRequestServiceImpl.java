@@ -32,7 +32,8 @@ public class CirculationRequestServiceImpl implements CirculationRequestService 
       .holdingsRecordId(asString(mediatedRequest.getHoldingsRecordId()))
       .itemId(asString(mediatedRequest.getItemId()))
       .requesterId(asString(mediatedRequest.getRequesterId()))
-      .fulfillmentPreference(Request.FulfillmentPreferenceEnum.fromValue(mediatedRequest.getFulfillmentPreference().getValue()))
+      .fulfillmentPreference(Request.FulfillmentPreferenceEnum.fromValue(
+        mediatedRequest.getFulfillmentPreference().getValue()))
       .pickupServicePointId(asString(mediatedRequest.getPickupServicePointId()))
       .requestDate(mediatedRequest.getRequestDate())
       .deliveryAddressTypeId(asString(mediatedRequest.getDeliveryAddressTypeId()))

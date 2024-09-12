@@ -27,8 +27,7 @@ public class CustomTenantService extends TenantService {
 
   @Override
   protected void afterTenantUpdate(TenantAttributes tenantAttributes) {
-    log.debug("afterTenantUpdate:: tenantAttributes={}", tenantAttributes);
-    log.info("afterTenantUpdate:: setting up system user");
+    log.info("afterTenantUpdate:: tenantAttributes={}", tenantAttributes);
     systemUserService.setupSystemUser();
   }
 }
