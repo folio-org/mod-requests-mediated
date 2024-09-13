@@ -1,16 +1,15 @@
 package org.folio.mr.controller;
 
-import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static java.util.UUID.randomUUID;
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
-import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequestWorkflowLog;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
+import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequestWorkflowLog;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
