@@ -1,0 +1,60 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="createMediatedRequestWorkflowLogTable" author="AntonyHruschev">
+        <comment>
+            Create mediated_request_workflow_log table
+        </comment>
+
+        <createTable tableName="mediated_request_workflow_log">
+            <column name="id" type="uuid" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="mediated_request_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mediated_workflow" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mediated_request_status" type="MediatedRequestStatus">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mediated_request_step" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="action_date" type="timestamp without time zone" defaultValueComputed="now()"/>
+            <column name="created_date" type="timestamp without time zone" defaultValueComputed="now()"/>
+            <column name="created_by" type="uuid"/>
+            <column name="updated_date" type="timestamp without time zone"/>
+            <column name="updated_by" type="uuid"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="addMediatedRequestIdForeignKey" author="AntonyHruschev">
+        <addForeignKeyConstraint constraintName="fk_medreqwflog_medreq"
+                                 baseTableName="mediated_request_workflow_log"
+                                 baseColumnNames="mediated_request_id"
+                                 referencedTableName="mediated_request"
+                                 referencedColumnNames="id"
+                                 deferrable="true"
+                                 initiallyDeferred="true"
+                                 onDelete="RESTRICT"
+                                 onUpdate="RESTRICT"/>
+    </changeSet>
+
+    <changeSet id="addMediatedRequestWorkflowLogForeignKey" author="AntonyHruschev">
+        <addForeignKeyConstraint constraintName="fk_medreqwflog_medreqstep"
+                                 baseTableName="mediated_request_workflow_log"
+                                 baseColumnNames="mediated_workflow, mediated_request_status, mediated_request_step"
+                                 referencedTableName="mediated_request_step"
+                                 referencedColumnNames="mediated_workflow, mediated_request_status, name"
+                                 deferrable="true"
+                                 initiallyDeferred="true"
+                                 onDelete="RESTRICT"
+                                 onUpdate="RESTRICT"/>
+    </changeSet>
+
+</databaseChangeLog>
