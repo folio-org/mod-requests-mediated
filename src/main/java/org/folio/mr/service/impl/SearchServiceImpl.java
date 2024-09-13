@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.folio.mr.client.SearchClient;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.service.ConsortiumService;
+import org.folio.mr.service.SearchService;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,7 @@ import lombok.extern.log4j.Log4j2;
 @Service
 @RequiredArgsConstructor
 @Log4j2
-public class SearchService implements org.folio.mr.service.SearchService {
+public class SearchServiceImpl implements SearchService {
 
   private final SearchClient searchClient;
   private final ConsortiumService consortiumService;
