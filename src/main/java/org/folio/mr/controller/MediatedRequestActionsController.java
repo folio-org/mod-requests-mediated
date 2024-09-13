@@ -33,7 +33,9 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
   private final MediatedRequestActionsService actionsService;
 
   @Override
-  public ResponseEntity<ConfirmItemArrivalResponse> confirmItemArrival(ConfirmItemArrivalRequest request) {
+  public ResponseEntity<ConfirmItemArrivalResponse> confirmItemArrival(
+    ConfirmItemArrivalRequest request) {
+
     log.info("confirmItemArrival:: request={}", request);
     MediatedRequest mediatedRequest = actionsService.confirmItemArrival(request.getItemBarcode());
 
@@ -82,7 +84,9 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
   }
 
   @Override
-  public ResponseEntity<SendItemInTransitResponse> sendItemInTransit(SendItemInTransitRequest request) {
+  public ResponseEntity<SendItemInTransitResponse> sendItemInTransit(
+    SendItemInTransitRequest request) {
+
     log.info("sendItemInTransit:: request={}", request);
     MediatedRequest mediatedRequest = actionsService.sendItemInTransit(request.getItemBarcode());
 

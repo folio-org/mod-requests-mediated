@@ -108,12 +108,16 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       .copyNumber(item.getCopyNumber());
   }
 
-  private static MediatedRequestWorkflowLog buildMediatedRequestWorkflowLog(MediatedRequest request) {
+  private static MediatedRequestWorkflowLog buildMediatedRequestWorkflowLog(
+    MediatedRequest request) {
+
     MediatedRequestWorkflowLog log = new MediatedRequestWorkflowLog();
     log.setMediatedRequestId(UUID.fromString(request.getId()));
     log.setMediatedRequestStep(request.getMediatedRequestStep());
-    log.setMediatedRequestStatus(MediatedRequestStatus.fromValue(request.getMediatedRequestStatus().getValue()));
+    log.setMediatedRequestStatus(MediatedRequestStatus.fromValue(request.getMediatedRequestStatus()
+      .getValue()));
     log.setMediatedWorkflow(request.getMediatedWorkflow());
+
     return log;
   }
 
