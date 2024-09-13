@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
+import org.folio.mr.repository.MediatedRequestWorkflowLogRepository;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.test.types.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,8 +35,12 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @Autowired
   private MediatedRequestsRepository mediatedRequestsRepository;
 
+  @Autowired
+  private MediatedRequestWorkflowLogRepository workflowLogRepository;
+
   @BeforeEach
   public void beforeEach() {
+    workflowLogRepository.deleteAll();
     mediatedRequestsRepository.deleteAll();
   }
 
