@@ -1,0 +1,11 @@
+description: User tenants collection
+type: object
+properties:
+  userTenants:
+    type: array
+    description: "List of user tenants"
+    items:
+      type: object
+      $ref: "userTenant.yaml"
+  totalRecords:
+    type: integer

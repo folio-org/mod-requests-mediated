@@ -85,6 +85,66 @@
           "preferredEmailCommunication": []
         }
       }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "urlPath": "/user-tenants",
+        "queryParameters": {
+          "limit": {
+            "equalTo": "1"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "userTenants": [
+            {
+              "id": "0de927da-afa5-4f6d-b553-acc7803770a6",
+              "userId": "788fef93-43d1-4377-a7ba-24651cb0ee5c",
+              "username": "consortia-system-user",
+              "tenantId": "consortium",
+              "centralTenantId": "central",
+              "consortiumId": "261a6ad9-0cab-47b5-ac83-a93b100d47b5"
+            }
+          ],
+          "totalRecords": 10
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "urlPath": "/users",
+        "queryParameters": {
+          "query": {
+            "equalTo": "username==mod-requests-mediated"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"users\": [], \"totalRecords\": 0, \"resultInfo\": {\"totalRecords\": 0, \"facets\": [],\"diagnostics\": []}}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/users"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
     }
   ]
 }

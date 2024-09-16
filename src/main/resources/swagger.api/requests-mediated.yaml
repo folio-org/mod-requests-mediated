@@ -121,6 +121,23 @@ paths:
           $ref: '#/components/responses/notFoundResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
+  /requests-mediated/mediated-requests/{mediatedRequestId}/confirm:
+    post:
+      description: Confirm mediated request
+      operationId: confirmMediatedRequest
+      tags:
+        - mediatedRequestsActions
+      parameters:
+        - $ref: '#/components/parameters/mediatedRequestId'
+      responses:
+        '204':
+          description: Mediated request successfully confirmed
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
   /requests-mediated/confirm-item-arrival:
     post:
       description: Confirm item arrival
@@ -199,10 +216,20 @@ components:
       $ref: 'schemas/inventory/servicePoint.json'
     item:
       $ref: 'schemas/inventory/item.json'
+    items:
+      $ref: 'schemas/inventory/items.json'
     location:
       $ref: 'schemas/inventory/location.json'
     library:
       $ref: 'schemas/inventory/library.json'
+    request:
+      $ref: 'schemas/circulation/request.json'
+    ecsTlr:
+      $ref: 'schemas/ecs/ecsTlr.yaml'
+    userTenantsResponse:
+      $ref: 'schemas/users/getUserTenantsResponse.yaml'
+    consortiumItems:
+      $ref: 'schemas/search/consortiumItems.yaml'
   parameters:
     mediatedRequestId:
       name: mediatedRequestId

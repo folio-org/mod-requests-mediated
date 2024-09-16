@@ -428,7 +428,7 @@
       "description": "arbitrary tags associated with this instance",
       "id": "tags",
       "type": "object",
-      "$ref": "tags.json"
+      "$ref": "../tags.json"
     },
     "metadata": {
       "type": "object",

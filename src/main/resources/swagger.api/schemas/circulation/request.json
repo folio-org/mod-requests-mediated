@@ -1,0 +1,215 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A request by a patron for a specific item",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "UUID of the request",
+      "$ref": "../uuid.yaml"
+    },
+    "requestLevel": {
+      "description": "Level of the request - Item or Title",
+      "type": "string",
+      "enum": ["Item", "Title"]
+    },
+    "requestType": {
+      "description": "Whether the item should be held upon return, recalled or paged for",
+      "type": "string",
+      "enum": ["Hold", "Recall", "Page"]
+    },
+    "requestDate": {
+      "description": "Date the request was made",
+      "type": "string",
+      "format": "date-time"
+    },
+    "patronComments": {
+      "description": "Comments made by the patron",
+      "type": "string"
+    },
+    "requesterId": {
+      "description": "ID of the requesting patron (user)",
+      "$ref": "../uuid.yaml"
+    },
+    "proxyUserId": {
+      "description": "ID of the user representing a proxy for the patron",
+      "$ref": "../uuid.yaml"
+    },
+    "instanceId": {
+      "description": "ID of the instance being requested",
+      "$ref": "../uuid.yaml"
+    },
+    "holdingsRecordId": {
+      "description": "ID of the holdings record being requested",
+      "$ref": "../uuid.yaml"
+    },
+    "itemId": {
+      "description": "ID of the item being requested",
+      "$ref": "../uuid.yaml"
+    },
+    "status": {
+      "description": "Status of the request",
+      "type": "string",
+      "enum": [
+        "Open - Not yet filled",
+        "Open - Awaiting pickup",
+        "Open - In transit",
+        "Open - Awaiting delivery",
+        "Closed - Filled",
+        "Closed - Cancelled",
+        "Closed - Unfilled",
+        "Closed - Pickup expired"
+      ]
+    },
+    "cancellationReasonId": {
+      "description": "The id of the relevant request reason",
+      "type": "string"
+    },
+    "cancelledByUserId": {
+      "description": "The id of the user that cancelled the request",
+      "type": "string"
+    },
+    "cancellationAdditionalInformation": {
+      "description": "Potential relevant information regarding a cancellation",
+      "type": "string"
+    },
+    "cancelledDate": {
+      "description": "Date the request was cancelled",
+      "type": "string",
+      "format": "date-time"
+    },
+    "position": {
+      "description": "Position of the request in the unified request queue",
+      "type": "integer"
+    },
+    "instance": {
+      "description": "Copy of some instance metadata (used for searching and sorting)",
+      "type": "object",
+      "properties": {
+        "title": {
+          "description": "title of the item",
+          "type": "string"
+        },
+        "identifiers": {
+          "type": "array",
+          "description": "An extensible set of name-value pairs of identifiers associated with the resource",
+          "minItems": 0,
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "description": "Resource identifier value"
+              },
+              "identifierTypeId": {
+                "type": "string",
+                "description": "UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
+                "$ref": "../uuid.yaml"
+              }
+            }
+          }
+        }
+      }
+    },
+    "item": {
+      "description": "Copy of some item metadata (used for searching and sorting)",
+      "type": "object",
+      "properties": {
+        "barcode": {
+          "description": "barcode of the item",
+          "type": "string"
+        }
+      }
+    },
+    "requester": {
+      "description": "Copy of some requesting patron metadata (used for searching and sorting)",
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "description": "first name of the requesting patron",
+          "type": "string"
+        },
+        "lastName": {
+          "description": "last name of the requesting patron",
+          "type": "string"
+        },
+        "middleName": {
+          "description": "middle name of the requesting patron",
+          "type": "string"
+        },
+        "barcode": {
+          "description": "barcode of the requesting patron",
+          "type": "string"
+        },
+        "patronGroup" : {
+          "description": "DEPRECATED, to be removed in subsequent major version",
+          "type": "string"
+        }
+      }
+    },
+    "proxy": {
+      "description": "Copy of some proxy patron metadata (used for searching and sorting)",
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "description": "first name of the proxy patron",
+          "type": "string"
+        },
+        "lastName": {
+          "description": "last name of the proxy patron",
+          "type": "string"
+        },
+        "middleName": {
+          "description": "middle name of the proxy patron",
+          "type": "string"
+        },
+        "barcode": {
+          "description": "barcode of the proxy patron",
+          "type": "string"
+        },
+        "patronGroup": {
+          "description": "DEPRECATED, to be removed in subsequent major version",
+          "type": "string"
+        }
+      }
+    },
+    "fulfillmentPreference": {
+      "description": "How should the request be fulfilled (whether the item should be kept on the hold shelf for collection or delivered to the requester)",
+      "type": "string",
+      "enum": ["Hold Shelf", "Delivery"]
+    },
+    "deliveryAddressTypeId": {
+      "description": "Deliver to the address of this type, for the requesting patron",
+      "$ref": "../uuid.yaml"
+    },
+    "requestExpirationDate": {
+      "description": "Date when the request expires",
+      "type": "string",
+      "format": "date-time"
+    },
+    "holdShelfExpirationDate": {
+      "description": "Date when an item returned to the hold shelf expires",
+      "type": "string",
+      "format": "date-time"
+    },
+    "pickupServicePointId": {
+      "description": "The ID of the Service Point where this request can be picked up",
+      "$ref": "../uuid.yaml"
+    },
+    "metadata": {
+      "description": "Metadata about creation and changes to requests, provided by the server (client should not provide)",
+      "type": "object",
+      "$ref": "../metadata.json"
+    },
+    "tags": {
+      "type": "object",
+      "description": "Tags",
+      "$ref": "../tags.json"
+    },
+    "awaitingPickupRequestClosedDate": {
+      "description": "A date when the request with awaiting pickup status was closed",
+      "type": "string",
+      "format": "date-time",
+      "readonly" : true
+    }
+  }
+}

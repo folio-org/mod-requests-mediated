@@ -448,7 +448,7 @@ class MediatedRequestsApiTest extends BaseIT {
   private ResultActions getRequestById(String id) {
     return mockMvc.perform(
         get(URL_MEDIATED_REQUESTS + "/" + id)
-          .headers(buildHeaders())
+          .headers(defaultHeaders())
           .contentType(MediaType.APPLICATION_JSON));
   }
 
@@ -456,7 +456,7 @@ class MediatedRequestsApiTest extends BaseIT {
   private ResultActions getRequestsByQuery(String query) {
     return mockMvc.perform(
       get(URL_MEDIATED_REQUESTS + "?query=" + query)
-        .headers(buildHeaders())
+        .headers(defaultHeaders())
         .contentType(MediaType.APPLICATION_JSON));
   }
 
@@ -464,7 +464,7 @@ class MediatedRequestsApiTest extends BaseIT {
   private ResultActions getAllRequests() {
     return mockMvc.perform(
       get(URL_MEDIATED_REQUESTS)
-        .headers(buildHeaders())
+        .headers(defaultHeaders())
         .contentType(MediaType.APPLICATION_JSON));
   }
 
@@ -472,7 +472,7 @@ class MediatedRequestsApiTest extends BaseIT {
   private ResultActions postRequest(MediatedRequest request) {
     return mockMvc.perform(
       post(URL_MEDIATED_REQUESTS)
-        .headers(buildHeaders())
+        .headers(defaultHeaders())
         .contentType(MediaType.APPLICATION_JSON)
         .content(asJsonString(request)));
   }
@@ -481,7 +481,7 @@ class MediatedRequestsApiTest extends BaseIT {
   private ResultActions putRequest(MediatedRequest request) {
     return mockMvc.perform(
       put(URL_MEDIATED_REQUESTS + "/" + request.getId())
-        .headers(buildHeaders())
+        .headers(defaultHeaders())
         .contentType(MediaType.APPLICATION_JSON)
         .content(asJsonString(request)));
   }
@@ -490,7 +490,7 @@ class MediatedRequestsApiTest extends BaseIT {
   private ResultActions deleteRequest(String id) {
     return mockMvc.perform(
       delete(URL_MEDIATED_REQUESTS + "/" + id)
-        .headers(buildHeaders())
+        .headers(defaultHeaders())
         .contentType(MediaType.APPLICATION_JSON));
   }
 

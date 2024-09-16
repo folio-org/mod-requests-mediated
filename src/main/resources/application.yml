@@ -38,6 +38,12 @@ folio:
       enabled: true
   environment: ${ENV:folio}
   okapi-url: ${OKAPI_URL:http://okapi:9130}
+  system-user:
+    enabled: ${SYSTEM_USER_ENABLED:true}
+    username: ${SYSTEM_USER_NAME:mod-requests-mediated}
+    password: ${SYSTEM_USER_PASSWORD:mod-requests-mediated}
+    lastname: System
+    permissionsFilePath: permissions/mod-requests-mediated.csv
 management:
   endpoints:
     web:
