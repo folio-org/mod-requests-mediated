@@ -71,6 +71,37 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     }
   }
 
+  private boolean localInstanceExists(MediatedRequestEntity mediatedRequest) {
+    final String instanceId = mediatedRequest.getInstanceId().toString();
+    log.info("localInstanceExists:: searching for instance {} in local tenant", instanceId);
+    try {
+      inventoryService.fetchInstance(instanceId);
+      log.info("localInstanceExists:: instance found");
+      return true;
+    } catch (FeignException.NotFound e) {
+      log.info("localInstanceExists:: instance not found");
+      return false;
+    }
+  }
+
+  private boolean localItemExists(MediatedRequestEntity mediatedRequest) {
+    String instanceId = mediatedRequest.getInstanceId().toString();
+    log.info("localItemExists:: searching for items of instance {} in local tenant", instanceId);
+    String itemId = asString(mediatedRequest.getItemId());
+    String localTenantId = folioExecutionContext.getTenantId();
+
+    List<String> localItemIds = searchService.searchItems(instanceId, localTenantId)
+      .stream()
+      .map(ConsortiumItem::getId)
+      .toList();
+
+    log.info("localItemExists:: found {} items in local tenant", localItemIds.size());
+    log.debug("localItemExists:: itemId={}, localItemIds={}", itemId, localItemIds);
+
+    return (itemId != null && localItemIds.contains(itemId))
+      || (itemId == null && !localItemIds.isEmpty());
+  }
+
   @Override
   public MediatedRequest confirmItemArrival(String itemBarcode) {
     log.info("confirmItemArrival:: item barcode: {}", itemBarcode);
@@ -159,36 +190,5 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     log.setMediatedWorkflow(request.getMediatedWorkflow());
 
     return log;
-  }
-
-  private boolean localInstanceExists(MediatedRequestEntity mediatedRequest) {
-    final String instanceId = mediatedRequest.getInstanceId().toString();
-    log.info("localInstanceExists:: searching for instance {} in local tenant", instanceId);
-    try {
-      inventoryService.fetchInstance(instanceId);
-      log.info("localInstanceExists:: instance found");
-      return true;
-    } catch (FeignException.NotFound e) {
-      log.info("localInstanceExists:: instance not found");
-      return false;
-    }
-  }
-
-  private boolean localItemExists(MediatedRequestEntity mediatedRequest) {
-    String instanceId = mediatedRequest.getInstanceId().toString();
-    log.info("localItemExists:: searching for items of instance {} in local tenant", instanceId);
-    String itemId = asString(mediatedRequest.getItemId());
-    String localTenantId = folioExecutionContext.getTenantId();
-
-    List<String> localItemIds = searchService.searchItems(instanceId, localTenantId)
-      .stream()
-      .map(ConsortiumItem::getId)
-      .toList();
-
-    log.info("localItemExists:: found {} items in local tenant", localItemIds.size());
-    log.debug("localItemExists:: itemId={}, localItemIds={}", itemId, localItemIds);
-
-    return (itemId != null && localItemIds.contains(itemId))
-      || (itemId == null && !localItemIds.isEmpty());
   }
 }
