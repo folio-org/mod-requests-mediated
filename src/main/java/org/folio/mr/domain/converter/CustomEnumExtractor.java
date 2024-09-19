@@ -25,8 +25,12 @@ public class CustomEnumExtractor<T> extends BasicExtractor<T> {
   protected T doExtract(ResultSet resultSet, int index, WrapperOptions wrapperOptions)
     throws SQLException {
 
-    return this.getJavaType().wrap(stringToEnumConverterFunction.apply(
-      resultSet.getObject(index).toString()), wrapperOptions);
+    Object enumObject = resultSet.getObject(index);
+    String enumString = enumObject == null ? null : enumObject.toString();
+
+    return this.getJavaType().wrap(
+      enumString == null ? null : stringToEnumConverterFunction.apply(enumString),
+      wrapperOptions);
   }
 
   @Override
