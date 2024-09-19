@@ -3,6 +3,7 @@ package org.folio.mr.domain.converter;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -25,12 +26,11 @@ public class CustomEnumExtractor<T> extends BasicExtractor<T> {
   protected T doExtract(ResultSet resultSet, int index, WrapperOptions wrapperOptions)
     throws SQLException {
 
-    Object enumObject = resultSet.getObject(index);
-    String enumString = enumObject == null ? null : enumObject.toString();
-
-    return this.getJavaType().wrap(
-      enumString == null ? null : stringToEnumConverterFunction.apply(enumString),
-      wrapperOptions);
+    return Optional.ofNullable(resultSet.getObject(index))
+      .map(Object::toString)
+      .map(stringToEnumConverterFunction)
+      .map(obj -> this.getJavaType().wrap(obj, wrapperOptions))
+      .orElse(null);
   }
 
   @Override
