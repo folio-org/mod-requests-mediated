@@ -1,0 +1,26 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/loan-types/2e48e713-17f3-4c13-a9f8-23845bb210a4"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "id": "2e48e713-17f3-4c13-a9f8-23845bb210a4",
+          "name": "Reading room",
+          "metadata": {
+            "createdDate": "2024-09-20T08:32:37.755Z",
+            "updatedDate": "2024-09-20T08:32:37.755Z",
+            "createdByUserId": "9508bf51-e881-4db2-ae2a-59a29dbf1ddd",
+            "updatedByUserId": "9508bf51-e881-4db2-ae2a-59a29dbf1ddd"
+          }
+        }
+      }
+    }
+  ]
+}

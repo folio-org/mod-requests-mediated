@@ -222,6 +222,14 @@ components:
       $ref: 'schemas/inventory/location.json'
     library:
       $ref: 'schemas/inventory/library.json'
+    campus:
+      $ref: 'schemas/inventory/loccamp.json'
+    institution:
+      $ref: 'schemas/inventory/locinst.json'
+    materialType:
+      $ref: 'schemas/inventory/materialtype.json'
+    loanType:
+      $ref: 'schemas/inventory/loantype.json'
     request:
       $ref: 'schemas/circulation/request.json'
     ecsTlr:

@@ -56,6 +56,95 @@ properties:
             description: Suffix of the item's call number
             type: string
         additionalProperties: false
+  staffSlipContext:
+    description: Staff slips data
+    type: object
+    properties:
+      item:
+        description: Staff slips item data
+        type: object
+        properties:
+          title:
+            description: x
+            type: string
+          primaryContributor:
+            description: x
+            type: string
+          allContributors:
+            description: x
+            type: string
+          barcode:
+            description: x
+            type: string
+          status:
+            description: x
+            type: string
+          enumeration:
+            description: x
+            type: string
+          volume:
+            description: x
+            type: string
+          chronology:
+            description: x
+            type: string
+          yearCaption:
+            description: x
+            type: string
+          materialType:
+            description: x
+            type: string
+          loanType:
+            description: x
+            type: string
+          copy:
+            description: x
+            type: string
+          numberOfPieces:
+            description: x
+            type: string
+          displaySummary:
+            description: x
+            type: string
+          descriptionOfPieces:
+            description: x
+            type: string
+          effectiveLocationSpecific:
+            description: x
+            type: string
+          effectiveLocationLibrary:
+            description: x
+            type: string
+          effectiveLocationCampus:
+            description: x
+            type: string
+          effectiveLocationInstitution:
+            description: x
+            type: string
+          effectiveLocationDiscoveryDisplayName:
+            description: x
+            type: string
+          effectiveLocationPrimaryServicePointName:
+            description: x
+            type: string
+          callNumber:
+            description: x
+            type: string
+          callNumberPrefix:
+            description: x
+            type: string
+          callNumberSuffix:
+            description: x
+            type: string
+          lastCheckedInDateTime:
+            description: x
+            type: string
+          toServicePoint:
+            description: x
+            type: string
+          fromServicePoint:
+            description: x
+            type: string
   mediatedRequest:
     description: Information about affected mediated request
     type: object

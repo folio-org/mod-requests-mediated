@@ -23,8 +23,10 @@ import org.folio.mr.domain.dto.ConfirmItemArrivalResponse;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.domain.dto.SendItemInTransitResponse;
+import org.folio.mr.domain.dto.SendItemInTransitResponseStaffSlipContext;
 import org.folio.mr.domain.entity.MediatedRequestWorkflowLog;
 import org.folio.mr.service.MediatedRequestActionsService;
+import org.folio.mr.service.impl.StaffSlipContextService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -43,6 +45,9 @@ class MediatedRequestActionsControllerTest {
 
   @Mock
   private MediatedRequestActionsService mediatedRequestActionsService;
+
+  @Mock
+  private StaffSlipContextService staffSlipContextService;
 
   @InjectMocks
   private MediatedRequestActionsController requestsController;
@@ -149,6 +154,8 @@ class MediatedRequestActionsControllerTest {
       .thenReturn(mediatedRequest);
     when(mediatedRequestActionsService.saveMediatedRequestWorkflowLog(any()))
       .thenReturn(log);
+    when(staffSlipContextService.createStaffSlipContext(mediatedRequest))
+      .thenReturn(new SendItemInTransitResponseStaffSlipContext());
 
     // when
     var responseEntity = requestsController.sendItemInTransit(

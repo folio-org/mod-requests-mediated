@@ -19,6 +19,7 @@ import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.domain.dto.SendItemInTransitResponse;
 import org.folio.mr.rest.resource.MediatedRequestsActionsApi;
 import org.folio.mr.service.MediatedRequestActionsService;
+import org.folio.mr.service.impl.StaffSlipContextService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,6 +32,7 @@ import lombok.extern.log4j.Log4j2;
 public class MediatedRequestActionsController implements MediatedRequestsActionsApi {
 
   private final MediatedRequestActionsService actionsService;
+  private final StaffSlipContextService staffSlipContextService;
 
   @Override
   public ResponseEntity<Void> confirmMediatedRequest(UUID mediatedRequestId) {
@@ -108,7 +110,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     return actionsService.saveMediatedRequestWorkflowLog(request).getActionDate();
   }
 
-  private static SendItemInTransitResponse buildSendItemInTransitResponse(MediatedRequest request,
+  private SendItemInTransitResponse buildSendItemInTransitResponse(MediatedRequest request,
     Date inTransitDate) {
 
     MediatedRequestItem item = request.getItem();
@@ -127,6 +129,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
         .chronology(item.getChronology())
         .displaySummary(item.getDisplaySummary())
         .copyNumber(item.getCopyNumber()))
+      .staffSlipContext(staffSlipContextService.createStaffSlipContext(request))
       .mediatedRequest(new ConfirmItemArrivalResponseMediatedRequest()
         .id(UUID.fromString(request.getId()))
         .status(request.getStatus().getValue()))

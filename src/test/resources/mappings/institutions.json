@@ -1,0 +1,27 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/location-units/institutions/40ee00ca-a518-4b49-be01-0638d0a4ac57"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "id": "40ee00ca-a518-4b49-be01-0638d0a4ac57",
+          "code": "KU",
+          "name": "Københavns Universitet",
+          "metadata": {
+            "createdDate": "2024-09-20T08:32:44.346Z",
+            "updatedDate": "2024-09-20T08:32:44.346Z",
+            "createdByUserId": "9508bf51-e881-4db2-ae2a-59a29dbf1ddd",
+            "updatedByUserId": "9508bf51-e881-4db2-ae2a-59a29dbf1ddd"
+          }
+        }
+      }
+    }
+  ]
+}

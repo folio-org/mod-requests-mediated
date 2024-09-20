@@ -1,0 +1,27 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/material-types/71fbd940-1027-40a6-8a48-49b44d795e46"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "id": "71fbd940-1027-40a6-8a48-49b44d795e46",
+          "name": "unspecified",
+          "source": "folio",
+          "metadata": {
+            "createdDate": "2024-09-20T08:32:37.577Z",
+            "updatedDate": "2024-09-20T08:32:37.577Z",
+            "createdByUserId": "9508bf51-e881-4db2-ae2a-59a29dbf1ddd",
+            "updatedByUserId": "9508bf51-e881-4db2-ae2a-59a29dbf1ddd"
+          }
+        }
+      }
+    }
+  ]
+}

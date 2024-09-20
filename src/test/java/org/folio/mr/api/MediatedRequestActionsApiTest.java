@@ -284,7 +284,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
       buildMediatedRequestEntity(OPEN_ITEM_ARRIVED)
     );
 
-    sendItemInTransit("A14837334314")
+    ResultActions resultActions = sendItemInTransit("A14837334314")
       .andExpect(status().isOk())
       .andExpect(jsonPath("inTransitDate", notNullValue()))
       .andExpect(jsonPath("instance.id", is("69640328-788e-43fc-9c3c-af39e243f3b7")))
@@ -307,10 +307,48 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .andExpect(jsonPath("requester.middleName", is("X")))
       .andExpect(jsonPath("requester.lastName", is("Mediated")));
 
+    expectStaffSlipContext(resultActions);
+
     MediatedRequestEntity updatedRequest = mediatedRequestsRepository.findById(request.getId())
       .orElseThrow();
     assertThat(updatedRequest.getMediatedRequestStep(), is("In transit to be checked out"));
     assertThat(updatedRequest.getStatus(), is("Open - In transit to be checked out"));
+  }
+
+  @SneakyThrows
+  private static void expectStaffSlipContext(ResultActions resultActions) {
+    resultActions
+      .andExpect(jsonPath("staffSlipContext.item.title", is("ABA Journal")))
+      .andExpect(jsonPath("staffSlipContext.item.primaryContributor", is("First, Author")))
+      .andExpect(jsonPath("staffSlipContext.item.allContributors", is("First, Author; Second, Writer")))
+      .andExpect(jsonPath("staffSlipContext.item.barcode", is("A14837334314")))
+      .andExpect(jsonPath("staffSlipContext.item.status", is("Available")))
+      .andExpect(jsonPath("staffSlipContext.item.enumeration", is("v.70:no.7-12")))
+      .andExpect(jsonPath("staffSlipContext.item.volume", is("vol.1")))
+      .andExpect(jsonPath("staffSlipContext.item.chronology", is("1984:July-Dec.")))
+      .andExpect(jsonPath("staffSlipContext.item.copy", is("cp.1")))
+      .andExpect(jsonPath("staffSlipContext.item.displaySummary", is("test summary")))
+      .andExpect(jsonPath("staffSlipContext.item.yearCaption", is("")))
+      .andExpect(jsonPath("staffSlipContext.item.status", is("Available")))
+      .andExpect(jsonPath("staffSlipContext.item.status", is("Available")))
+      .andExpect(jsonPath("staffSlipContext.item.status", is("Available")))
+      .andExpect(jsonPath("staffSlipContext.item.status", is("Available")))
+
+      .andExpect(jsonPath("staffSlipContext.item.materialType", is("unspecified")))
+      .andExpect(jsonPath("staffSlipContext.item.loanType", is("Reading room")))
+      .andExpect(jsonPath("staffSlipContext.item.effectiveLocationSpecific", is("Main Library")))
+      .andExpect(jsonPath("staffSlipContext.item.effectiveLocationLibrary", is("Datalogisk Institut")))
+      .andExpect(jsonPath("staffSlipContext.item.effectiveLocationCampus", is("City Campus")))
+      .andExpect(jsonPath("staffSlipContext.item.effectiveLocationInstitution", is("Københavns Universitet")))
+
+      .andExpect(jsonPath("staffSlipContext.item.effectiveLocationPrimaryServicePointName", is("Circ Desk 1")))
+
+      .andExpect(jsonPath("staffSlipContext.item.callNumber", is("CN")))
+      .andExpect(jsonPath("staffSlipContext.item.callNumberPrefix", is("PFX")))
+      .andExpect(jsonPath("staffSlipContext.item.callNumberSuffix", is("SFX")))
+
+      .andExpect(jsonPath("staffSlipContext.item.fromServicePoint", is("TODO: missing service point?")))
+      .andExpect(jsonPath("staffSlipContext.item.toServicePoint", is("Circ Desk 1")));
   }
 
   @Test
