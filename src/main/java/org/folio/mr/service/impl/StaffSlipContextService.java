@@ -37,22 +37,18 @@ public class StaffSlipContextService {
       .title(instance.getTitle())
       .primaryContributor(getPrimaryContributorName(instance))
       .allContributors(getAllContributorNames(instance))
-
       .barcode(item.getBarcode())
       .status(item.getStatus().getName().getValue())
-
       .enumeration(item.getEnumeration())
       .volume(item.getVolume())
       .chronology(item.getChronology())
       .copy(Objects.requireNonNullElse(item.getCopyNumber(), ""))
       .displaySummary(item.getDisplaySummary())
       .yearCaption(String.join("; ", item.getYearCaption()))
-
       .materialType(materialType.getName())
       .loanType(loanType.getName())
       .numberOfPieces(item.getNumberOfPieces())
       .descriptionOfPieces(item.getDescriptionOfPieces())
-
       .fromServicePoint("TODO: missing service point?")
       .toServicePoint(toServicePoint.getName());
 
@@ -63,7 +59,6 @@ public class StaffSlipContextService {
 
     var location = inventoryService.fetchLocation(item.getEffectiveLocationId());
     if (location != null) {
-
       var library = inventoryService.fetchLibrary(location.getLibraryId());
       var campus = inventoryService.fetchCampus(location.getCampusId());
       var institution = inventoryService.fetchInstitution(location.getInstitutionId());
@@ -78,8 +73,8 @@ public class StaffSlipContextService {
       var primaryServicePoint = inventoryService.fetchServicePoint(location.getPrimaryServicePoint().toString());
       if (primaryServicePoint != null) {
         log.info("createStaffSlipContext:: primaryServicePoint is not null");
-        staffSlipContextItem
-          .effectiveLocationPrimaryServicePointName(primaryServicePoint.getName());
+        staffSlipContextItem.effectiveLocationPrimaryServicePointName(
+          primaryServicePoint.getName());
       }
     }
 
