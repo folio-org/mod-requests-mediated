@@ -24,8 +24,5 @@
       "readonly": true
     }
   },
-  "additionalProperties": false,
-  "required": [
-    "name", "institutionId", "code"
-  ]
+  "additionalProperties": true
 }

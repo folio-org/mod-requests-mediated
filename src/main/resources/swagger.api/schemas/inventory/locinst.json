@@ -20,8 +20,5 @@
       "readonly": true
     }
   },
-  "additionalProperties": false,
-  "required": [
-    "name", "code"
-  ]
+  "additionalProperties": true
 }

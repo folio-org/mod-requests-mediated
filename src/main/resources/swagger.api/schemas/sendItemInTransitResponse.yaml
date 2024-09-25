@@ -65,85 +65,85 @@ properties:
         type: object
         properties:
           title:
-            description: x
+            description: Title of the instance record
             type: string
           primaryContributor:
-            description: x
+            description: Primary contributor name from the instance record
             type: string
           allContributors:
-            description: x
+            description: List of contributor names from the instance record concatenated with semicolon
             type: string
           barcode:
-            description: x
+            description: Barcode of the item
             type: string
           status:
-            description: x
+            description: Status of the item
             type: string
           enumeration:
-            description: x
+            description: Enumeration of the item
             type: string
           volume:
-            description: x
+            description: Volume of the item
             type: string
           chronology:
-            description: x
+            description: Chronology of the item
             type: string
           yearCaption:
-            description: x
+            description: Year caption of the item
             type: string
           materialType:
-            description: x
+            description: Material type of the item
             type: string
           loanType:
-            description: x
+            description: Loan type of the item
             type: string
           copy:
-            description: x
+            description: Copy number of the item
             type: string
           numberOfPieces:
-            description: x
+            description: Number of item pieces
             type: string
           displaySummary:
-            description: x
+            description: Display summary of the item
             type: string
           descriptionOfPieces:
-            description: x
+            description: Description of item pieces
             type: string
           effectiveLocationSpecific:
-            description: x
+            description: Name of the effective location
             type: string
           effectiveLocationLibrary:
-            description: x
+            description: Library name of the effective location
             type: string
           effectiveLocationCampus:
-            description: x
+            description: Campus name of the effective location
             type: string
           effectiveLocationInstitution:
-            description: x
+            description: Institution name of the effective location
             type: string
           effectiveLocationDiscoveryDisplayName:
-            description: x
+            description: Discovery display name of the effective location
             type: string
           effectiveLocationPrimaryServicePointName:
-            description: x
+            description: Primary service point name of the effective location
             type: string
           callNumber:
-            description: x
+            description: Call number of the item
             type: string
           callNumberPrefix:
-            description: x
+            description: Prefix of the item's call number
             type: string
           callNumberSuffix:
-            description: x
+            description: Suffix of the item's call number
             type: string
           lastCheckedInDateTime:
-            description: x
+            description: Last checked in date of the item
             type: string
           toServicePoint:
-            description: x
+            description: Destination service point of the item
             type: string
           fromServicePoint:
-            description: x
+            description: Last checked in service point of the item
             type: string
   mediatedRequest:
     description: Information about affected mediated request
