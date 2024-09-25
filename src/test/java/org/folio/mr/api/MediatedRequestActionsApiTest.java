@@ -330,24 +330,17 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .andExpect(jsonPath("staffSlipContext.item.displaySummary", is("test summary")))
       .andExpect(jsonPath("staffSlipContext.item.yearCaption", is("")))
       .andExpect(jsonPath("staffSlipContext.item.status", is("Available")))
-      .andExpect(jsonPath("staffSlipContext.item.status", is("Available")))
-      .andExpect(jsonPath("staffSlipContext.item.status", is("Available")))
-      .andExpect(jsonPath("staffSlipContext.item.status", is("Available")))
-
       .andExpect(jsonPath("staffSlipContext.item.materialType", is("unspecified")))
       .andExpect(jsonPath("staffSlipContext.item.loanType", is("Reading room")))
       .andExpect(jsonPath("staffSlipContext.item.effectiveLocationSpecific", is("Main Library")))
       .andExpect(jsonPath("staffSlipContext.item.effectiveLocationLibrary", is("Datalogisk Institut")))
       .andExpect(jsonPath("staffSlipContext.item.effectiveLocationCampus", is("City Campus")))
       .andExpect(jsonPath("staffSlipContext.item.effectiveLocationInstitution", is("Københavns Universitet")))
-
       .andExpect(jsonPath("staffSlipContext.item.effectiveLocationPrimaryServicePointName", is("Circ Desk 1")))
-
       .andExpect(jsonPath("staffSlipContext.item.callNumber", is("CN")))
       .andExpect(jsonPath("staffSlipContext.item.callNumberPrefix", is("PFX")))
       .andExpect(jsonPath("staffSlipContext.item.callNumberSuffix", is("SFX")))
-
-      .andExpect(jsonPath("staffSlipContext.item.fromServicePoint", is("TODO: missing service point?")))
+      .andExpect(jsonPath("staffSlipContext.item.fromServicePoint", is("Circ Desk 1")))
       .andExpect(jsonPath("staffSlipContext.item.toServicePoint", is("Circ Desk 1")));
   }
 

@@ -44,7 +44,8 @@
           "effectiveLocationId": "fcd64ce1-6995-48f0-840e-89ffa2288371",
           "inTransitDestinationServicePointId": "3a40852d-49fd-4df2-a1f9-6e2641a6e91f",
           "lastCheckIn": {
-            "dateTime":"2022-03-16T07:22:16.470Z"
+            "dateTime":"2022-03-16T07:22:16.470Z",
+            "servicePointId":"3a40852d-49fd-4df2-a1f9-6e2641a6e91f"
           },
           "electronicAccess": [],
           "statisticalCodeIds": [],

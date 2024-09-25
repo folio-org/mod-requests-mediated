@@ -49,11 +49,13 @@ public class StaffSlipContextService {
       .loanType(loanType.getName())
       .numberOfPieces(item.getNumberOfPieces())
       .descriptionOfPieces(item.getDescriptionOfPieces())
-      .fromServicePoint("TODO: missing service point?")
       .toServicePoint(toServicePoint.getName());
 
     if (item.getLastCheckIn() != null) {
+      var fromServicePoint = inventoryService.fetchServicePoint(
+        item.getLastCheckIn().getServicePointId());
       staffSlipContextItem
+        .fromServicePoint(fromServicePoint.getName())
         .lastCheckedInDateTime(DateFormatUtil.formatUtcDate(item.getLastCheckIn().getDateTime()));
     }
 
