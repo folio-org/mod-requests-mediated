@@ -60,6 +60,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
   private static final String INSTANCES_URL = "/instance-storage/instances";
   private static final String ECS_TLR_URL = "/tlr/ecs-tlr";
   private static final String SEARCH_ITEMS_URL = "/search/consortium/items";
+  private static final String NOT_FOUND_ITEM_UUID = "f13ef24f-d0fe-4aa8-901a-bfad3f0e6cae";
 
   @Autowired
   private MediatedRequestsRepository mediatedRequestsRepository;
@@ -342,6 +343,16 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .andExpect(jsonPath("staffSlipContext.item.callNumberSuffix", is("SFX")))
       .andExpect(jsonPath("staffSlipContext.item.fromServicePoint", is("Circ Desk 1")))
       .andExpect(jsonPath("staffSlipContext.item.toServicePoint", is("Circ Desk 1")));
+  }
+
+  @Test
+  @SneakyThrows
+  void sendItemInTransitItemNotFound() {
+    mediatedRequestsRepository.save(
+      buildMediatedRequestEntity(OPEN_ITEM_ARRIVED).withItemId(UUID.fromString(NOT_FOUND_ITEM_UUID))
+    );
+
+    sendItemInTransit("A14837334314").andExpect(status().isNotFound());
   }
 
   @Test

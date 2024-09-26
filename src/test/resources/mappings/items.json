@@ -57,6 +57,18 @@
           }
         }
       }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/item-storage/items/f13ef24f-d0fe-4aa8-901a-bfad3f0e6cae"
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
     }
   ]
 }
