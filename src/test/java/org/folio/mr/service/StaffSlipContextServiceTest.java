@@ -62,9 +62,7 @@ class StaffSlipContextServiceTest {
       .effectiveLocationId(locationId)
       .status(new ItemStatus().name(ItemStatus.NameEnum.AVAILABLE))
       .yearCaption(Set.of());
-    when(inventoryService.fetchItem(itemId))
-      .thenReturn(item
-      );
+    when(inventoryService.fetchItem(itemId)).thenReturn(item);
     when(inventoryService.fetchHolding(holdingId))
       .thenReturn(new HoldingsRecord().instanceId(instanceId));
     when(inventoryService.fetchInstance(instanceId))
