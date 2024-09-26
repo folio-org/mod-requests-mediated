@@ -22,9 +22,9 @@ public class StaffSlipContextService {
   private final InventoryService inventoryService;
 
   public SendItemInTransitResponseStaffSlipContext createStaffSlipContext(MediatedRequest request) {
-    Item item = inventoryService.fetchItem(request.getItemId());
+    log.debug("createStaffSlipContext:: parameters request: {}", request);
 
-    log.debug("createStaffSlipContext:: parameters item: {}", item);
+    Item item = inventoryService.fetchItem(request.getItemId());
 
     var holding = inventoryService.fetchHolding(item.getHoldingsRecordId());
     var instance = inventoryService.fetchInstance(holding.getInstanceId());
