@@ -39,9 +39,14 @@
             "name": "Available",
             "date": "2024-08-02T11:38:44.537+00:00"
           },
-          "materialTypeId": "d9acad2f-2aac-4b48-9097-e6ab85906b25",
-          "permanentLoanTypeId": "2b94c631-fca9-4892-a730-03ee529ffe27",
+          "materialTypeId": "71fbd940-1027-40a6-8a48-49b44d795e46",
+          "permanentLoanTypeId": "2e48e713-17f3-4c13-a9f8-23845bb210a4",
           "effectiveLocationId": "fcd64ce1-6995-48f0-840e-89ffa2288371",
+          "inTransitDestinationServicePointId": "3a40852d-49fd-4df2-a1f9-6e2641a6e91f",
+          "lastCheckIn": {
+            "dateTime":"2022-03-16T07:22:16.470Z",
+            "servicePointId":"3a40852d-49fd-4df2-a1f9-6e2641a6e91f"
+          },
           "electronicAccess": [],
           "statisticalCodeIds": [],
           "metadata": {
@@ -50,6 +55,18 @@
             "updatedDate": "2024-08-13T10:21:09.467+00:00",
             "updatedByUserId": "731c4da7-2aac-40ea-9104-393003dcc6a8"
           }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/item-storage/items/f13ef24f-d0fe-4aa8-901a-bfad3f0e6cae"
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "Content-Type": "application/json"
         }
       }
     }

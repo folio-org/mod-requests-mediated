@@ -1,0 +1,28 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/location-units/campuses/62cf76b7-cca5-4d33-9217-edf42ce1a848"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "id": "62cf76b7-cca5-4d33-9217-edf42ce1a848",
+          "code": "CC",
+          "name": "City Campus",
+          "metadata": {
+            "createdDate": "2024-09-20T08:32:44.396Z",
+            "updatedDate": "2024-09-20T08:32:44.396Z",
+            "createdByUserId": "9508bf51-e881-4db2-ae2a-59a29dbf1ddd",
+            "updatedByUserId": "9508bf51-e881-4db2-ae2a-59a29dbf1ddd"
+          },
+          "institutionId": "40ee00ca-a518-4b49-be01-0638d0a4ac57"
+        }
+      }
+    }
+  ]
+}
