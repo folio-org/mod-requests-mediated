@@ -139,6 +139,7 @@ properties:
           lastCheckedInDateTime:
             description: Last checked in date of the item
             type: string
+            format: date-time
           toServicePoint:
             description: Destination service point of the item
             type: string

@@ -9,7 +9,6 @@ import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.SendItemInTransitResponseStaffSlipContext;
 import org.folio.mr.domain.dto.SendItemInTransitResponseStaffSlipContextItem;
 import org.folio.mr.service.InventoryService;
-import org.folio.mr.support.DateFormatUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -56,7 +55,7 @@ public class StaffSlipContextService {
         item.getLastCheckIn().getServicePointId());
       staffSlipContextItem
         .fromServicePoint(fromServicePoint.getName())
-        .lastCheckedInDateTime(DateFormatUtil.formatUtcDate(item.getLastCheckIn().getDateTime()));
+        .lastCheckedInDateTime(item.getLastCheckIn().getDateTime());
     }
 
     var location = inventoryService.fetchLocation(item.getEffectiveLocationId());
