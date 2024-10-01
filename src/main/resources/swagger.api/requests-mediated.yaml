@@ -138,6 +138,23 @@ paths:
           $ref: '#/components/responses/notFoundResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
+  /requests-mediated/{mediatedRequestId}/decline:
+    post:
+      description: Decline mediated request
+      operationId: declineMediatedRequest
+      tags:
+        - mediatedRequestsActions
+      parameters:
+        - $ref: '#/components/parameters/mediatedRequestId'
+      responses:
+        '204':
+          description: Mediated request successfully declined
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
   /requests-mediated/confirm-item-arrival:
     post:
       description: Confirm item arrival

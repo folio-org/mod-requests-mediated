@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.validation.ValidationException;
+import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Instance;
@@ -28,6 +30,8 @@ import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
+import org.folio.mr.domain.entity.MediatedRequestStep;
+import org.folio.mr.domain.entity.MediatedRequestWorkflow;
 import org.folio.mr.domain.mapper.MediatedRequestMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.impl.MediatedRequestActionsServiceImpl;
@@ -242,6 +246,48 @@ class MediatedRequestActionsServiceTest {
     verifyNoInteractions(circulationRequestService);
     verify(inventoryService).fetchInstance(instanceId.toString());
     verifyNoMoreInteractions(inventoryService);
+  }
+
+  @Test
+  void mediatedRequestDeclineWrongStatus() {
+    // given
+    UUID mediatedRequestId = randomUUID();
+
+    MediatedRequestEntity mediatedRequest = buildMediatedRequestEntity(OPEN_ITEM_ARRIVED)
+      .withId(mediatedRequestId);
+
+    when(mediatedRequestsRepository.findById(mediatedRequestId))
+      .thenReturn(Optional.of(mediatedRequest));
+
+
+    // when-then
+    ValidationException exception = assertThrows(ValidationException.class,
+      () -> mediatedRequestActionsService.decline(mediatedRequestId));
+    assertThat(exception.getMessage(),
+      is("Mediated request status should be 'New - Awaiting conformation'"));
+  }
+
+  @Test
+  void mediatedRequestDeclineSuccess() {
+    // given
+    UUID mediatedRequestId = randomUUID();
+
+    MediatedRequestEntity mediatedRequest = buildMediatedRequestEntity(NEW_AWAITING_CONFIRMATION)
+      .withId(mediatedRequestId);
+
+    when(mediatedRequestsRepository.findById(mediatedRequestId))
+      .thenReturn(Optional.of(mediatedRequest));
+
+    // when
+    mediatedRequestActionsService.decline(mediatedRequestId);
+
+    // then
+    verify(mediatedRequestsRepository).save(
+      mediatedRequest
+        .withMediatedRequestStatus(MediatedRequestStatus.CLOSED)
+        .withMediatedRequestStep(MediatedRequestStep.DECLINED.getValue())
+        .withMediatedWorkflow(MediatedRequestWorkflow.PRIVATE_REQUEST.getValue())
+    );
   }
 
 }

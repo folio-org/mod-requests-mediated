@@ -42,6 +42,7 @@ public class MetadataServiceImpl implements MetadataService {
       }
     } catch (Exception e) {
       log.error("updateMetadata:: failed to update metadata", e);
+      // Is this handled in ApiExceptionHandler? Replace with throw ExceptionFactory.xyz(e)
       throw new MetadataUpdateException(e);
     }
     return obj;
