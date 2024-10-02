@@ -99,6 +99,14 @@
             "inventory-storage.items.collection.get",
             "circulation.requests.item.post"
           ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/requests-mediated/mediated-requests/{requestId}/decline",
+          "permissionsRequired": ["requests-mediated.mediated-request.decline.post"],
+          "modulePermissions": []
         }
       ]
     },
