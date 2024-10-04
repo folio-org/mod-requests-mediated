@@ -4,7 +4,7 @@ import java.lang.reflect.Method;
 import java.util.Date;
 
 import org.folio.mr.domain.dto.Metadata;
-import org.folio.mr.exception.MetadataUpdateException;
+import org.folio.mr.exception.ExceptionFactory;
 import org.folio.mr.service.MetadataService;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
@@ -42,8 +42,7 @@ public class MetadataServiceImpl implements MetadataService {
       }
     } catch (Exception e) {
       log.error("updateMetadata:: failed to update metadata", e);
-      // Is this handled in ApiExceptionHandler? Replace with throw ExceptionFactory.xyz(e)
-      throw new MetadataUpdateException(e);
+      throw ExceptionFactory.unexpectedError("failed to update metadata", e);
     }
     return obj;
   }
