@@ -203,7 +203,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     if (request.getMediatedRequestStatus() != MediatedRequestStatus.NEW ||
       !MediatedRequestStep.AWAITING_CONFIRMATION.getValue().equals(request.getMediatedRequestStep()))
     {
-      throw ExceptionFactory.unprocessableEntity("Mediated request status should be 'New - Awaiting conformation'");
+      throw ExceptionFactory.validationError("Mediated request status should be 'New - Awaiting conformation'");
     }
     request.setMediatedRequestStatus(MediatedRequestStatus.CLOSED);
     request.setStatus(MediatedRequestStatus.CLOSED.getValue());

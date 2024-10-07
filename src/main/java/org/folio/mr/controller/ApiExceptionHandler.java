@@ -8,9 +8,9 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.client.HttpClientErrorException;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ValidationException;
 import lombok.extern.log4j.Log4j2;
 
 @RestControllerAdvice
@@ -30,9 +30,9 @@ public class ApiExceptionHandler {
   }
 
   @ExceptionHandler
-  public ResponseEntity<ErrorResponse> handleHttpClientException(HttpClientErrorException e) {
+  public ResponseEntity<ErrorResponse> handleValidationException(ValidationException e) {
     logException(e);
-    return buildResponseEntity(e, e.getStatusCode());
+    return buildResponseEntity(e, HttpStatus.UNPROCESSABLE_ENTITY);
   }
 
   private static void logException(Exception e) {
