@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import jakarta.validation.ValidationException;
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
@@ -259,9 +258,8 @@ class MediatedRequestActionsServiceTest {
     when(mediatedRequestsRepository.findById(mediatedRequestId))
       .thenReturn(Optional.of(mediatedRequest));
 
-
     // when-then
-    ValidationException exception = assertThrows(ValidationException.class,
+    RuntimeException exception = assertThrows(RuntimeException.class,
       () -> mediatedRequestActionsService.decline(mediatedRequestId));
     assertThat(exception.getMessage(),
       is("Mediated request status should be 'New - Awaiting conformation'"));
