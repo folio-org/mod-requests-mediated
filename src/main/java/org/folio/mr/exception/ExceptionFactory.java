@@ -19,7 +19,7 @@ public class ExceptionFactory {
   }
 
   public static RuntimeException unprocessableEntity(String message) {
-    return HttpClientErrorException.create(HttpStatusCode.valueOf(422), message, null, null, null);
+    return HttpClientErrorException.create(message, HttpStatusCode.valueOf(422), message, null, null, null);
   }
 
   //-----------------------------------------------------------------------------------
