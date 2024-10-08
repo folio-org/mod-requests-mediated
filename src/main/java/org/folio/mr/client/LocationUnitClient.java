@@ -1,5 +1,7 @@
 package org.folio.mr.client;
 
+import org.folio.mr.domain.dto.Campus;
+import org.folio.mr.domain.dto.Institution;
 import org.folio.mr.domain.dto.Library;
 import org.folio.spring.config.FeignClientConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -11,4 +13,11 @@ public interface LocationUnitClient {
 
   @GetMapping("/libraries/{id}")
   Library getLibrary(@PathVariable String id);
+
+  @GetMapping("/campuses/{id}")
+  Campus getCampus(@PathVariable String id);
+
+  @GetMapping("/institutions/{id}")
+  Institution getInstitution(@PathVariable String id);
+
 }
