@@ -149,7 +149,7 @@ class MediatedRequestActionsServiceTest {
     EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
       () -> mediatedRequestActionsService.sendItemInTransit("item-barcode"));
     assertThat(exception.getMessage(),
-      is("Mediated request for in transit sending of item with barcode 'item-barcode' was not found"));
+      is("Send item in transit: mediated request for item 'item-barcode' was not found"));
   }
 
   @Test
