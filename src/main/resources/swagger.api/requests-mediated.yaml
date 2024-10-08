@@ -138,7 +138,7 @@ paths:
           $ref: '#/components/responses/notFoundResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
-  /requests-mediated/{mediatedRequestId}/decline:
+  /requests-mediated/mediated-requests/{mediatedRequestId}/decline:
     post:
       description: Decline mediated request
       operationId: declineMediatedRequest
