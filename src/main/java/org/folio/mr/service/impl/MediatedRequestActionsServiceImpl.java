@@ -148,7 +148,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
         "request with item barcode '{}'", itemBarcode);
     var entity = mediatedRequestsRepository.findRequestForSendingInTransit(itemBarcode)
       .orElseThrow(() -> new EntityNotFoundException(String.format(
-        "Mediated request for in transit sending of item with barcode '%s' was not found",
+        "Send item in transit: mediated request for item '%s' was not found",
           itemBarcode)));
 
     log.info("findMediatedRequestForSendingInTransit:: mediated request found: {}", entity::getId);

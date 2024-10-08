@@ -25,6 +25,7 @@ import java.util.UUID;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -101,6 +102,69 @@ class StaffSlipContextServiceTest {
     verify(inventoryService).fetchItem(itemId);
     verify(inventoryService).fetchHolding(holdingId);
     verify(inventoryService).fetchInstance(instanceId);
+    verify(inventoryService).fetchServicePoint(inTransitServicePointId);
+
+    verify(inventoryService).fetchLocation(locationId);
+    verify(inventoryService).fetchLibrary(libraryId);
+    verify(inventoryService).fetchCampus(campusId);
+    verify(inventoryService).fetchInstitution(institutionId);
+    verify(inventoryService).fetchServicePoint(primaryServicePointId);
+
+    verifyNoMoreInteractions(inventoryService);
+  }
+
+  @Test
+  void testCreateStaffSlipContextWithMissingData() {
+    // given
+    String itemId = "itemId";
+    String holdingId = "holdingId";
+    String materialTypeId = "materialTypeId";
+    String loanTypeId = "loanTypeId";
+    String inTransitServicePointId = "inTransitServicePointId";
+
+    String locationId = "locationId";
+    String libraryId = "libraryId";
+    String campusId = "campusId";
+    String institutionId = "institutionId";
+    String primaryServicePointId = UUID.randomUUID().toString();
+
+    Item item = new Item()
+      .holdingsRecordId(holdingId)
+      .materialTypeId(materialTypeId)
+      .permanentLoanTypeId(loanTypeId)
+      .inTransitDestinationServicePointId(inTransitServicePointId)
+      .effectiveLocationId(locationId)
+      .status(new ItemStatus().name(ItemStatus.NameEnum.AVAILABLE))
+      .yearCaption(Set.of());
+    when(inventoryService.fetchItem(itemId)).thenReturn(item);
+    when(inventoryService.fetchHolding(holdingId)).thenReturn(null);
+    when(inventoryService.fetchMaterialType(materialTypeId)).thenReturn(null);
+    when(inventoryService.fetchLoanType(loanTypeId)).thenReturn(null);
+    when(inventoryService.fetchServicePoint(inTransitServicePointId)).thenReturn(null);
+
+    when(inventoryService.fetchLocation(locationId))
+      .thenReturn(new Location()
+        .libraryId(libraryId)
+        .campusId(campusId)
+        .institutionId(institutionId)
+        .primaryServicePoint(UUID.fromString(primaryServicePointId))
+      );
+    when(inventoryService.fetchLibrary(libraryId)).thenReturn(null);
+    when(inventoryService.fetchCampus(campusId)).thenReturn(null);
+    when(inventoryService.fetchInstitution(institutionId)).thenReturn(null);
+    when(inventoryService.fetchServicePoint(primaryServicePointId)).thenReturn(null);
+
+    var request = buildMediatedRequest(OPEN_IN_TRANSIT_FOR_APPROVAL).itemId(itemId);
+
+    // when
+    var result = staffSlipContextService.createStaffSlipContext(request);
+
+    // then
+    assertEquals("Available", result.getItem().getStatus());
+    assertNull(result.getItem().getTitle());
+
+    verify(inventoryService).fetchItem(itemId);
+    verify(inventoryService).fetchHolding(holdingId);
     verify(inventoryService).fetchServicePoint(inTransitServicePointId);
 
     verify(inventoryService).fetchLocation(locationId);
