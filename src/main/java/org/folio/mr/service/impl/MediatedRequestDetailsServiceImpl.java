@@ -319,6 +319,11 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
   private static void addFulfillmentDetails(MediatedRequestContext context) {
     var fulfillmentPreference = context.request().getFulfillmentPreference();
+    if (fulfillmentPreference == null) {
+      log.info("addFulfillmentDetails:: fulfillment preference is null");
+      return;
+    }
+
     log.info("addFulfillmentDetails:: fulfillment preference is '{}'", fulfillmentPreference.getValue());
 
     if (fulfillmentPreference == DELIVERY) {
