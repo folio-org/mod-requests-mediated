@@ -1,5 +1,6 @@
 package org.folio.mr.service.impl;
 
+import static java.lang.String.format;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.domain.entity.MediatedRequestStep.from;
@@ -70,13 +71,14 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   private boolean localInstanceExists(MediatedRequestEntity mediatedRequest) {
     final String instanceId = mediatedRequest.getInstanceId().toString();
     log.info("localInstanceExists:: searching for instance {} in local tenant", instanceId);
-    try {
-      inventoryService.fetchInstance(instanceId);
-      log.info("localInstanceExists:: instance found");
-      return true;
-    } catch (FeignException.NotFound e) {
+
+    var instance = inventoryService.fetchInstance(instanceId);
+    if (instance == null) {
       log.info("localInstanceExists:: instance not found");
       return false;
+    } else {
+      log.info("localInstanceExists:: instance found");
+      return true;
     }
   }
 
@@ -120,7 +122,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       itemBarcode);
 
     var entity = mediatedRequestsRepository.findRequestForItemArrivalConfirmation(itemBarcode)
-      .orElseThrow(() -> ExceptionFactory.notFound(String.format(
+      .orElseThrow(() -> ExceptionFactory.notFound(format(
         "Mediated request for arrival confirmation of item with barcode '%s' was not found", itemBarcode)));
 
     log.info("findMediatedRequestForItemArrival:: mediated request found: {}", entity::getId);
@@ -143,7 +145,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     log.info("findMediatedRequestForSendingInTransit:: looking for mediated " +
         "request with item barcode '{}'", itemBarcode);
     var entity = mediatedRequestsRepository.findRequestForSendingInTransit(itemBarcode)
-      .orElseThrow(() -> ExceptionFactory.notFound(String.format(
+      .orElseThrow(() -> ExceptionFactory.notFound(format(
         "Send item in transit: mediated request for item '%s' was not found",
         itemBarcode)));
 
@@ -166,13 +168,16 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   private void extendMediatedRequest(MediatedRequest request) {
     log.info("extendMediatedRequest:: extending mediated request with additional item details");
     Item item = inventoryService.fetchItem(request.getItemId());
-
-    request.getItem()
-      .enumeration(item.getEnumeration())
-      .volume(item.getVolume())
-      .chronology(item.getChronology())
-      .displaySummary(item.getDisplaySummary())
-      .copyNumber(item.getCopyNumber());
+    if (item == null) {
+      throw ExceptionFactory.notFound(format("Item %s not found", request.getItemId()));
+    } else {
+      request.getItem()
+        .enumeration(item.getEnumeration())
+        .volume(item.getVolume())
+        .chronology(item.getChronology())
+        .displaySummary(item.getDisplaySummary())
+        .copyNumber(item.getCopyNumber());
+    }
   }
 
   private static MediatedRequestWorkflowLog buildMediatedRequestWorkflowLog(

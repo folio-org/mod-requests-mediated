@@ -6,8 +6,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "search", url = "search", configuration = FeignClientConfiguration.class,
-  dismiss404 = true)
+@FeignClient(name = "search", url = "search", configuration = FeignClientConfiguration.class)
 public interface SearchClient {
 
   @GetMapping("/consortium/items")

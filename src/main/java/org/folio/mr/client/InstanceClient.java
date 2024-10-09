@@ -1,5 +1,7 @@
 package org.folio.mr.client;
 
+import java.util.Optional;
+
 import org.folio.mr.domain.dto.Instance;
 import org.folio.spring.config.FeignClientConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -11,6 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface InstanceClient {
 
   @GetMapping("/{id}")
-  Instance get(@PathVariable String id);
+  Optional<Instance> get(@PathVariable String id);
 
 }

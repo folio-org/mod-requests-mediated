@@ -1,5 +1,7 @@
 package org.folio.mr.client;
 
+import java.util.Optional;
+
 import org.folio.mr.domain.dto.Campus;
 import org.folio.mr.domain.dto.Institution;
 import org.folio.mr.domain.dto.Library;
@@ -13,12 +15,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface LocationUnitClient {
 
   @GetMapping("/libraries/{id}")
-  Library getLibrary(@PathVariable String id);
+  Optional<Library> getLibrary(@PathVariable String id);
 
   @GetMapping("/campuses/{id}")
-  Campus getCampus(@PathVariable String id);
+  Optional<Campus> getCampus(@PathVariable String id);
 
   @GetMapping("/institutions/{id}")
-  Institution getInstitution(@PathVariable String id);
+  Optional<Institution> getInstitution(@PathVariable String id);
 
 }

@@ -1,5 +1,7 @@
 package org.folio.mr.client;
 
+import java.util.Optional;
+
 import org.folio.mr.domain.dto.ServicePoint;
 import org.folio.spring.config.FeignClientConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -11,5 +13,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface ServicePointClient {
 
   @GetMapping("/{id}")
-  ServicePoint get(@PathVariable String id);
+  Optional<ServicePoint> get(@PathVariable String id);
 }

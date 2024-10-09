@@ -21,12 +21,12 @@ public class UserServiceImpl implements UserService {
   @Override
   public User fetchUser(String id) {
     log.info("fetchUser:: fetching user {}", id);
-    return userClient.get(id);
+    return userClient.get(id).orElse(null);
   }
 
   @Override
   public UserGroup fetchUserGroup(String id) {
     log.info("fetchUserGroup:: fetching user group {}", id);
-    return userGroupClient.get(id);
+    return userGroupClient.get(id).orElse(null);
   }
 }

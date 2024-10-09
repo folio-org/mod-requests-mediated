@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(name = "user-tenants", url = "user-tenants",
-  configuration = FeignClientConfiguration.class, dismiss404 = true)
+  configuration = FeignClientConfiguration.class)
 public interface UserTenantsClient {
 
   @GetMapping()
