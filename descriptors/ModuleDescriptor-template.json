@@ -99,6 +99,14 @@
             "inventory-storage.items.collection.get",
             "circulation.requests.item.post"
           ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/requests-mediated/mediated-requests/{requestId}/decline",
+          "permissionsRequired": ["requests-mediated.decline-mediated-request.execute"],
+          "modulePermissions": []
         }
       ]
     },
@@ -173,6 +181,11 @@
       "permissionName": "requests-mediated.mediated-request.confirm.post",
       "displayName": "requests-mediated - confirm mediated request",
       "description": "Confirm mediated request"
+    },
+    {
+      "permissionName": "requests-mediated.decline-mediated-request.execute",
+      "displayName": "requests-mediated - decline mediated request",
+      "description": "Decline mediated request"
     },
     {
       "permissionName": "requests-mediated.internal.fetch-request-details",

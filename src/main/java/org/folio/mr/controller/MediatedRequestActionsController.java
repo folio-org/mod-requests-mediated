@@ -42,6 +42,13 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
   }
 
   @Override
+  public ResponseEntity<Void> declineMediatedRequest(UUID mediatedRequestId) {
+    log.info("declineMediatedRequest:: mediatedRequestId={}", mediatedRequestId);
+    actionsService.decline(mediatedRequestId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Override
   public ResponseEntity<ConfirmItemArrivalResponse> confirmItemArrival(
     ConfirmItemArrivalRequest request) {
 
