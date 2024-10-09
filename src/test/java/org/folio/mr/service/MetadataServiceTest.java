@@ -13,7 +13,6 @@ import java.util.UUID;
 
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Metadata;
-import org.folio.mr.exception.MetadataUpdateException;
 import org.folio.mr.service.impl.MetadataServiceImpl;
 import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.Test;
@@ -69,7 +68,7 @@ class MetadataServiceTest {
   @Test
   void metadataUpdateFailsWhenObjectDoesNotSupportMetadata() {
     Object object = new Object();
-    MetadataUpdateException exception = assertThrows(MetadataUpdateException.class,
+    RuntimeException exception = assertThrows(RuntimeException.class,
       () -> metadataService.updateMetadata(object));
     assertNotNull(exception.getCause());
     assertInstanceOf(NoSuchMethodException.class, exception.getCause());

@@ -15,8 +15,11 @@ import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
+import org.folio.mr.domain.entity.MediatedRequestStep;
+import org.folio.mr.domain.entity.MediatedRequestWorkflow;
 import org.folio.mr.domain.entity.MediatedRequestWorkflowLog;
 import org.folio.mr.domain.mapper.MediatedRequestMapper;
+import org.folio.mr.exception.ExceptionFactory;
 import org.folio.mr.repository.MediatedRequestWorkflowLogRepository;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.CirculationRequestService;
@@ -28,7 +31,6 @@ import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
 
 import feign.FeignException;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -53,12 +55,6 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     log.info("confirm:: request created: {}", mediatedRequest.getConfirmedRequestId());
     mediatedRequestsRepository.save(mediatedRequest);
     log.info("confirm:: mediated request {} was successfully confirmed", id);
-  }
-
-  private MediatedRequestEntity findMediatedRequest(UUID id) {
-    log.info("findMediatedRequest:: looking for mediated request: {}", id);
-    return mediatedRequestsRepository.findById(id)
-      .orElseThrow(() -> new EntityNotFoundException("Mediated request was not found: " + id));
   }
 
   private void createRequest(MediatedRequestEntity mediatedRequest) {
@@ -124,7 +120,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       itemBarcode);
 
     var entity = mediatedRequestsRepository.findRequestForItemArrivalConfirmation(itemBarcode)
-      .orElseThrow(() -> new EntityNotFoundException(String.format(
+      .orElseThrow(() -> ExceptionFactory.notFound(String.format(
         "Mediated request for arrival confirmation of item with barcode '%s' was not found", itemBarcode)));
 
     log.info("findMediatedRequestForItemArrival:: mediated request found: {}", entity::getId);
@@ -147,9 +143,9 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     log.info("findMediatedRequestForSendingInTransit:: looking for mediated " +
         "request with item barcode '{}'", itemBarcode);
     var entity = mediatedRequestsRepository.findRequestForSendingInTransit(itemBarcode)
-      .orElseThrow(() -> new EntityNotFoundException(String.format(
+      .orElseThrow(() -> ExceptionFactory.notFound(String.format(
         "Send item in transit: mediated request for item '%s' was not found",
-          itemBarcode)));
+        itemBarcode)));
 
     log.info("findMediatedRequestForSendingInTransit:: mediated request found: {}", entity::getId);
 
@@ -190,5 +186,34 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     log.setMediatedWorkflow(request.getMediatedWorkflow());
 
     return log;
+  }
+
+  @Override
+  public void decline(UUID id) {
+    log.info("decline:: looking for mediated request: {}", id);
+    MediatedRequestEntity mediatedRequest = findMediatedRequest(id);
+    log.debug("decline:: mediatedRequest: {}", mediatedRequest);
+
+    declineRequest(mediatedRequest);
+    mediatedRequestsRepository.save(mediatedRequest);
+    log.info("decline:: mediated request {} was successfully declined", id);
+  }
+
+  private void declineRequest(MediatedRequestEntity request) {
+    if (request.getMediatedRequestStatus() != MediatedRequestStatus.NEW ||
+      !MediatedRequestStep.AWAITING_CONFIRMATION.getValue().equals(request.getMediatedRequestStep()))
+    {
+      throw ExceptionFactory.validationError("Mediated request status should be 'New - Awaiting conformation'");
+    }
+    request.setMediatedRequestStatus(MediatedRequestStatus.CLOSED);
+    request.setStatus(MediatedRequestStatus.CLOSED.getValue());
+    request.setMediatedRequestStep(MediatedRequestStep.DECLINED.getValue());
+    request.setMediatedWorkflow(MediatedRequestWorkflow.PRIVATE_REQUEST.getValue());
+  }
+
+  private MediatedRequestEntity findMediatedRequest(UUID id) {
+    log.info("findMediatedRequest:: looking for mediated request: {}", id);
+    return mediatedRequestsRepository.findById(id)
+      .orElseThrow(() -> ExceptionFactory.notFound("Mediated request was not found: " + id));
   }
 }

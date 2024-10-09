@@ -99,6 +99,14 @@
             "inventory-storage.items.collection.get",
             "circulation.requests.item.post"
           ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/requests-mediated/mediated-requests/{requestId}/decline",
+          "permissionsRequired": ["requests-mediated.decline-mediated-request.execute"],
+          "modulePermissions": []
         }
       ]
     },
@@ -175,6 +183,11 @@
       "description": "Confirm mediated request"
     },
     {
+      "permissionName": "requests-mediated.decline-mediated-request.execute",
+      "displayName": "requests-mediated - decline mediated request",
+      "description": "Decline mediated request"
+    },
+    {
       "permissionName": "requests-mediated.internal.fetch-request-details",
       "displayName": "Fetch mediated request details",
       "description": "Internal permission set for fetching mediated request details",
@@ -216,7 +229,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "10.0"
+      "version": "10.0 11.0"
     },
     {
       "id": "ecs-tlr",
