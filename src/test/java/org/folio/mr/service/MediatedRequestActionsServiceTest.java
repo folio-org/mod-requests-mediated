@@ -235,7 +235,7 @@ class MediatedRequestActionsServiceTest {
     when(mediatedRequestsRepository.findById(mediatedRequestId))
       .thenReturn(Optional.of(mediatedRequest));
     when(inventoryService.fetchInstance(instanceId.toString()))
-      .thenThrow(FeignException.NotFound.class);
+      .thenReturn(null);
     when(ecsRequestService.create(mediatedRequest))
       .thenReturn(ecsTlr);
 
