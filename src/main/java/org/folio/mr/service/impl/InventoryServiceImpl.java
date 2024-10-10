@@ -43,7 +43,7 @@ public class InventoryServiceImpl implements InventoryService {
   @Override
   public Item fetchItem(String id) {
     log.info("fetchItem:: fetching item {}", id);
-    return itemClient.get(id);
+    return itemClient.get(id).orElse(null);
   }
 
   @Override
@@ -55,55 +55,55 @@ public class InventoryServiceImpl implements InventoryService {
   @Override
   public HoldingsRecord fetchHolding(String id) {
     log.info("fetchHolding:: fetching holding {}", id);
-    return holdingClient.get(id);
+    return holdingClient.get(id).orElse(null);
   }
 
   @Override
   public Instance fetchInstance(String id) {
     log.info("fetchInstance:: fetching instance {}", id);
-    return instanceClient.get(id);
+    return instanceClient.get(id).orElse(null);
   }
 
   @Override
   public Location fetchLocation(String id) {
     log.info("fetchLocation:: fetching location {}", id);
-    return locationClient.get(id);
+    return locationClient.get(id).orElse(null);
   }
 
   @Override
   public Library fetchLibrary(String id) {
     log.info("fetchLibrary:: fetching library {}", id);
-    return locationUnitClient.getLibrary(id);
+    return locationUnitClient.getLibrary(id).orElse(null);
   }
 
   @Override
   public Campus fetchCampus(String id) {
     log.info("fetchCampus:: fetching campus {}", id);
-    return locationUnitClient.getCampus(id);
+    return locationUnitClient.getCampus(id).orElse(null);
   }
 
   @Override
   public Institution fetchInstitution(String id) {
     log.info("fetchInstitution:: fetching institution {}", id);
-    return locationUnitClient.getInstitution(id);
+    return locationUnitClient.getInstitution(id).orElse(null);
   }
 
   @Override
   public ServicePoint fetchServicePoint(String id) {
     log.info("fetchServicePoint:: fetching library {}", id);
-    return servicePointClient.get(id);
+    return servicePointClient.get(id).orElse(null);
   }
 
   @Override
   public MaterialType fetchMaterialType(String id) {
     log.info("fetchMaterialType:: fetching material type {}", id);
-    return materialTypeClient.get(id);
+    return materialTypeClient.get(id).orElse(null);
   }
 
   @Override
   public LoanType fetchLoanType(String id) {
     log.info("fetchLoanType:: fetching loan type {}", id);
-    return loanTypeClient.get(id);
+    return loanTypeClient.get(id).orElse(null);
   }
 
 }
