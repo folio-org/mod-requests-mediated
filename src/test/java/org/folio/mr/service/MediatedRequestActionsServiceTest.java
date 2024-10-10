@@ -282,6 +282,7 @@ class MediatedRequestActionsServiceTest {
     verify(mediatedRequestsRepository).save(
       mediatedRequest
         .withMediatedRequestStatus(MediatedRequestStatus.CLOSED)
+        .withStatus(MediatedRequest.StatusEnum.CLOSED_DECLINED.getValue())
         .withMediatedRequestStep(MediatedRequestStep.DECLINED.getValue())
         .withMediatedWorkflow(MediatedRequestWorkflow.PRIVATE_REQUEST.getValue())
     );
