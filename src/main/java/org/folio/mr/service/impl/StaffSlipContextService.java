@@ -42,15 +42,13 @@ public class StaffSlipContextService {
 
       if (item.getHoldingsRecordId() != null) {
         var holding = inventoryService.fetchHolding(item.getHoldingsRecordId());
-        if (holding != null) {
-          if (holding.getInstanceId() != null) {
-            var instance = inventoryService.fetchInstance(holding.getInstanceId());
-            if (instance != null) {
-              staffSlipContextItem
-                .title(instance.getTitle())
-                .primaryContributor(getPrimaryContributorName(instance))
-                .allContributors(getAllContributorNames(instance));
-            }
+        if (holding != null && holding.getInstanceId() != null) {
+          var instance = inventoryService.fetchInstance(holding.getInstanceId());
+          if (instance != null) {
+            staffSlipContextItem
+              .title(instance.getTitle())
+              .primaryContributor(getPrimaryContributorName(instance))
+              .allContributors(getAllContributorNames(instance));
           }
         }
       }
