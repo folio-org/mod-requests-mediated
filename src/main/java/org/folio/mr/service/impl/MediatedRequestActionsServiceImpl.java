@@ -31,7 +31,6 @@ import org.folio.mr.service.SearchService;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
 
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -211,7 +210,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       throw ExceptionFactory.validationError("Mediated request status should be 'New - Awaiting conformation'");
     }
     request.setMediatedRequestStatus(MediatedRequestStatus.CLOSED);
-    request.setStatus(MediatedRequestStatus.CLOSED.getValue());
+    request.setStatus(MediatedRequest.StatusEnum.CLOSED_DECLINED.getValue());
     request.setMediatedRequestStep(MediatedRequestStep.DECLINED.getValue());
     request.setMediatedWorkflow(MediatedRequestWorkflow.PRIVATE_REQUEST.getValue());
   }
