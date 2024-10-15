@@ -17,7 +17,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -27,17 +27,14 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.http.HttpStatus;
-import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.ConsortiumItems;
-import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Items;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
-import org.folio.mr.domain.entity.MediatedRequestStep;
 import org.folio.mr.repository.MediatedRequestWorkflowLogRepository;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.test.types.IntegrationTest;
@@ -61,6 +58,8 @@ class MediatedRequestActionsApiTest extends BaseIT {
     "/requests-mediated/mediated-requests/%s/confirm";
   private static final String DECLINE_MEDIATED_REQUEST_URL_TEMPLATE =
     "/requests-mediated/mediated-requests/%s/decline";
+  private static final String URL_MEDIATED_REQUESTS = "/requests-mediated/mediated-requests";
+
   private static final String CIRCULATION_REQUESTS_URL = "/circulation/requests";
   private static final String ITEMS_URL = "/item-storage/items";
   private static final String INSTANCES_URL = "/instance-storage/instances";
@@ -125,6 +124,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @Test
   @SneakyThrows
   void mediatedRequestConfirmationForLocalInstanceAndRemoteItem() {
+    // given
     MediatedRequestEntity initialRequest = mediatedRequestsRepository.save(
       buildMediatedRequestEntity(NEW_AWAITING_CONFIRMATION));
     UUID instanceId = initialRequest.getInstanceId();
@@ -147,9 +147,11 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
       .willReturn(jsonResponse(new ConsortiumItems().items(new ArrayList<>()), HttpStatus.SC_OK)));
 
+    // when
     confirmMediatedRequest(initialRequest.getId())
       .andExpect(status().isNoContent());
 
+    // then
     MediatedRequestEntity updatedRequest = mediatedRequestsRepository.findById(initialRequest.getId())
       .orElseThrow();
     assertThat(updatedRequest.getConfirmedRequestId(), is(primaryRequestId));
@@ -168,6 +170,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @Test
   @SneakyThrows
   void mediatedRequestConfirmationForRemoteInstanceAndItem() {
+    // given
     UUID instanceId = UUID.randomUUID();
     UUID primaryRequestId = UUID.randomUUID();
     MediatedRequestEntity initialRequest = mediatedRequestsRepository.save(
@@ -180,9 +183,11 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
       .willReturn(jsonResponse(ecsTlr, HttpStatus.SC_OK)));
 
+    // when
     confirmMediatedRequest(initialRequest.getId())
       .andExpect(status().isNoContent());
 
+    // then
     MediatedRequestEntity updatedRequest = mediatedRequestsRepository.findById(initialRequest.getId())
       .orElseThrow();
     assertThat(updatedRequest.getConfirmedRequestId(), is(primaryRequestId));
@@ -225,16 +230,16 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .andExpect(status().isNoContent());
 
     // then
-    MediatedRequestEntity updatedRequest = mediatedRequestsRepository.findById(initialRequest.getId())
-      .orElseThrow();
-    assertEquals(updatedRequest.getMediatedRequestStatus(), MediatedRequestStatus.CLOSED);
-    assertEquals(updatedRequest.getStatus(), MediatedRequest.StatusEnum.CLOSED_DECLINED.getValue());
-    assertEquals(updatedRequest.getMediatedRequestStep(), MediatedRequestStep.DECLINED.getValue());
+    getRequestById(initialRequest.getId().toString())
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("mediatedRequestStatus", is("Closed")))
+      .andExpect(jsonPath("status", is("Closed - Declined")))
+      .andExpect(jsonPath("mediatedRequestStep", is("Declined")));
   }
 
   @Test
   @SneakyThrows
-  void declineRequestConfirmationFailsForNonExistentRequest() {
+  void declineRequestFailsForNonExistentRequest() {
     // given
     UUID mediatedRequestId = UUID.randomUUID();
 
@@ -256,6 +261,14 @@ class MediatedRequestActionsApiTest extends BaseIT {
   private ResultActions declineMediatedRequest(UUID mediatedRequestId) {
     return mockMvc.perform(
       post(format(DECLINE_MEDIATED_REQUEST_URL_TEMPLATE, mediatedRequestId))
+        .headers(defaultHeaders())
+        .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @SneakyThrows
+  private ResultActions getRequestById(String id) {
+    return mockMvc.perform(
+      get(URL_MEDIATED_REQUESTS + "/" + id)
         .headers(defaultHeaders())
         .contentType(MediaType.APPLICATION_JSON));
   }

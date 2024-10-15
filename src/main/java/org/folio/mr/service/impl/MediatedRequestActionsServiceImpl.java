@@ -63,8 +63,27 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       mediatedRequest.setConfirmedRequestId(UUID.fromString(request.getId()));
     } else {
       EcsTlr ecsTlr = ecsRequestService.create(mediatedRequest);
-      mediatedRequest.setConfirmedRequestId(UUID.fromString(ecsTlr.getPrimaryRequestId()));
+      Request request = updatePrimaryRequest(mediatedRequest, ecsTlr);
+      updateMediatedRequest(mediatedRequest, ecsTlr, request);
     }
+  }
+
+  private Request updatePrimaryRequest(MediatedRequestEntity mediatedRequest,
+                                                EcsTlr ecsTlr) {
+    Request request = circulationRequestService.get(ecsTlr.getPrimaryRequestId());
+    request.setRequesterId(mediatedRequest.getRequesterId().toString());
+    circulationRequestService.update(request);
+    return request;
+  }
+
+  private void updateMediatedRequest(MediatedRequestEntity mediatedRequest,
+                                     EcsTlr ecsTlr,
+                                     Request request) {
+    mediatedRequest.setConfirmedRequestId(UUID.fromString(ecsTlr.getPrimaryRequestId()));
+    if (request.getStatus() == Request.StatusEnum.OPEN_NOT_YET_FILLED) {
+      mediatedRequest.setStatus(Request.StatusEnum.OPEN_NOT_YET_FILLED.getValue());
+    }
+    mediatedRequestsRepository.save(mediatedRequest);
   }
 
   private boolean localInstanceExists(MediatedRequestEntity mediatedRequest) {

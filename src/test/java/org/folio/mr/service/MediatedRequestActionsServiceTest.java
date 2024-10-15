@@ -209,6 +209,7 @@ class MediatedRequestActionsServiceTest {
       .thenReturn(emptyList());
     when(ecsRequestService.create(mediatedRequest))
       .thenReturn(ecsTlr);
+    // more test
 
     mediatedRequestActionsService.confirm(mediatedRequestId);
 
@@ -237,6 +238,7 @@ class MediatedRequestActionsServiceTest {
       .thenReturn(null);
     when(ecsRequestService.create(mediatedRequest))
       .thenReturn(ecsTlr);
+    // more test
 
     mediatedRequestActionsService.confirm(mediatedRequestId);
 
