@@ -36,6 +36,7 @@ import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestDetailsService;
 import org.folio.mr.service.MetadataService;
 import org.folio.mr.service.UserService;
+import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
 import lombok.Builder;
@@ -53,6 +54,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private final InventoryService inventoryService;
   private final UserService userService;
   private final MetadataService metadataService;
+  private final SystemUserScopedExecutionService executionService;
 
   @Override
   public MediatedRequest addRequestDetailsForCreate(MediatedRequest request) {
@@ -131,15 +133,15 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     }
 
     if (request.getItemId() != null) {
-      Item item = inventoryService.fetchItem(request.getItemId());
-      if (item != null) {
-        log.info("buildRequestContext:: item found");
-        Location location = inventoryService.fetchLocation(item.getEffectiveLocationId());
-        Library library = inventoryService.fetchLibrary(location.getLibraryId());
-        contextBuilder.item(item)
-          .location(location)
-          .library(library);
-      }
+        Item item = inventoryService.fetchItem(request.getItemId());
+        if (item != null) {
+          log.info("buildRequestContext:: item found");
+          Location location = inventoryService.fetchLocation(item.getEffectiveLocationId());
+          Library library = inventoryService.fetchLibrary(location.getLibraryId());
+          contextBuilder.item(item)
+            .location(location)
+            .library(library);
+        }
     }
 
     if (request.getPickupServicePointId() != null) {
@@ -239,7 +241,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     Instance instance = context.instance();
     if (instance == null) {
       log.info("addInstance:: instance is null");
-      context.request().item(null);
+      context.request().instance(null);
       return;
     }
     var identifiers = instance.getIdentifiers()
@@ -259,6 +261,11 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private static void extendInstance(MediatedRequestContext context) {
     log.info("extendInstance:: extending instance data");
     Instance instance = context.instance();
+    if (instance == null) {
+      log.info("extendInstance:: instance is null");
+      context.request().instance(null);
+      return;
+    }
 
     var contributors = instance.getContributors()
       .stream()
