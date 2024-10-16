@@ -257,6 +257,19 @@ class MediatedRequestsApiTest extends BaseIT {
     assertThat(entity.getUpdatedByUsername(), nullValue());
   }
 
+  @Test
+  @SneakyThrows
+  void minimalMediatedRequestShouldBeCreated() {
+    Date requestDate = new Date();
+    MediatedRequest request = new MediatedRequest()
+      .requestLevel(TITLE)
+      .requestDate(requestDate)
+      .requesterId("9812e24b-0a66-457a-832c-c5e789797e35")
+      .instanceId("69640328-788e-43fc-9c3c-af39e243f3b7");
+
+    postRequest(request).andExpect(status().isCreated());
+  }
+
   @SneakyThrows
   @Test
   void mediatedRequestsShouldBeRetrieved() {

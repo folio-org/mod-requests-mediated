@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Instance;
@@ -28,6 +29,8 @@ import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
+import org.folio.mr.domain.entity.MediatedRequestStep;
+import org.folio.mr.domain.entity.MediatedRequestWorkflow;
 import org.folio.mr.domain.mapper.MediatedRequestMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.impl.MediatedRequestActionsServiceImpl;
@@ -38,7 +41,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
@@ -149,7 +151,7 @@ class MediatedRequestActionsServiceTest {
     EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
       () -> mediatedRequestActionsService.sendItemInTransit("item-barcode"));
     assertThat(exception.getMessage(),
-      is("Mediated request for in transit sending of item with barcode 'item-barcode' was not found"));
+      is("Send item in transit: mediated request for item 'item-barcode' was not found"));
   }
 
   @Test
@@ -232,7 +234,7 @@ class MediatedRequestActionsServiceTest {
     when(mediatedRequestsRepository.findById(mediatedRequestId))
       .thenReturn(Optional.of(mediatedRequest));
     when(inventoryService.fetchInstance(instanceId.toString()))
-      .thenThrow(FeignException.NotFound.class);
+      .thenReturn(null);
     when(ecsRequestService.create(mediatedRequest))
       .thenReturn(ecsTlr);
 
@@ -242,6 +244,48 @@ class MediatedRequestActionsServiceTest {
     verifyNoInteractions(circulationRequestService);
     verify(inventoryService).fetchInstance(instanceId.toString());
     verifyNoMoreInteractions(inventoryService);
+  }
+
+  @Test
+  void mediatedRequestDeclineWrongStatus() {
+    // given
+    UUID mediatedRequestId = randomUUID();
+
+    MediatedRequestEntity mediatedRequest = buildMediatedRequestEntity(OPEN_ITEM_ARRIVED)
+      .withId(mediatedRequestId);
+
+    when(mediatedRequestsRepository.findById(mediatedRequestId))
+      .thenReturn(Optional.of(mediatedRequest));
+
+    // when-then
+    RuntimeException exception = assertThrows(RuntimeException.class,
+      () -> mediatedRequestActionsService.decline(mediatedRequestId));
+    assertThat(exception.getMessage(),
+      is("Mediated request status should be 'New - Awaiting conformation'"));
+  }
+
+  @Test
+  void mediatedRequestDeclineSuccess() {
+    // given
+    UUID mediatedRequestId = randomUUID();
+
+    MediatedRequestEntity mediatedRequest = buildMediatedRequestEntity(NEW_AWAITING_CONFIRMATION)
+      .withId(mediatedRequestId);
+
+    when(mediatedRequestsRepository.findById(mediatedRequestId))
+      .thenReturn(Optional.of(mediatedRequest));
+
+    // when
+    mediatedRequestActionsService.decline(mediatedRequestId);
+
+    // then
+    verify(mediatedRequestsRepository).save(
+      mediatedRequest
+        .withMediatedRequestStatus(MediatedRequestStatus.CLOSED)
+        .withStatus(MediatedRequest.StatusEnum.CLOSED_DECLINED.getValue())
+        .withMediatedRequestStep(MediatedRequestStep.DECLINED.getValue())
+        .withMediatedWorkflow(MediatedRequestWorkflow.PRIVATE_REQUEST.getValue())
+    );
   }
 
 }

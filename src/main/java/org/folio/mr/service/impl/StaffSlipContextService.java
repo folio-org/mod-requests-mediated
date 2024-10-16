@@ -24,68 +24,115 @@ public class StaffSlipContextService {
   public SendItemInTransitResponseStaffSlipContext createStaffSlipContext(MediatedRequest request) {
     log.debug("createStaffSlipContext:: parameters request: {}", request);
 
+    var staffSlipContextItem = new SendItemInTransitResponseStaffSlipContextItem();
+
     Item item = inventoryService.fetchItem(request.getItemId());
-
-    var holding = inventoryService.fetchHolding(item.getHoldingsRecordId());
-    var instance = inventoryService.fetchInstance(holding.getInstanceId());
-    var materialType = inventoryService.fetchMaterialType(item.getMaterialTypeId());
-    var loanType = inventoryService.fetchLoanType(item.getPermanentLoanTypeId());
-    var toServicePoint = inventoryService.fetchServicePoint(item.getInTransitDestinationServicePointId());
-
-    var staffSlipContextItem = new SendItemInTransitResponseStaffSlipContextItem()
-      .title(instance.getTitle())
-      .primaryContributor(getPrimaryContributorName(instance))
-      .allContributors(getAllContributorNames(instance))
-      .barcode(item.getBarcode())
-      .status(item.getStatus().getName().getValue())
-      .enumeration(item.getEnumeration())
-      .volume(item.getVolume())
-      .chronology(item.getChronology())
-      .copy(Objects.requireNonNullElse(item.getCopyNumber(), ""))
-      .displaySummary(item.getDisplaySummary())
-      .yearCaption(String.join("; ", item.getYearCaption()))
-      .materialType(materialType.getName())
-      .loanType(loanType.getName())
-      .numberOfPieces(item.getNumberOfPieces())
-      .descriptionOfPieces(item.getDescriptionOfPieces())
-      .toServicePoint(toServicePoint.getName());
-
-    if (item.getLastCheckIn() != null) {
-      var fromServicePoint = inventoryService.fetchServicePoint(
-        item.getLastCheckIn().getServicePointId());
+    if (item != null) {
       staffSlipContextItem
-        .fromServicePoint(fromServicePoint.getName())
-        .lastCheckedInDateTime(item.getLastCheckIn().getDateTime());
-    }
+        .barcode(item.getBarcode())
+        .status(item.getStatus().getName().getValue())
+        .enumeration(item.getEnumeration())
+        .volume(item.getVolume())
+        .chronology(item.getChronology())
+        .copy(Objects.requireNonNullElse(item.getCopyNumber(), ""))
+        .displaySummary(item.getDisplaySummary())
+        .yearCaption(String.join("; ", item.getYearCaption()))
+        .numberOfPieces(item.getNumberOfPieces())
+        .descriptionOfPieces(item.getDescriptionOfPieces());
 
-    var location = inventoryService.fetchLocation(item.getEffectiveLocationId());
-    if (location != null) {
-      var library = inventoryService.fetchLibrary(location.getLibraryId());
-      var campus = inventoryService.fetchCampus(location.getCampusId());
-      var institution = inventoryService.fetchInstitution(location.getInstitutionId());
-
-      staffSlipContextItem
-        .effectiveLocationSpecific(location.getName())
-        .effectiveLocationLibrary(library.getName())
-        .effectiveLocationCampus(campus.getName())
-        .effectiveLocationInstitution(institution.getName())
-        .effectiveLocationDiscoveryDisplayName(location.getDiscoveryDisplayName());
-
-      var primaryServicePoint = inventoryService.fetchServicePoint(location.getPrimaryServicePoint().toString());
-      if (primaryServicePoint != null) {
-        log.info("createStaffSlipContext:: primaryServicePoint is not null");
-        staffSlipContextItem.effectiveLocationPrimaryServicePointName(
-          primaryServicePoint.getName());
+      if (item.getHoldingsRecordId() != null) {
+        var holding = inventoryService.fetchHolding(item.getHoldingsRecordId());
+        if (holding != null && holding.getInstanceId() != null) {
+          var instance = inventoryService.fetchInstance(holding.getInstanceId());
+          if (instance != null) {
+            staffSlipContextItem
+              .title(instance.getTitle())
+              .primaryContributor(getPrimaryContributorName(instance))
+              .allContributors(getAllContributorNames(instance));
+          }
+        }
       }
-    }
 
-    var effectiveCallNumberComponents = item.getEffectiveCallNumberComponents();
-    if (effectiveCallNumberComponents != null) {
-      log.info("createStaffSlipContext:: effectiveCallNumberComponents is not null");
-      staffSlipContextItem
-        .callNumber(effectiveCallNumberComponents.getCallNumber())
-        .callNumberPrefix(effectiveCallNumberComponents.getPrefix())
-        .callNumberSuffix(effectiveCallNumberComponents.getSuffix());
+      if (item.getMaterialTypeId() != null) {
+        var materialType = inventoryService.fetchMaterialType(item.getMaterialTypeId());
+        if (materialType != null) {
+          staffSlipContextItem.materialType(materialType.getName());
+        }
+      }
+
+      if (item.getPermanentLoanTypeId() != null) {
+        var loanType = inventoryService.fetchLoanType(item.getPermanentLoanTypeId());
+        if (loanType != null) {
+          staffSlipContextItem.loanType(loanType.getName());
+        }
+      }
+
+      if (item.getInTransitDestinationServicePointId() != null) {
+        var toServicePoint = inventoryService.fetchServicePoint(
+          item.getInTransitDestinationServicePointId());
+        if (toServicePoint != null) {
+          staffSlipContextItem.toServicePoint(toServicePoint.getName());
+        }
+      }
+
+      if (item.getLastCheckIn() != null) {
+        staffSlipContextItem.lastCheckedInDateTime(item.getLastCheckIn().getDateTime());
+
+        var fromServicePoint = inventoryService.fetchServicePoint(
+          item.getLastCheckIn().getServicePointId());
+        if (fromServicePoint != null) {
+          staffSlipContextItem.fromServicePoint(fromServicePoint.getName());
+        }
+      }
+
+      if (item.getEffectiveLocationId() != null) {
+        var location = inventoryService.fetchLocation(item.getEffectiveLocationId());
+        if (location != null) {
+          staffSlipContextItem
+            .effectiveLocationSpecific(location.getName())
+            .effectiveLocationDiscoveryDisplayName(location.getDiscoveryDisplayName());
+
+          if (location.getLibraryId() != null) {
+            var library = inventoryService.fetchLibrary(location.getLibraryId());
+            if (library != null) {
+              staffSlipContextItem.effectiveLocationLibrary(library.getName());
+            }
+          }
+
+          if (location.getCampusId() != null) {
+            var campus = inventoryService.fetchCampus(location.getCampusId());
+            if (campus != null) {
+              staffSlipContextItem.effectiveLocationCampus(campus.getName());
+            }
+          }
+
+          if (location.getInstitutionId() != null) {
+            var institution = inventoryService.fetchInstitution(location.getInstitutionId());
+            if (institution != null) {
+              staffSlipContextItem.effectiveLocationInstitution(institution.getName());
+            }
+          }
+
+          if (location.getPrimaryServicePoint() != null) {
+            var primaryServicePoint = inventoryService.fetchServicePoint(
+              location.getPrimaryServicePoint().toString());
+            if (primaryServicePoint != null) {
+              staffSlipContextItem.effectiveLocationPrimaryServicePointName(
+                primaryServicePoint.getName());
+            }
+          }
+        }
+      }
+
+      if (item.getEffectiveCallNumberComponents() != null) {
+        var effectiveCallNumberComponents = item.getEffectiveCallNumberComponents();
+        if (effectiveCallNumberComponents != null) {
+          staffSlipContextItem
+            .callNumber(effectiveCallNumberComponents.getCallNumber())
+            .callNumberPrefix(effectiveCallNumberComponents.getPrefix())
+            .callNumberSuffix(effectiveCallNumberComponents.getSuffix());
+        }
+      }
     }
 
     log.info("createStaffSlipContext:: staffSlipContextItem: {}", staffSlipContextItem);

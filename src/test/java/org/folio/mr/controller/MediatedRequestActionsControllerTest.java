@@ -182,4 +182,11 @@ class MediatedRequestActionsControllerTest {
     assertThat(response.getRequester().getMiddleName(), is("X"));
     assertThat(response.getRequester().getLastName(), is("Mediated"));
   }
+
+  @Test
+  void successfulMediatedRequestDecline() {
+    doNothing().when(mediatedRequestActionsService).decline(any(UUID.class));
+    ResponseEntity<Void> response = requestsController.declineMediatedRequest(randomUUID());
+    assertThat(response.getStatusCode(), is(HttpStatus.NO_CONTENT));
+  }
 }

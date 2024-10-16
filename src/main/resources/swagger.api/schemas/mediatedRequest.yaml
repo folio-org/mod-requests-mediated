@@ -349,8 +349,6 @@ MediatedRequest:
   additionalProperties: false
   required:
     - requestLevel
-    - requestType
     - requestDate
     - requesterId
     - instanceId
-    - fulfillmentPreference
