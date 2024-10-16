@@ -132,11 +132,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
     if (request.getItemId() != null) {
       Item item = inventoryService.fetchItem(request.getItemId());
-      Location location = inventoryService.fetchLocation(item.getEffectiveLocationId());
-      Library library = inventoryService.fetchLibrary(location.getLibraryId());
-      contextBuilder.item(item)
-        .location(location)
-        .library(library);
+      if (item != null) {
+        Location location = inventoryService.fetchLocation(item.getEffectiveLocationId());
+        Library library = inventoryService.fetchLibrary(location.getLibraryId());
+        contextBuilder.item(item)
+          .location(location)
+          .library(library);
+      }
     }
 
     if (request.getPickupServicePointId() != null) {
