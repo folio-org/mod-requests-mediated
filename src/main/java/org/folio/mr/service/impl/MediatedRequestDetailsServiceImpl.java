@@ -237,6 +237,11 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private static void addInstance(MediatedRequestContext context) {
     log.info("addInstance:: adding instance data");
     Instance instance = context.instance();
+    if (instance == null) {
+      log.info("addInstance:: instance is null");
+      context.request().item(null);
+      return;
+    }
     var identifiers = instance.getIdentifiers()
       .stream()
       .map(i -> new MediatedRequestInstanceIdentifiersInner()
