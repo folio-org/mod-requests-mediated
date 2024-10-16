@@ -133,6 +133,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     if (request.getItemId() != null) {
       Item item = inventoryService.fetchItem(request.getItemId());
       if (item != null) {
+        log.info("buildRequestContext:: item found");
         Location location = inventoryService.fetchLocation(item.getEffectiveLocationId());
         Library library = inventoryService.fetchLibrary(location.getLibraryId());
         contextBuilder.item(item)
