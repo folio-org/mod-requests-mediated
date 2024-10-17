@@ -66,7 +66,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
     MediatedRequest extendedRequest = requestDetailsService.addRequestDetailsForCreate(
       mediatedRequest);
     MediatedRequestEntity savedEntity = mediatedRequestsRepository.save(
-      requestsMapper.mapDtoToEntity(mediatedRequest));
+      requestsMapper.mapDtoToEntity(extendedRequest));
     removeSearchIndex(extendedRequest);
 
     return extendedRequest.id(savedEntity.getId().toString());
