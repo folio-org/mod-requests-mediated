@@ -249,6 +249,10 @@ components:
       $ref: 'schemas/inventory/loantype.json'
     request:
       $ref: 'schemas/circulation/request.json'
+    searchItemResponse:
+      $ref: 'schemas/search/searchItemResponse.json'
+    searchInstanceResponse:
+      $ref: 'schemas/search/searchInstancesResponse.json'
     ecsTlr:
       $ref: 'schemas/ecs/ecsTlr.yaml'
     userTenantsResponse:

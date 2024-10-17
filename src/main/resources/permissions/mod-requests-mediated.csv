@@ -4,3 +4,11 @@ users.item.get
 user-tenants.collection.get
 consortium-search.items.collection.get
 consortium-search.items.item.get
+inventory-storage.items.item.get
+inventory-storage.items.collection.get
+inventory-storage.instances.item.get
+inventory-storage.instances.collection.get
+inventory-storage.locations.item.get
+inventory-storage.locations.collection.get
+inventory-storage.location-units.libraries.item.get
+inventory-storage.location-units.libraries.collection.get
