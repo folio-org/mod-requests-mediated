@@ -28,8 +28,6 @@ import org.folio.mr.domain.dto.MediatedRequestRequester;
 import org.folio.mr.domain.dto.MediatedRequestRequesterPatronGroup;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndexCallNumberComponents;
-import org.folio.mr.domain.dto.SearchInstance;
-import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.dto.ServicePoint;
 import org.folio.mr.domain.dto.User;
 import org.folio.mr.domain.dto.UserGroup;
@@ -124,8 +122,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     User requester = userService.fetchUser(request.getRequesterId());
     UserGroup requesterGroup = userService.fetchUserGroup(requester.getPatronGroup());
 
-    var searchInstance = searchClient.searchInstance(request.getInstanceId())
-      .getInstances().get(0);
+    var searchInstances = searchClient.searchInstance(request.getInstanceId())
+      .getInstances();
+    if (searchInstances == null || searchInstances.isEmpty()) {
+      log.info("buildRequestContext:: searchInstances not found");
+      return contextBuilder.instance(null).build();
+    }
+    var searchInstance = searchInstances.get(0);
     executionService.executeAsyncSystemUserScoped(searchInstance.getTenantId(), () -> {
         Instance instance = inventoryService.fetchInstance(searchInstance.getId());
         contextBuilder.instance(instance)
