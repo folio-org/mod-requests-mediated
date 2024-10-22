@@ -118,12 +118,12 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private MediatedRequestContext buildRequestContext(MediatedRequest request) {
     log.info("buildRequestContext:: building request context");
     var contextBuilder = MediatedRequestContext.builder().request(request);
-    var searchInstance = searchClient.searchInstance(request.getInstanceId())
-      .getInstances().get(0);
 
     User requester = userService.fetchUser(request.getRequesterId());
     UserGroup requesterGroup = userService.fetchUserGroup(requester.getPatronGroup());
 
+    var searchInstance = searchClient.searchInstance(request.getInstanceId())
+      .getInstances().get(0);
     contextBuilder.instance(searchInstance)
       .requester(requester)
       .requesterGroup(requesterGroup);
@@ -259,11 +259,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
         .value(i.getValue())
         .identifierTypeId(i.getIdentifierTypeId()))
       .toList();
-
     MediatedRequestInstance newInstance = new MediatedRequestInstance()
       .title(searchInstance.getTitle())
       .identifiers(identifiers);
-
     context.request().instance(newInstance);
   }
 
@@ -276,13 +274,11 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       return;
     }
     executionService.executeAsyncSystemUserScoped(searchInstance.getTenantId(),
-      () -> extendInstanceFromInventory(context, searchInstance));
+      () -> extendInstanceFromInventory(context));
   }
 
-  private void extendInstanceFromInventory(MediatedRequestContext context,
-    SearchInstance searchInstance) {
-
-    var inventoryInstance = inventoryService.fetchInstance(searchInstance.getId());
+  private void extendInstanceFromInventory(MediatedRequestContext context) {
+    var inventoryInstance = inventoryService.fetchInstance(context.instance().getId());
     var contributors = inventoryInstance.getContributors()
       .stream()
       .map(InstanceContributorsInner::getName)
@@ -342,7 +338,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
         .code(context.location().getCode())
         .libraryName(context.library().getName()));
 
-    var effectiveCallNumberComponents = searchItem.getEffectiveCallNumberComponents();
+    var effectiveCallNumberComponents = inventoryItem.getEffectiveCallNumberComponents();
     if (effectiveCallNumberComponents != null) {
       context.request().getItem()
         .callNumber(effectiveCallNumberComponents.getCallNumber())

@@ -1,5 +1,8 @@
 package org.folio.mr.api;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.DELIVERY;
 import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.HOLD_SHELF;
 import static org.folio.mr.domain.dto.MediatedRequest.RequestLevelEnum.ITEM;
@@ -24,12 +27,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
+import org.apache.http.HttpStatus;
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.RequestLevel;
 import org.folio.mr.domain.RequestType;
+import org.folio.mr.domain.dto.Identifiers;
 import org.folio.mr.domain.dto.MediatedRequest;
+import org.folio.mr.domain.dto.SearchInstance;
+import org.folio.mr.domain.dto.SearchInstancesResponse;
+import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.test.types.IntegrationTest;
@@ -38,6 +47,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
+
+import com.github.tomakehurst.wiremock.client.WireMock;
 
 import lombok.SneakyThrows;
 
@@ -125,6 +136,7 @@ class MediatedRequestsApiTest extends BaseIT {
   @SneakyThrows
   void mediatedRequestWithoutSomeDetailsShouldBeCreated() {
     Date requestDate = new Date();
+    String instanceId = "69640328-788e-43fc-9c3c-af39e243f3b7";
     MediatedRequest request = new MediatedRequest()
       .requestLevel(TITLE)
       .requestType(HOLD)
@@ -132,7 +144,22 @@ class MediatedRequestsApiTest extends BaseIT {
       .deliveryAddressTypeId("93d3d88d-499b-45d0-9bc7-ac73c3a19880")
       .requestDate(requestDate)
       .requesterId("9812e24b-0a66-457a-832c-c5e789797e35")
-      .instanceId("69640328-788e-43fc-9c3c-af39e243f3b7");
+      .instanceId(instanceId);
+
+    List<Identifiers> identifiers = List.of(
+      new Identifiers().value("0747-0088").identifierTypeId("913300b2-03ed-469a-8179-c1092c991227"),
+      new Identifiers().value("84641839").identifierTypeId("c858e4f2-2b6b-4385-842b-60732ee14abb"));
+    String title = "ABA Journal";
+
+    wireMockServer.stubFor(WireMock.get(urlMatching("/search/instances" + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new SearchInstancesResponse().addInstancesItem(
+        new SearchInstance()
+          .id(instanceId)
+          .identifiers(identifiers)
+          .title(title)
+          .tenantId(TENANT_ID_CONSORTIUM)),
+        HttpStatus.SC_OK)));
 
     String responseBody = postRequest(request)
       .andExpect(status().isCreated())
@@ -159,12 +186,12 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("deliveryAddressTypeId", is("93d3d88d-499b-45d0-9bc7-ac73c3a19880")))
       .andExpect(jsonPath("confirmedRequestId").doesNotExist())
       .andExpect(jsonPath("pickupServicePointId").doesNotExist())
-      .andExpect(jsonPath("instance.title", is("ABA Journal")))
+      .andExpect(jsonPath("instance.title", is(title)))
       .andExpect(jsonPath("instance.identifiers", hasSize(2)))
-      .andExpect(jsonPath("instance.identifiers[0].value", is("0747-0088")))
-      .andExpect(jsonPath("instance.identifiers[0].identifierTypeId", is("913300b2-03ed-469a-8179-c1092c991227")))
-      .andExpect(jsonPath("instance.identifiers[1].value", is("84641839")))
-      .andExpect(jsonPath("instance.identifiers[1].identifierTypeId", is("c858e4f2-2b6b-4385-842b-60732ee14abb")))
+      .andExpect(jsonPath("instance.identifiers[0].value", is(identifiers.get(0).getValue())))
+      .andExpect(jsonPath("instance.identifiers[0].identifierTypeId", is(identifiers.get(0).getIdentifierTypeId())))
+      .andExpect(jsonPath("instance.identifiers[1].value", is(identifiers.get(1).getValue())))
+      .andExpect(jsonPath("instance.identifiers[1].identifierTypeId", is(identifiers.get(1).getIdentifierTypeId())))
       .andExpect(jsonPath("instance.publication", hasSize(2)))
       .andExpect(jsonPath("instance.publication[0].publisher", is("American Bar Association")))
       .andExpect(jsonPath("instance.publication[0].place", is("Chicago, Ill.")))
@@ -261,11 +288,24 @@ class MediatedRequestsApiTest extends BaseIT {
   @SneakyThrows
   void minimalMediatedRequestShouldBeCreated() {
     Date requestDate = new Date();
+    String instanceId = "69640328-788e-43fc-9c3c-af39e243f3b7";
     MediatedRequest request = new MediatedRequest()
       .requestLevel(TITLE)
       .requestDate(requestDate)
       .requesterId("9812e24b-0a66-457a-832c-c5e789797e35")
-      .instanceId("69640328-788e-43fc-9c3c-af39e243f3b7");
+      .instanceId(instanceId);
+
+    List<Identifiers> identifiers = List.of(
+      new Identifiers().value("0747-0088").identifierTypeId("913300b2-03ed-469a-8179-c1092c991227"),
+      new Identifiers().value("84641839").identifierTypeId("c858e4f2-2b6b-4385-842b-60732ee14abb"));
+    wireMockServer.stubFor(WireMock.get(urlMatching("/search/instances" + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new SearchInstancesResponse().addInstancesItem(
+          new SearchInstance()
+            .id(instanceId)
+            .tenantId(TENANT_ID_CONSORTIUM)
+            .identifiers(identifiers)),
+        HttpStatus.SC_OK)));
 
     postRequest(request).andExpect(status().isCreated());
   }
@@ -351,6 +391,7 @@ class MediatedRequestsApiTest extends BaseIT {
   @SneakyThrows
   private MediatedRequest createMediatedRequest() {
     Date requestDate = new Date();
+    String instanceId = "69640328-788e-43fc-9c3c-af39e243f3b7";
     MediatedRequest request = new MediatedRequest()
       .requestLevel(ITEM)
       .requestType(PAGE)
@@ -359,10 +400,33 @@ class MediatedRequestsApiTest extends BaseIT {
       .patronComments("test")
       .requesterId("9812e24b-0a66-457a-832c-c5e789797e35")
       .proxyUserId("7b89ee8c-6524-432e-8c57-82bc860af38f")
-      .instanceId("69640328-788e-43fc-9c3c-af39e243f3b7")
+      .instanceId(instanceId)
       .holdingsRecordId("0c45bb50-7c9b-48b0-86eb-178a494e25fe")
       .itemId("9428231b-dd31-4f70-8406-fe22fbdeabc2")
       .pickupServicePointId("3a40852d-49fd-4df2-a1f9-6e2641a6e91f");
+
+    List<Identifiers> identifiers = List.of(
+      new Identifiers().value("0747-0088").identifierTypeId("913300b2-03ed-469a-8179-c1092c991227"),
+      new Identifiers().value("84641839").identifierTypeId("c858e4f2-2b6b-4385-842b-60732ee14abb"));
+    String title = "ABA Journal";
+    String itemId = "9428231b-dd31-4f70-8406-fe22fbdeabc2";
+    String barcode = "A14837334314";
+    SearchItem searchItem = new SearchItem()
+      .id(itemId)
+      .tenantId(TENANT_ID_CONSORTIUM)
+      .barcode(barcode)
+      .effectiveLocationId("fcd64ce1-6995-48f0-840e-89ffa2288371");
+
+    wireMockServer.stubFor(WireMock.get(urlMatching("/search/instances" + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new SearchInstancesResponse().addInstancesItem(
+          new SearchInstance()
+            .id(instanceId)
+            .identifiers(identifiers)
+            .title(title)
+            .tenantId(TENANT_ID_CONSORTIUM)
+            .addItemsItem(searchItem)),
+        HttpStatus.SC_OK)));
 
     String responseBody = postRequest(request)
       .andExpect(status().isCreated())
@@ -373,9 +437,9 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("patronComments", is("test")))
       .andExpect(jsonPath("requesterId", is("9812e24b-0a66-457a-832c-c5e789797e35")))
       .andExpect(jsonPath("proxyUserId", is("7b89ee8c-6524-432e-8c57-82bc860af38f")))
-      .andExpect(jsonPath("instanceId", is("69640328-788e-43fc-9c3c-af39e243f3b7")))
+      .andExpect(jsonPath("instanceId", is(instanceId)))
       .andExpect(jsonPath("holdingsRecordId", is("0c45bb50-7c9b-48b0-86eb-178a494e25fe")))
-      .andExpect(jsonPath("itemId", is("9428231b-dd31-4f70-8406-fe22fbdeabc2")))
+      .andExpect(jsonPath("itemId", is(itemId)))
       .andExpect(jsonPath("mediatedRequestStatus", is("New")))
       .andExpect(jsonPath("mediatedRequestStep", is("Awaiting confirmation")))
       .andExpect(jsonPath("mediatedWorkflow", is("Private request")))
@@ -390,12 +454,12 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("deliveryAddress").doesNotExist())
       .andExpect(jsonPath("confirmedRequestId").doesNotExist())
       .andExpect(jsonPath("pickupServicePointId", is("3a40852d-49fd-4df2-a1f9-6e2641a6e91f")))
-      .andExpect(jsonPath("instance.title", is("ABA Journal")))
+      .andExpect(jsonPath("instance.title", is(title)))
       .andExpect(jsonPath("instance.identifiers", hasSize(2)))
-      .andExpect(jsonPath("instance.identifiers[0].value", is("0747-0088")))
-      .andExpect(jsonPath("instance.identifiers[0].identifierTypeId", is("913300b2-03ed-469a-8179-c1092c991227")))
-      .andExpect(jsonPath("instance.identifiers[1].value", is("84641839")))
-      .andExpect(jsonPath("instance.identifiers[1].identifierTypeId", is("c858e4f2-2b6b-4385-842b-60732ee14abb")))
+      .andExpect(jsonPath("instance.identifiers[0].value", is(identifiers.get(0).getValue())))
+      .andExpect(jsonPath("instance.identifiers[0].identifierTypeId", is(identifiers.get(0).getIdentifierTypeId())))
+      .andExpect(jsonPath("instance.identifiers[1].value", is(identifiers.get(1).getValue())))
+      .andExpect(jsonPath("instance.identifiers[1].identifierTypeId", is(identifiers.get(1).getIdentifierTypeId())))
       .andExpect(jsonPath("instance.publication", hasSize(2)))
       .andExpect(jsonPath("instance.publication[0].publisher", is("American Bar Association")))
       .andExpect(jsonPath("instance.publication[0].place", is("Chicago, Ill.")))
@@ -409,7 +473,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("instance.contributorNames", hasSize(2)))
       .andExpect(jsonPath("instance.contributorNames[0].name", is("First, Author")))
       .andExpect(jsonPath("instance.contributorNames[1].name", is("Second, Writer")))
-      .andExpect(jsonPath("item.barcode", is("A14837334314")))
+      .andExpect(jsonPath("item.barcode", is(barcode)))
       .andExpect(jsonPath("item.enumeration", is("v.70:no.7-12")))
       .andExpect(jsonPath("item.volume", is("vol.1")))
       .andExpect(jsonPath("item.chronology", is("1984:July-Dec.")))
