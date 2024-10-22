@@ -148,9 +148,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
             log.info("buildRequestContext:: searchItem found {}", searchItem.getId());
             String tenantId = searchItem.getTenantId();
             executionService.executeAsyncSystemUserScoped(tenantId, () -> {
-              Item inventoryItem = inventoryService.fetchItem(searchItem.getId());
-              Location location = inventoryService.fetchLocation(searchItem.getEffectiveLocationId());
-              Library library = inventoryService.fetchLibrary(location.getLibraryId());
+              var inventoryItem = inventoryService.fetchItem(searchItem.getId());
+              var location = inventoryService.fetchLocation(inventoryItem.getEffectiveLocationId());
+              var library = inventoryService.fetchLibrary(location.getLibraryId());
               contextBuilder.item(inventoryItem)
                 .location(location)
                 .library(library);
