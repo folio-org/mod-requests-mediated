@@ -152,11 +152,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
             String tenantId = searchItem.getTenantId();
             executionService.executeAsyncSystemUserScoped(tenantId, () -> {
               var inventoryItem = inventoryService.fetchItem(searchItem.getId());
-              var location = inventoryService.fetchLocation(inventoryItem.getEffectiveLocationId());
-              var library = inventoryService.fetchLibrary(location.getLibraryId());
-              contextBuilder.item(inventoryItem)
-                .location(location)
-                .library(library);
+              if (inventoryItem != null) {
+                var location = inventoryService.fetchLocation(inventoryItem.getEffectiveLocationId());
+                var library = inventoryService.fetchLibrary(location.getLibraryId());
+                contextBuilder.item(inventoryItem)
+                  .location(location)
+                  .library(library);
+              }
             });
         });
 
