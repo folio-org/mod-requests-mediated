@@ -196,6 +196,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("instance.contributorNames", hasSize(2)))
       .andExpect(jsonPath("instance.contributorNames[0].name", is("First, Author")))
       .andExpect(jsonPath("instance.contributorNames[1].name", is("Second, Writer")))
+      .andExpect(jsonPath("instance.hrid", is("inst000000000001")))
       .andExpect(jsonPath("item").doesNotExist())
       .andExpect(jsonPath("staffSlipContext").doesNotExist())
       .andExpect(jsonPath("requester.barcode", is("111")))

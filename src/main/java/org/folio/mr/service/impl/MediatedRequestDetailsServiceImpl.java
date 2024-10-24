@@ -298,7 +298,8 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .getInstance()
       .contributorNames(contributors)
       .publication(publications)
-      .editions(new ArrayList<>(instance.getEditions()));
+      .editions(new ArrayList<>(instance.getEditions()))
+      .hrid(instance.getHrid());
   }
 
   private static void addItem(MediatedRequestContext context) {
