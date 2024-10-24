@@ -6,10 +6,10 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CO
 
 import java.util.ArrayList;
 
+import org.folio.mr.client.SearchClient;
 import org.folio.mr.domain.dto.Instance;
 import org.folio.mr.domain.dto.InstanceContributorsInner;
 import org.folio.mr.domain.dto.Item;
-import org.folio.mr.domain.dto.ItemEffectiveCallNumberComponents;
 import org.folio.mr.domain.dto.Library;
 import org.folio.mr.domain.dto.Location;
 import org.folio.mr.domain.dto.MediatedRequest;
@@ -36,6 +36,7 @@ import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestDetailsService;
 import org.folio.mr.service.MetadataService;
 import org.folio.mr.service.UserService;
+import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
 import lombok.Builder;
@@ -53,6 +54,8 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private final InventoryService inventoryService;
   private final UserService userService;
   private final MetadataService metadataService;
+  private final SystemUserScopedExecutionService executionService;
+  private final SearchClient searchClient;
 
   @Override
   public MediatedRequest addRequestDetailsForCreate(MediatedRequest request) {
@@ -115,13 +118,23 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private MediatedRequestContext buildRequestContext(MediatedRequest request) {
     log.info("buildRequestContext:: building request context");
     var contextBuilder = MediatedRequestContext.builder().request(request);
-    Instance instance = inventoryService.fetchInstance(request.getInstanceId());
+
     User requester = userService.fetchUser(request.getRequesterId());
     UserGroup requesterGroup = userService.fetchUserGroup(requester.getPatronGroup());
 
-    contextBuilder.instance(instance)
-      .requester(requester)
-      .requesterGroup(requesterGroup);
+    var searchInstances = searchClient.searchInstance(request.getInstanceId())
+      .getInstances();
+    if (searchInstances == null || searchInstances.isEmpty()) {
+      log.info("buildRequestContext:: searchInstances not found");
+      return contextBuilder.instance(null).build();
+    }
+    var searchInstance = searchInstances.get(0);
+    executionService.executeAsyncSystemUserScoped(searchInstance.getTenantId(), () -> {
+        Instance instance = inventoryService.fetchInstance(searchInstance.getId());
+        contextBuilder.instance(instance)
+          .requester(requester)
+          .requesterGroup(requesterGroup);
+      });
 
     if (request.getProxyUserId() != null) {
       User proxy = userService.fetchUser(request.getProxyUserId());
@@ -131,12 +144,24 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     }
 
     if (request.getItemId() != null) {
-      Item item = inventoryService.fetchItem(request.getItemId());
-      Location location = inventoryService.fetchLocation(item.getEffectiveLocationId());
-      Library library = inventoryService.fetchLibrary(location.getLibraryId());
-      contextBuilder.item(item)
-        .location(location)
-        .library(library);
+        searchInstance.getItems().stream()
+          .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
+          .findFirst()
+          .ifPresent(searchItem -> {
+            log.info("buildRequestContext:: searchItem found {}", searchItem.getId());
+            String tenantId = searchItem.getTenantId();
+            executionService.executeAsyncSystemUserScoped(tenantId, () -> {
+              var inventoryItem = inventoryService.fetchItem(searchItem.getId());
+              if (inventoryItem != null) {
+                var location = inventoryService.fetchLocation(inventoryItem.getEffectiveLocationId());
+                var library = inventoryService.fetchLibrary(location.getLibraryId());
+                contextBuilder.item(inventoryItem)
+                  .location(location)
+                  .library(library);
+              }
+            });
+        });
+
     }
 
     if (request.getPickupServicePointId() != null) {
@@ -233,25 +258,27 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
   private static void addInstance(MediatedRequestContext context) {
     log.info("addInstance:: adding instance data");
-    Instance instance = context.instance();
+    var instance = context.instance();
+    if (instance == null) {
+      log.info("addInstance:: instance is null");
+      context.request().instance(null);
+      return;
+    }
     var identifiers = instance.getIdentifiers()
       .stream()
       .map(i -> new MediatedRequestInstanceIdentifiersInner()
         .value(i.getValue())
         .identifierTypeId(i.getIdentifierTypeId()))
       .toList();
-
     MediatedRequestInstance newInstance = new MediatedRequestInstance()
       .title(instance.getTitle())
       .identifiers(identifiers);
-
     context.request().instance(newInstance);
   }
 
-  private static void extendInstance(MediatedRequestContext context) {
+  private void extendInstance(MediatedRequestContext context) {
     log.info("extendInstance:: extending instance data");
-    Instance instance = context.instance();
-
+    var instance = context.instance();
     var contributors = instance.getContributors()
       .stream()
       .map(InstanceContributorsInner::getName)
@@ -271,7 +298,8 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .getInstance()
       .contributorNames(contributors)
       .publication(publications)
-      .editions(new ArrayList<>(instance.getEditions()));
+      .editions(new ArrayList<>(instance.getEditions()))
+      .hrid(instance.getHrid());
   }
 
   private static void addItem(MediatedRequestContext context) {
@@ -285,15 +313,14 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .item(new MediatedRequestItem().barcode(context.item().getBarcode()));
   }
 
-  private static void extendItem(MediatedRequestContext context) {
+  private void extendItem(MediatedRequestContext context) {
     log.info("extendItem:: extending item data");
-    Item item = context.item();
+    var item = context.item();
     if (item == null) {
       log.info("extendItem:: item is null");
       context.request().item(null);
       return;
     }
-
     context.request().getItem()
       .enumeration(item.getEnumeration())
       .volume(item.getVolume())
@@ -382,11 +409,11 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     log.info("addSearchIndex:: adding search index");
     MediatedRequestSearchIndex searchIndex = new MediatedRequestSearchIndex();
 
-    Item item = context.item();
-    if (item != null) {
+    var searchItem = context.item();
+    if (searchItem != null) {
       log.info("addSearchIndex:: adding item data to search index");
-      String shelvingOrder = item.getEffectiveShelvingOrder();
-      ItemEffectiveCallNumberComponents callNumberComponents = item.getEffectiveCallNumberComponents();
+      String shelvingOrder = searchItem.getEffectiveShelvingOrder();
+      var callNumberComponents = searchItem.getEffectiveCallNumberComponents();
       if (shelvingOrder != null) {
         log.info("addSearchIndex:: adding shelving order to search index");
         searchIndex.setShelvingOrder(shelvingOrder);

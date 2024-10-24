@@ -1,5 +1,8 @@
 package org.folio.mr.api;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.DELIVERY;
 import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.HOLD_SHELF;
 import static org.folio.mr.domain.dto.MediatedRequest.RequestLevelEnum.ITEM;
@@ -26,10 +29,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.Date;
 import java.util.UUID;
 
+import org.apache.http.HttpStatus;
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.RequestLevel;
 import org.folio.mr.domain.RequestType;
 import org.folio.mr.domain.dto.MediatedRequest;
+import org.folio.mr.domain.dto.SearchInstance;
+import org.folio.mr.domain.dto.SearchInstancesResponse;
+import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.test.types.IntegrationTest;
@@ -38,6 +45,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
+
+import com.github.tomakehurst.wiremock.client.WireMock;
 
 import lombok.SneakyThrows;
 
@@ -125,6 +134,7 @@ class MediatedRequestsApiTest extends BaseIT {
   @SneakyThrows
   void mediatedRequestWithoutSomeDetailsShouldBeCreated() {
     Date requestDate = new Date();
+    String instanceId = "69640328-788e-43fc-9c3c-af39e243f3b7";
     MediatedRequest request = new MediatedRequest()
       .requestLevel(TITLE)
       .requestType(HOLD)
@@ -132,7 +142,15 @@ class MediatedRequestsApiTest extends BaseIT {
       .deliveryAddressTypeId("93d3d88d-499b-45d0-9bc7-ac73c3a19880")
       .requestDate(requestDate)
       .requesterId("9812e24b-0a66-457a-832c-c5e789797e35")
-      .instanceId("69640328-788e-43fc-9c3c-af39e243f3b7");
+      .instanceId(instanceId);
+
+    wireMockServer.stubFor(WireMock.get(urlMatching("/search/instances" + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new SearchInstancesResponse().addInstancesItem(
+        new SearchInstance()
+          .id(instanceId)
+          .tenantId(TENANT_ID_CONSORTIUM)),
+        HttpStatus.SC_OK)));
 
     String responseBody = postRequest(request)
       .andExpect(status().isCreated())
@@ -178,6 +196,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("instance.contributorNames", hasSize(2)))
       .andExpect(jsonPath("instance.contributorNames[0].name", is("First, Author")))
       .andExpect(jsonPath("instance.contributorNames[1].name", is("Second, Writer")))
+      .andExpect(jsonPath("instance.hrid", is("inst000000000001")))
       .andExpect(jsonPath("item").doesNotExist())
       .andExpect(jsonPath("staffSlipContext").doesNotExist())
       .andExpect(jsonPath("requester.barcode", is("111")))
@@ -261,11 +280,20 @@ class MediatedRequestsApiTest extends BaseIT {
   @SneakyThrows
   void minimalMediatedRequestShouldBeCreated() {
     Date requestDate = new Date();
+    String instanceId = "69640328-788e-43fc-9c3c-af39e243f3b7";
     MediatedRequest request = new MediatedRequest()
       .requestLevel(TITLE)
       .requestDate(requestDate)
       .requesterId("9812e24b-0a66-457a-832c-c5e789797e35")
-      .instanceId("69640328-788e-43fc-9c3c-af39e243f3b7");
+      .instanceId(instanceId);
+
+    wireMockServer.stubFor(WireMock.get(urlMatching("/search/instances" + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new SearchInstancesResponse().addInstancesItem(
+          new SearchInstance()
+            .id(instanceId)
+            .tenantId(TENANT_ID_CONSORTIUM)),
+        HttpStatus.SC_OK)));
 
     postRequest(request).andExpect(status().isCreated());
   }
@@ -351,6 +379,7 @@ class MediatedRequestsApiTest extends BaseIT {
   @SneakyThrows
   private MediatedRequest createMediatedRequest() {
     Date requestDate = new Date();
+    String instanceId = "69640328-788e-43fc-9c3c-af39e243f3b7";
     MediatedRequest request = new MediatedRequest()
       .requestLevel(ITEM)
       .requestType(PAGE)
@@ -359,10 +388,24 @@ class MediatedRequestsApiTest extends BaseIT {
       .patronComments("test")
       .requesterId("9812e24b-0a66-457a-832c-c5e789797e35")
       .proxyUserId("7b89ee8c-6524-432e-8c57-82bc860af38f")
-      .instanceId("69640328-788e-43fc-9c3c-af39e243f3b7")
+      .instanceId(instanceId)
       .holdingsRecordId("0c45bb50-7c9b-48b0-86eb-178a494e25fe")
       .itemId("9428231b-dd31-4f70-8406-fe22fbdeabc2")
       .pickupServicePointId("3a40852d-49fd-4df2-a1f9-6e2641a6e91f");
+
+    String itemId = "9428231b-dd31-4f70-8406-fe22fbdeabc2";
+    SearchItem searchItem = new SearchItem()
+      .id(itemId)
+      .tenantId(TENANT_ID_CONSORTIUM);
+
+    wireMockServer.stubFor(WireMock.get(urlMatching("/search/instances" + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new SearchInstancesResponse().addInstancesItem(
+          new SearchInstance()
+            .id(instanceId)
+            .tenantId(TENANT_ID_CONSORTIUM)
+            .addItemsItem(searchItem)),
+        HttpStatus.SC_OK)));
 
     String responseBody = postRequest(request)
       .andExpect(status().isCreated())
@@ -373,9 +416,9 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("patronComments", is("test")))
       .andExpect(jsonPath("requesterId", is("9812e24b-0a66-457a-832c-c5e789797e35")))
       .andExpect(jsonPath("proxyUserId", is("7b89ee8c-6524-432e-8c57-82bc860af38f")))
-      .andExpect(jsonPath("instanceId", is("69640328-788e-43fc-9c3c-af39e243f3b7")))
+      .andExpect(jsonPath("instanceId", is(instanceId)))
       .andExpect(jsonPath("holdingsRecordId", is("0c45bb50-7c9b-48b0-86eb-178a494e25fe")))
-      .andExpect(jsonPath("itemId", is("9428231b-dd31-4f70-8406-fe22fbdeabc2")))
+      .andExpect(jsonPath("itemId", is(itemId)))
       .andExpect(jsonPath("mediatedRequestStatus", is("New")))
       .andExpect(jsonPath("mediatedRequestStep", is("Awaiting confirmation")))
       .andExpect(jsonPath("mediatedWorkflow", is("Private request")))
