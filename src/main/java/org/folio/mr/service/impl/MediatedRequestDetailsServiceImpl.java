@@ -28,6 +28,7 @@ import org.folio.mr.domain.dto.MediatedRequestRequester;
 import org.folio.mr.domain.dto.MediatedRequestRequesterPatronGroup;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndexCallNumberComponents;
+import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.dto.ServicePoint;
 import org.folio.mr.domain.dto.User;
 import org.folio.mr.domain.dto.UserGroup;
@@ -144,24 +145,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     }
 
     if (request.getItemId() != null) {
-        searchInstance.getItems().stream()
-          .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
-          .findFirst()
-          .ifPresent(searchItem -> {
-            log.info("buildRequestContext:: searchItem found {}", searchItem.getId());
-            String tenantId = searchItem.getTenantId();
-            executionService.executeAsyncSystemUserScoped(tenantId, () -> {
-              var inventoryItem = inventoryService.fetchItem(searchItem.getId());
-              if (inventoryItem != null) {
-                var location = inventoryService.fetchLocation(inventoryItem.getEffectiveLocationId());
-                var library = inventoryService.fetchLibrary(location.getLibraryId());
-                contextBuilder.item(inventoryItem)
-                  .location(location)
-                  .library(library);
-              }
-            });
-        });
-
+      searchInstance.getItems().stream()
+        .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
+        .findFirst()
+        .ifPresent(searchItem -> fetchItemDetailsFromTenant(searchItem, contextBuilder));
     }
 
     if (request.getPickupServicePointId() != null) {
@@ -171,6 +158,30 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     log.info("buildRequestContext:: request context is built");
 
     return contextBuilder.build();
+  }
+
+  private void fetchItemDetailsFromTenant(SearchItem searchItem,
+    MediatedRequestContext.MediatedRequestContextBuilder contextBuilder) {
+
+    String tenantId = searchItem.getTenantId();
+    log.info("fetchItemDetailsForTenant:: searchItem found {}, tenant {}", searchItem.getId(),
+      tenantId);
+    executionService.executeAsyncSystemUserScoped(tenantId,
+      () -> fetchItemDetails(searchItem, contextBuilder));
+  }
+
+  private void fetchItemDetails(SearchItem searchItem,
+    MediatedRequestContext.MediatedRequestContextBuilder contextBuilder) {
+
+    var inventoryItem = inventoryService.fetchItem(searchItem.getId());
+    if (inventoryItem != null) {
+      log.info("fetchItemDetails:: inventoryItem is found");
+      var location = inventoryService.fetchLocation(inventoryItem.getEffectiveLocationId());
+      var library = inventoryService.fetchLibrary(location.getLibraryId());
+      contextBuilder.item(inventoryItem)
+        .location(location)
+        .library(library);
+    }
   }
 
   private static void addRequester(MediatedRequestContext context) {
