@@ -26,6 +26,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.With;
 
 @Data
@@ -34,6 +35,7 @@ import lombok.With;
 @With
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class MediatedRequestEntity {
 
   @Id
