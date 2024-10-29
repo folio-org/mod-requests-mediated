@@ -198,6 +198,8 @@
         "inventory-storage.instances.item.get",
         "inventory-storage.service-points.collection.get",
         "inventory-storage.service-points.item.get",
+        "search.instances.item.get",
+        "search.instances.collection.get",
         "users.collection.get",
         "users.item.get",
         "usergroups.collection.get",
