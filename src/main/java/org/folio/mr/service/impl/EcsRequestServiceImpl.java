@@ -36,6 +36,8 @@ public class EcsRequestServiceImpl implements EcsRequestService {
       .fulfillmentPreference(EcsTlr.FulfillmentPreferenceEnum.fromValue(
         mediatedRequest.getFulfillmentPreference().getValue()))
       .instanceId(asString(mediatedRequest.getInstanceId()))
+      .itemId(asString(mediatedRequest.getItemId()))
+      .holdingsRecordId(asString(mediatedRequest.getHoldingsRecordId()))
       .requesterId(asString(mediatedRequest.getRequesterId()))
       .pickupServicePointId(asString(mediatedRequest.getPickupServicePointId()))
       .requestDate(mediatedRequest.getRequestDate())
