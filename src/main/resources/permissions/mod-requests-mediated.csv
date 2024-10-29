@@ -4,6 +4,7 @@ users.item.get
 user-tenants.collection.get
 consortium-search.items.collection.get
 consortium-search.items.item.get
+search.instances.collection.get
 inventory-storage.items.item.get
 inventory-storage.items.collection.get
 inventory-storage.instances.item.get
