@@ -11,33 +11,33 @@
             "GET"
           ],
           "pathPattern": "/requests-mediated/mediated-requests",
-          "permissionsRequired": ["requests-mediated.mediated-request.collection.get"],
-          "modulePermissions": ["requests-mediated.internal.fetch-request-details"]
+          "permissionsRequired": ["requests-mediated.mediated-requests.collection.get"],
+          "modulePermissions": ["requests-mediated.internal.fetch-request-details.all"]
         },
         {
           "methods": [
             "GET"
           ],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
-          "permissionsRequired": ["requests-mediated.mediated-request.item.get"],
-          "modulePermissions": ["requests-mediated.internal.fetch-request-details"]
+          "permissionsRequired": ["requests-mediated.mediated-requests.item.get"],
+          "modulePermissions": ["requests-mediated.internal.fetch-request-details.all"]
         },
         {
           "methods": ["POST"],
           "pathPattern": "/requests-mediated/mediated-requests",
-          "permissionsRequired": ["requests-mediated.mediated-request.item.post"],
-          "modulePermissions": ["requests-mediated.internal.fetch-request-details"]
+          "permissionsRequired": ["requests-mediated.mediated-requests.item.post"],
+          "modulePermissions": ["requests-mediated.internal.fetch-request-details.all"]
         },
         {
           "methods": ["PUT"],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
-          "permissionsRequired": ["requests-mediated.mediated-request.item.put"],
-          "modulePermissions": ["requests-mediated.internal.fetch-request-details"]
+          "permissionsRequired": ["requests-mediated.mediated-requests.item.put"],
+          "modulePermissions": ["requests-mediated.internal.fetch-request-details.all"]
         },
         {
           "methods": ["DELETE"],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
-          "permissionsRequired": ["requests-mediated.mediated-request.item.delete"],
+          "permissionsRequired": ["requests-mediated.mediated-requests.item.delete"],
           "modulePermissions": []
         }
       ]
@@ -91,7 +91,7 @@
             "POST"
           ],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}/confirm",
-          "permissionsRequired": ["requests-mediated.mediated-request.confirm.post"],
+          "permissionsRequired": ["requests-mediated.mediated-requests.confirm.post"],
           "modulePermissions": [
             "inventory-storage.instances.item.get",
             "inventory-storage.instances.collection.get",
@@ -105,7 +105,7 @@
             "POST"
           ],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}/decline",
-          "permissionsRequired": ["requests-mediated.decline-mediated-request.execute"],
+          "permissionsRequired": ["requests-mediated.mediated-requests.decline.execute"],
           "modulePermissions": []
         }
       ]
@@ -143,29 +143,34 @@
   ],
   "permissionSets" : [
     {
-      "permissionName": "requests-mediated.mediated-request.collection.get",
+      "permissionName": "requests-mediated.mediated-requests.collection.get",
       "displayName": "requests-mediated - get mediated requests",
-      "description": "Get mediated requests"
+      "description": "Get mediated requests",
+      "replaces": ["requests-mediated.mediated-request.collection.get"]
     },
     {
-      "permissionName": "requests-mediated.mediated-request.item.get",
+      "permissionName": "requests-mediated.mediated-requests.item.get",
       "displayName": "requests-mediated - get mediated request by ID",
-      "description": "Get mediated request"
+      "description": "Get mediated request",
+      "replaces": ["requests-mediated.mediated-request.item.get"]
     },
     {
-      "permissionName": "requests-mediated.mediated-request.item.post",
+      "permissionName": "requests-mediated.mediated-requests.item.post",
       "displayName": "requests-mediated - create mediated request",
-      "description": "Create mediated request"
+      "description": "Create mediated request",
+      "replaces": ["requests-mediated.mediated-request.item.post"]
     },
     {
-      "permissionName": "requests-mediated.mediated-request.item.put",
+      "permissionName": "requests-mediated.mediated-requests.item.put",
       "displayName": "requests-mediated - update mediated request",
-      "description": "Update mediated request"
+      "description": "Update mediated request",
+      "replaces": ["requests-mediated.mediated-request.item.put"]
     },
     {
-      "permissionName": "requests-mediated.mediated-request.item.delete",
+      "permissionName": "requests-mediated.mediated-requests.item.delete",
       "displayName": "requests-mediated - remove mediated request",
-      "description": "Remove mediated request"
+      "description": "Remove mediated request",
+      "replaces": ["requests-mediated.mediated-request.item.delete"]
     },
     {
       "permissionName": "requests-mediated.confirm-item-arrival.post",
@@ -175,20 +180,23 @@
     {
       "permissionName": "requests-mediated.send-item-in-transit.post",
       "displayName": "requests-mediated - send item in transit",
-      "description": "Send item in transit"
+      "description": "Send item in transit",
+      "replaces": []
     },
     {
-      "permissionName": "requests-mediated.mediated-request.confirm.post",
+      "permissionName": "requests-mediated.mediated-requests.confirm.post",
       "displayName": "requests-mediated - confirm mediated request",
-      "description": "Confirm mediated request"
+      "description": "Confirm mediated request",
+      "replaces": ["requests-mediated.mediated-request.confirm.post"]
     },
     {
-      "permissionName": "requests-mediated.decline-mediated-request.execute",
+      "permissionName": "requests-mediated.mediated-requests.decline.execute",
       "displayName": "requests-mediated - decline mediated request",
-      "description": "Decline mediated request"
+      "description": "Decline mediated request",
+      "replaces": ["requests-mediated.decline-mediated-request.execute"]
     },
     {
-      "permissionName": "requests-mediated.internal.fetch-request-details",
+      "permissionName": "requests-mediated.internal.fetch-request-details.all",
       "displayName": "Fetch mediated request details",
       "description": "Internal permission set for fetching mediated request details",
       "subPermissions": [
