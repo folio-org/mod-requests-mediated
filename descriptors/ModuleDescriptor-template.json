@@ -180,8 +180,7 @@
     {
       "permissionName": "requests-mediated.send-item-in-transit.post",
       "displayName": "requests-mediated - send item in transit",
-      "description": "Send item in transit",
-      "replaces": []
+      "description": "Send item in transit"
     },
     {
       "permissionName": "requests-mediated.mediated-requests.confirm.post",
