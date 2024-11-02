@@ -9,6 +9,7 @@ import static org.folio.mr.support.ConversionUtils.asString;
 import java.util.List;
 import java.util.UUID;
 
+import org.folio.mr.client.SearchClient;
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
@@ -29,6 +30,7 @@ import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestActionsService;
 import org.folio.mr.service.SearchService;
 import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -47,6 +49,8 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   private final EcsRequestService ecsRequestService;
   private final FolioExecutionContext folioExecutionContext;
   private final SearchService searchService;
+  private final SystemUserScopedExecutionService executionService;
+  private final SearchClient searchClient;
 
   @Override
   public void confirm(UUID id) {
@@ -167,16 +171,28 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
   private void extendMediatedRequest(MediatedRequest request) {
     log.info("extendMediatedRequest:: extending mediated request with additional item details");
-    Item item = inventoryService.fetchItem(request.getItemId());
-    if (item == null) {
-      throw ExceptionFactory.notFound(format("Item %s not found", request.getItemId()));
-    } else {
-      request.getItem()
-        .enumeration(item.getEnumeration())
-        .volume(item.getVolume())
-        .chronology(item.getChronology())
-        .displaySummary(item.getDisplaySummary())
-        .copyNumber(item.getCopyNumber());
+    var searchInstance = searchClient.searchInstance(request.getInstanceId()).getInstances().get(0);
+    if (searchInstance != null) {
+      searchInstance.getItems().stream()
+        .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
+        .findFirst()
+        .ifPresent(searchItem -> {
+          String tenantId = searchItem.getTenantId();
+          log.info("fetching item from tenant: {}", tenantId);
+          executionService.executeAsyncSystemUserScoped(tenantId, () -> {
+            Item item = inventoryService.fetchItem(request.getItemId());
+            if (item == null) {
+              throw ExceptionFactory.notFound(format("Item %s not found", request.getItemId()));
+            } else {
+              request.getItem()
+                .enumeration(item.getEnumeration())
+                .volume(item.getVolume())
+                .chronology(item.getChronology())
+                .displaySummary(item.getDisplaySummary())
+                .copyNumber(item.getCopyNumber());
+            }
+          });
+        });
     }
   }
 
