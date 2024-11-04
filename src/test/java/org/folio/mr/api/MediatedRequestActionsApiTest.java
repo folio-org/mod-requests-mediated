@@ -60,6 +60,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
   private static final String TENANT_ID_CENTRAL = "central";
   private static final String CONFIRM_ITEM_ARRIVAL_URL = "/requests-mediated/confirm-item-arrival";
   private static final String SEND_ITEM_IN_TRANSIT_URL = "/requests-mediated/send-item-in-transit";
+  private static final String SEARCH_INSTANCES_URL = "/search/instances\\?query=id==%s&expandAll=true";
   private static final String CONFIRM_MEDIATED_REQUEST_URL_TEMPLATE =
     "/requests-mediated/mediated-requests/%s/confirm";
   private static final String DECLINE_MEDIATED_REQUEST_URL_TEMPLATE =
@@ -330,15 +331,16 @@ class MediatedRequestActionsApiTest extends BaseIT {
 
   @SneakyThrows
   private ResultActions confirmItemArrival(String itemBarcode, MediatedRequestEntity request) {
-    wireMockServer.stubFor(WireMock.get(urlMatching("/search/instances" + ".*"))
+    var instanceId = request.getInstanceId().toString();
+    wireMockServer.stubFor(WireMock.get(urlMatching(format(SEARCH_INSTANCES_URL, instanceId)))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(jsonResponse(new SearchInstancesResponse().addInstancesItem(
           new SearchInstance()
-            .id(request.getInstanceId().toString())
+            .id(instanceId)
             .tenantId(TENANT_ID_CONSORTIUM)
             .addItemsItem(new SearchItem()
               .id(request.getItemId().toString())
-              .tenantId(TENANT_ID_CONSORTIUM))),
+              .tenantId(TENANT_ID_COLLEGE))),
         HttpStatus.SC_OK)));
 
     return mockMvc.perform(
@@ -454,15 +456,16 @@ class MediatedRequestActionsApiTest extends BaseIT {
 
   @SneakyThrows
   private ResultActions sendItemInTransit(String itemBarcode, MediatedRequestEntity request) {
-    wireMockServer.stubFor(WireMock.get(urlMatching("/search/instances" + ".*"))
+    var instanceId = request.getInstanceId().toString();
+    wireMockServer.stubFor(WireMock.get(urlMatching(format(SEARCH_INSTANCES_URL, instanceId)))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(jsonResponse(new SearchInstancesResponse().addInstancesItem(
           new SearchInstance()
-            .id(request.getInstanceId().toString())
+            .id(instanceId)
             .tenantId(TENANT_ID_CONSORTIUM)
             .addItemsItem(new SearchItem()
               .id(request.getItemId().toString())
-              .tenantId(TENANT_ID_CONSORTIUM))),
+              .tenantId(TENANT_ID_COLLEGE))),
         HttpStatus.SC_OK)));
 
     return mockMvc.perform(
