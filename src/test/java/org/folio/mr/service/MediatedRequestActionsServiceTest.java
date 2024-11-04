@@ -12,6 +12,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -21,13 +22,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.folio.mr.client.SearchClient;
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Instance;
-import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
+import org.folio.mr.domain.dto.SearchInstance;
+import org.folio.mr.domain.dto.SearchInstancesResponse;
+import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.entity.MediatedRequestStep;
 import org.folio.mr.domain.entity.MediatedRequestWorkflow;
@@ -35,6 +39,7 @@ import org.folio.mr.domain.mapper.MediatedRequestMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.impl.MediatedRequestActionsServiceImpl;
 import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -67,6 +72,12 @@ class MediatedRequestActionsServiceTest {
   @Mock
   private SearchService searchService;
 
+  @Mock
+  private SearchClient searchClient;
+
+  @Mock
+  private SystemUserScopedExecutionService executionService;
+
   @InjectMocks
   private MediatedRequestActionsServiceImpl mediatedRequestActionsService;
 
@@ -85,10 +96,12 @@ class MediatedRequestActionsServiceTest {
       .thenReturn(Optional.of(initialRequest));
     when(mediatedRequestsRepository.save(any(MediatedRequestEntity.class)))
       .thenReturn(updatedRequest);
-    when(inventoryService.fetchItem(initialRequest.getItemId().toString()))
-      .thenReturn(new Item());
     when(mediatedRequestMapper.mapEntityToDto(any(MediatedRequestEntity.class)))
       .thenReturn(mappedRequest);
+    when(searchClient.searchInstance(anyString()))
+      .thenReturn(new SearchInstancesResponse()
+        .instances(List.of(new SearchInstance().items(List.of(
+          new SearchItem().id(initialRequest.getItemId().toString()))))));
 
     // when
     MediatedRequest result = mediatedRequestActionsService.confirmItemArrival(itemBarcode);
@@ -127,10 +140,12 @@ class MediatedRequestActionsServiceTest {
       .thenReturn(Optional.of(initialRequest));
     when(mediatedRequestsRepository.save(any(MediatedRequestEntity.class)))
       .thenReturn(updatedRequest);
-    when(inventoryService.fetchItem(initialRequest.getItemId().toString()))
-      .thenReturn(new Item());
     when(mediatedRequestMapper.mapEntityToDto(any(MediatedRequestEntity.class)))
       .thenReturn(mappedRequest);
+    when(searchClient.searchInstance(anyString()))
+      .thenReturn(new SearchInstancesResponse()
+        .instances(List.of(new SearchInstance().items(List.of(
+          new SearchItem().id(initialRequest.getItemId().toString()))))));
 
     // when
     MediatedRequest result = mediatedRequestActionsService.sendItemInTransit(itemBarcode);

@@ -32,6 +32,9 @@ import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.ConsortiumItems;
 import org.folio.mr.domain.dto.MediatedRequest;
+import org.folio.mr.domain.dto.SearchInstance;
+import org.folio.mr.domain.dto.SearchInstancesResponse;
+import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Items;
@@ -265,7 +268,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
   void successfulItemArrivalConfirmation() {
     MediatedRequestEntity request = createMediatedRequestEntity();
 
-    confirmItemArrival("A14837334314")
+    confirmItemArrival("A14837334314", request)
       .andExpect(status().isOk())
       .andExpect(jsonPath("arrivalDate", notNullValue()))
       .andExpect(jsonPath("instance.id", is("69640328-788e-43fc-9c3c-af39e243f3b7")))
@@ -297,7 +300,9 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @Test
   @SneakyThrows
   void itemArrivalConfirmationFailsWhenMediatedRequestIsNotFoundByItemBarcode() {
-    confirmItemArrival("random-barcode")
+    confirmItemArrival("random-barcode", new MediatedRequestEntity()
+      .withInstanceId(UUID.randomUUID())
+      .withItemId(UUID.randomUUID()))
       .andExpect(status().isNotFound())
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
       .andExpect(jsonPath("errors[0].type").value("EntityNotFoundException"))
@@ -308,9 +313,10 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @Test
   @SneakyThrows
   void itemArrivalConfirmationFailsWhenMediatedRequestIsNotFoundByStatus() {
-    mediatedRequestsRepository.save(buildMediatedRequestEntity(OPEN_ITEM_ARRIVED)); // wrong status
+    MediatedRequestEntity mediatedRequest = mediatedRequestsRepository.save(
+      buildMediatedRequestEntity(OPEN_ITEM_ARRIVED));// wrong status
 
-    confirmItemArrival("A14837334314")
+    confirmItemArrival("A14837334314", mediatedRequest)
       .andExpect(status().isNotFound())
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
       .andExpect(jsonPath("errors[0].type").value("EntityNotFoundException"))
@@ -323,7 +329,18 @@ class MediatedRequestActionsApiTest extends BaseIT {
   }
 
   @SneakyThrows
-  private ResultActions confirmItemArrival(String itemBarcode) {
+  private ResultActions confirmItemArrival(String itemBarcode, MediatedRequestEntity request) {
+    wireMockServer.stubFor(WireMock.get(urlMatching("/search/instances" + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new SearchInstancesResponse().addInstancesItem(
+          new SearchInstance()
+            .id(request.getInstanceId().toString())
+            .tenantId(TENANT_ID_CONSORTIUM)
+            .addItemsItem(new SearchItem()
+              .id(request.getItemId().toString())
+              .tenantId(TENANT_ID_CONSORTIUM))),
+        HttpStatus.SC_OK)));
+
     return mockMvc.perform(
       post(CONFIRM_ITEM_ARRIVAL_URL)
         .headers(defaultHeaders())
@@ -338,7 +355,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
       buildMediatedRequestEntity(OPEN_ITEM_ARRIVED)
     );
 
-    ResultActions resultActions = sendItemInTransit("A14837334314")
+    ResultActions resultActions = sendItemInTransit("A14837334314", request)
       .andExpect(status().isOk())
       .andExpect(jsonPath("inTransitDate", notNullValue()))
       .andExpect(jsonPath("instance.id", is("69640328-788e-43fc-9c3c-af39e243f3b7")))
@@ -401,17 +418,19 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @Test
   @SneakyThrows
   void sendItemInTransitItemNotFound() {
-    mediatedRequestsRepository.save(
+    MediatedRequestEntity request = mediatedRequestsRepository.save(
       buildMediatedRequestEntity(OPEN_ITEM_ARRIVED).withItemId(UUID.fromString(NOT_FOUND_ITEM_UUID))
     );
 
-    sendItemInTransit("A14837334314").andExpect(status().isNotFound());
+    sendItemInTransit("A14837334314", request).andExpect(status().isNotFound());
   }
 
   @Test
   @SneakyThrows
   void sendItemInTransitFailsWhenMediatedRequestIsNotFoundByItemBarcode() {
-    sendItemInTransit("random-barcode")
+    sendItemInTransit("random-barcode", new MediatedRequestEntity()
+      .withInstanceId(UUID.randomUUID())
+      .withItemId(UUID.randomUUID()))
       .andExpect(status().isNotFound())
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
       .andExpect(jsonPath("errors[0].type").value("EntityNotFoundException"))
@@ -422,9 +441,10 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @Test
   @SneakyThrows
   void sendItemInTransitFailsWhenMediatedRequestIsNotFoundByStatus() {
-    mediatedRequestsRepository.save(buildMediatedRequestEntity(OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT)); // wrong status
+    MediatedRequestEntity request = mediatedRequestsRepository.save(
+      buildMediatedRequestEntity(OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT));// wrong status
 
-    sendItemInTransit("A14837334314")
+    sendItemInTransit("A14837334314", request)
       .andExpect(status().isNotFound())
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
       .andExpect(jsonPath("errors[0].type").value("EntityNotFoundException"))
@@ -433,7 +453,18 @@ class MediatedRequestActionsApiTest extends BaseIT {
   }
 
   @SneakyThrows
-  private ResultActions sendItemInTransit(String itemBarcode) {
+  private ResultActions sendItemInTransit(String itemBarcode, MediatedRequestEntity request) {
+    wireMockServer.stubFor(WireMock.get(urlMatching("/search/instances" + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new SearchInstancesResponse().addInstancesItem(
+          new SearchInstance()
+            .id(request.getInstanceId().toString())
+            .tenantId(TENANT_ID_CONSORTIUM)
+            .addItemsItem(new SearchItem()
+              .id(request.getItemId().toString())
+              .tenantId(TENANT_ID_CONSORTIUM))),
+        HttpStatus.SC_OK)));
+
     return mockMvc.perform(
       post(SEND_ITEM_IN_TRANSIT_URL)
         .headers(defaultHeaders())
