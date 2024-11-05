@@ -175,11 +175,13 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     var searchInstances = searchClient.searchInstance(request.getInstanceId()).getInstances();
     if (searchInstances == null || searchInstances.isEmpty()) {
       log.info("extendMediatedRequest:: searchInstances not found");
+      return;
     }
     var searchInstance = searchInstances.get(0);
     if (searchInstance == null || searchInstance.getItems() == null) {
       log.info("extendMediatedRequest:: searchItems not found: {}",
         searchInstance);
+      return;
     }
     searchInstance.getItems().stream()
       .filter(searchItem -> searchItem.getId().equals(request.getItemId()))

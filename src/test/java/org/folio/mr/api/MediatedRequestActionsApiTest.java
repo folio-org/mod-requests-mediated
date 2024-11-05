@@ -46,6 +46,8 @@ import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.test.types.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
@@ -423,6 +425,53 @@ class MediatedRequestActionsApiTest extends BaseIT {
     MediatedRequestEntity request = mediatedRequestsRepository.save(
       buildMediatedRequestEntity(OPEN_ITEM_ARRIVED).withItemId(UUID.fromString(NOT_FOUND_ITEM_UUID))
     );
+
+    sendItemInTransit("A14837334314", request).andExpect(status().isNotFound());
+  }
+
+  @SneakyThrows
+  @ParameterizedTest
+  @NullAndEmptySource
+  void sendItemInTransitShouldReturnNotFoundIfNoSearchInstancesFound(List<SearchInstance> instances) {
+    var request = mediatedRequestsRepository.save(buildMediatedRequestEntity(OPEN_ITEM_ARRIVED)
+      .withItemId(UUID.fromString(NOT_FOUND_ITEM_UUID)));
+
+    var instanceId = request.getInstanceId().toString();
+    wireMockServer.stubFor(WireMock.get(urlMatching(format(SEARCH_INSTANCES_URL, instanceId)))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new SearchInstancesResponse().instances(instances), HttpStatus.SC_OK)));
+
+    mockMvc.perform(
+      post(SEND_ITEM_IN_TRANSIT_URL)
+        .headers(defaultHeaders())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(asJsonString(new SendItemInTransitRequest()
+          .itemBarcode(request.getItemBarcode()))));
+
+    sendItemInTransit("A14837334314", request).andExpect(status().isNotFound());
+  }
+
+  @SneakyThrows
+  @ParameterizedTest
+  @NullAndEmptySource
+  void sendItemInTransitShouldReturnNotFoundIfNoSearchItemsFound(List<SearchItem> items) {
+    var request = mediatedRequestsRepository.save(buildMediatedRequestEntity(OPEN_ITEM_ARRIVED)
+      .withItemId(UUID.fromString(NOT_FOUND_ITEM_UUID)));
+
+    var instanceId = request.getInstanceId().toString();
+    wireMockServer.stubFor(WireMock.get(urlMatching(format(SEARCH_INSTANCES_URL, instanceId)))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new SearchInstancesResponse().instances(
+        List.of(new SearchInstance().id(instanceId)
+          .tenantId(TENANT_ID_CONSORTIUM)
+          .items(items))), HttpStatus.SC_OK)));
+
+    mockMvc.perform(
+      post(SEND_ITEM_IN_TRANSIT_URL)
+        .headers(defaultHeaders())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(asJsonString(new SendItemInTransitRequest()
+          .itemBarcode(request.getItemBarcode()))));
 
     sendItemInTransit("A14837334314", request).andExpect(status().isNotFound());
   }
