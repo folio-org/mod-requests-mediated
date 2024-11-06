@@ -16,6 +16,7 @@ import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
+import org.folio.mr.domain.dto.SearchInstance;
 import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.entity.MediatedRequestStep;
@@ -51,7 +52,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   private final FolioExecutionContext folioExecutionContext;
   private final SearchService searchService;
   private final SystemUserScopedExecutionService executionService;
-  private final SearchClient searchClient;
+//  private final SearchClient searchClient;
 
   @Override
   public void confirm(UUID id) {
@@ -172,18 +173,11 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
   private void extendMediatedRequest(MediatedRequest request) {
     log.info("extendMediatedRequest:: extending mediated request with additional item details");
-    var searchInstances = searchClient.searchInstance(request.getInstanceId()).getInstances();
-    if (searchInstances == null || searchInstances.isEmpty()) {
-      log.info("extendMediatedRequest:: searchInstances not found");
-      return;
-    }
-    var searchInstance = searchInstances.get(0);
-    if (searchInstance == null || searchInstance.getItems() == null) {
-      log.info("extendMediatedRequest:: searchItems not found: {}",
-        searchInstance);
-      return;
-    }
-    searchInstance.getItems().stream()
+
+    searchService.searchInstance(request.getInstanceId())
+      .map(SearchInstance::getItems)
+      .stream()
+      .flatMap(List::stream)
       .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
       .findFirst()
       .ifPresent(searchItem -> fillItemDetailsFromInventoryItem(request, searchItem));

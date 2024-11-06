@@ -1,9 +1,11 @@
 package org.folio.mr.service.impl;
 
 import java.util.Collection;
+import java.util.Optional;
 
 import org.folio.mr.client.SearchClient;
 import org.folio.mr.domain.dto.ConsortiumItem;
+import org.folio.mr.domain.dto.SearchInstance;
 import org.folio.mr.service.ConsortiumService;
 import org.folio.mr.service.SearchService;
 import org.folio.spring.service.SystemUserScopedExecutionService;
@@ -28,5 +30,15 @@ public class SearchServiceImpl implements SearchService {
     return executionService.executeSystemUserScoped(consortiumService.getCentralTenantId(),
         () -> searchClient.searchItems(instanceId, tenantId))
       .getItems();
+  }
+
+  @Override
+  public Optional<SearchInstance> searchInstance(String instanceId) {
+    log.info("searchInstance:: parameters instanceId: {}", instanceId);
+
+    return Optional.ofNullable(searchClient.searchInstance(instanceId).getInstances())
+      .stream()
+      .flatMap(Collection::stream)
+      .findFirst();
   }
 }
