@@ -11,7 +11,7 @@
             "GET"
           ],
           "pathPattern": "/requests-mediated/mediated-requests",
-          "permissionsRequired": ["requests-mediated.mediated-requests.collection.get"],
+          "permissionsRequired": ["requests-mediated.mediated-request.collection.get"],
           "modulePermissions": ["requests-mediated.internal.fetch-request-details.all"]
         },
         {
@@ -19,25 +19,25 @@
             "GET"
           ],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
-          "permissionsRequired": ["requests-mediated.mediated-requests.item.get"],
+          "permissionsRequired": ["requests-mediated.mediated-request.item.get"],
           "modulePermissions": ["requests-mediated.internal.fetch-request-details.all"]
         },
         {
           "methods": ["POST"],
           "pathPattern": "/requests-mediated/mediated-requests",
-          "permissionsRequired": ["requests-mediated.mediated-requests.item.post"],
+          "permissionsRequired": ["requests-mediated.mediated-request.item.post"],
           "modulePermissions": ["requests-mediated.internal.fetch-request-details.all"]
         },
         {
           "methods": ["PUT"],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
-          "permissionsRequired": ["requests-mediated.mediated-requests.item.put"],
+          "permissionsRequired": ["requests-mediated.mediated-request.item.put"],
           "modulePermissions": ["requests-mediated.internal.fetch-request-details.all"]
         },
         {
           "methods": ["DELETE"],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
-          "permissionsRequired": ["requests-mediated.mediated-requests.item.delete"],
+          "permissionsRequired": ["requests-mediated.mediated-request.item.delete"],
           "modulePermissions": []
         }
       ]
@@ -91,7 +91,7 @@
             "POST"
           ],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}/confirm",
-          "permissionsRequired": ["requests-mediated.mediated-requests.confirm.post"],
+          "permissionsRequired": ["requests-mediated.mediated-request.confirm.post"],
           "modulePermissions": [
             "inventory-storage.instances.item.get",
             "inventory-storage.instances.collection.get",
@@ -143,34 +143,29 @@
   ],
   "permissionSets" : [
     {
-      "permissionName": "requests-mediated.mediated-requests.collection.get",
+      "permissionName": "requests-mediated.mediated-request.collection.get",
       "displayName": "requests-mediated - get mediated requests",
-      "description": "Get mediated requests",
-      "replaces": ["requests-mediated.mediated-request.collection.get"]
+      "description": "Get mediated requests"
     },
     {
-      "permissionName": "requests-mediated.mediated-requests.item.get",
+      "permissionName": "requests-mediated.mediated-request.item.get",
       "displayName": "requests-mediated - get mediated request by ID",
-      "description": "Get mediated request",
-      "replaces": ["requests-mediated.mediated-request.item.get"]
+      "description": "Get mediated request"
     },
     {
-      "permissionName": "requests-mediated.mediated-requests.item.post",
+      "permissionName": "requests-mediated.mediated-request.item.post",
       "displayName": "requests-mediated - create mediated request",
-      "description": "Create mediated request",
-      "replaces": ["requests-mediated.mediated-request.item.post"]
+      "description": "Create mediated request"
     },
     {
-      "permissionName": "requests-mediated.mediated-requests.item.put",
+      "permissionName": "requests-mediated.mediated-request.item.put",
       "displayName": "requests-mediated - update mediated request",
-      "description": "Update mediated request",
-      "replaces": ["requests-mediated.mediated-request.item.put"]
+      "description": "Update mediated request"
     },
     {
-      "permissionName": "requests-mediated.mediated-requests.item.delete",
+      "permissionName": "requests-mediated.mediated-request.item.delete",
       "displayName": "requests-mediated - remove mediated request",
-      "description": "Remove mediated request",
-      "replaces": ["requests-mediated.mediated-request.item.delete"]
+      "description": "Remove mediated request"
     },
     {
       "permissionName": "requests-mediated.confirm-item-arrival.post",
@@ -183,10 +178,9 @@
       "description": "Send item in transit"
     },
     {
-      "permissionName": "requests-mediated.mediated-requests.confirm.post",
+      "permissionName": "requests-mediated.mediated-request.confirm.post",
       "displayName": "requests-mediated - confirm mediated request",
-      "description": "Confirm mediated request",
-      "replaces": ["requests-mediated.mediated-request.confirm.post"]
+      "description": "Confirm mediated request"
     },
     {
       "permissionName": "requests-mediated.mediated-requests.decline.execute",
