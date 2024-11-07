@@ -52,7 +52,6 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   private final FolioExecutionContext folioExecutionContext;
   private final SearchService searchService;
   private final SystemUserScopedExecutionService executionService;
-//  private final SearchClient searchClient;
 
   @Override
   public void confirm(UUID id) {
