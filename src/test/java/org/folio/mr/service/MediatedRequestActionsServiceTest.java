@@ -98,11 +98,6 @@ class MediatedRequestActionsServiceTest {
       .thenReturn(updatedRequest);
     when(mediatedRequestMapper.mapEntityToDto(any(MediatedRequestEntity.class)))
       .thenReturn(mappedRequest);
-    when(searchClient.searchInstance(anyString()))
-      .thenReturn(new SearchInstancesResponse()
-        .instances(List.of(new SearchInstance().items(List.of(
-          new SearchItem().id(initialRequest.getItemId().toString()))))));
-
     // when
     MediatedRequest result = mediatedRequestActionsService.confirmItemArrival(itemBarcode);
 
@@ -142,10 +137,6 @@ class MediatedRequestActionsServiceTest {
       .thenReturn(updatedRequest);
     when(mediatedRequestMapper.mapEntityToDto(any(MediatedRequestEntity.class)))
       .thenReturn(mappedRequest);
-    when(searchClient.searchInstance(anyString()))
-      .thenReturn(new SearchInstancesResponse()
-        .instances(List.of(new SearchInstance().items(List.of(
-          new SearchItem().id(initialRequest.getItemId().toString()))))));
 
     // when
     MediatedRequest result = mediatedRequestActionsService.sendItemInTransit(itemBarcode);
