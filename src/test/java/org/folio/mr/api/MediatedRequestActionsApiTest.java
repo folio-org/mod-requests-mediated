@@ -73,7 +73,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
   private static final String ECS_TLR_URL = "/tlr/ecs-tlr";
   private static final String SEARCH_ITEMS_URL = "/search/consortium/items";
   private static final String NOT_FOUND_ITEM_UUID = "f13ef24f-d0fe-4aa8-901a-bfad3f0e6cae";
-  private static final String SEARCH_INSTANCES_ULR = "/search/instances";
+  private static final String SEARCH_INSTANCES_URL = "/search/instances";
 
   @Autowired
   private MediatedRequestsRepository mediatedRequestsRepository;
@@ -295,7 +295,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .andExpect(jsonPath("requester.middleName", is("X")))
       .andExpect(jsonPath("requester.lastName", is("Mediated")));
 
-    wireMockServer.verify(1, getRequestedFor(urlPathMatching(SEARCH_INSTANCES_ULR))
+    wireMockServer.verify(1, getRequestedFor(urlPathMatching(SEARCH_INSTANCES_URL))
       .withQueryParam("query", equalTo("id==" + request.getInstanceId()))
       .withQueryParam("expandAll", equalTo("true"))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
@@ -342,7 +342,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @SneakyThrows
   private ResultActions confirmItemArrival(String itemBarcode, MediatedRequestEntity request) {
     var instanceId = request.getInstanceId().toString();
-    wireMockServer.stubFor(WireMock.get(urlPathMatching(SEARCH_INSTANCES_ULR))
+    wireMockServer.stubFor(WireMock.get(urlPathMatching(SEARCH_INSTANCES_URL))
       .withQueryParam("query", equalTo("id==" + instanceId))
       .withQueryParam("expandAll", equalTo("true"))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
@@ -447,7 +447,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .withItemId(UUID.fromString(NOT_FOUND_ITEM_UUID)));
 
     var instanceId = request.getInstanceId().toString();
-    wireMockServer.stubFor(WireMock.get(urlPathMatching(SEARCH_INSTANCES_ULR))
+    wireMockServer.stubFor(WireMock.get(urlPathMatching(SEARCH_INSTANCES_URL))
       .withQueryParam("query", equalTo("id==" + instanceId))
       .withQueryParam("expandAll", equalTo("true"))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
@@ -471,7 +471,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .withItemId(UUID.fromString(NOT_FOUND_ITEM_UUID)));
 
     var instanceId = request.getInstanceId().toString();
-    wireMockServer.stubFor(WireMock.get(urlPathMatching(SEARCH_INSTANCES_ULR))
+    wireMockServer.stubFor(WireMock.get(urlPathMatching(SEARCH_INSTANCES_URL))
       .withQueryParam("query", equalTo("id==" + instanceId))
       .withQueryParam("expandAll", equalTo("true"))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
@@ -520,7 +520,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @SneakyThrows
   private ResultActions sendItemInTransit(String itemBarcode, MediatedRequestEntity request) {
     var instanceId = request.getInstanceId().toString();
-    wireMockServer.stubFor(WireMock.get(urlPathMatching(SEARCH_INSTANCES_ULR))
+    wireMockServer.stubFor(WireMock.get(urlPathMatching(SEARCH_INSTANCES_URL))
       .withQueryParam("query", equalTo("id==" + instanceId))
       .withQueryParam("expandAll", equalTo("true"))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
