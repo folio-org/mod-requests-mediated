@@ -4,14 +4,15 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CONFIRMATION;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
-import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequestEntity;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -31,14 +32,14 @@ import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.ConsortiumItems;
+import org.folio.mr.domain.dto.EcsTlr;
+import org.folio.mr.domain.dto.Items;
 import org.folio.mr.domain.dto.MediatedRequest;
+import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.SearchInstance;
 import org.folio.mr.domain.dto.SearchInstancesResponse;
 import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
-import org.folio.mr.domain.dto.EcsTlr;
-import org.folio.mr.domain.dto.Items;
-import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.entity.MediatedRequestStep;
 import org.folio.mr.repository.MediatedRequestWorkflowLogRepository;
@@ -293,6 +294,13 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .andExpect(jsonPath("requester.firstName", is("Requester")))
       .andExpect(jsonPath("requester.middleName", is("X")))
       .andExpect(jsonPath("requester.lastName", is("Mediated")));
+
+    wireMockServer.verify(1, getRequestedFor(urlPathMatching(SEARCH_INSTANCES_ULR))
+      .withQueryParam("query", equalTo("id==" + request.getInstanceId()))
+      .withQueryParam("expandAll", equalTo("true"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(ITEMS_URL + "/" + request.getItemId()))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
 
     MediatedRequestEntity updatedRequest = mediatedRequestsRepository.findById(request.getId())
       .orElseThrow();
