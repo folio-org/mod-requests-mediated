@@ -144,24 +144,23 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     }
 
     if (request.getItemId() != null) {
-        searchInstance.getItems().stream()
-          .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
-          .findFirst()
-          .ifPresent(searchItem -> {
-            log.info("buildRequestContext:: searchItem found {}", searchItem.getId());
-            String tenantId = searchItem.getTenantId();
-            executionService.executeAsyncSystemUserScoped(tenantId, () -> {
-              var inventoryItem = inventoryService.fetchItem(searchItem.getId());
-              if (inventoryItem != null) {
-                var location = inventoryService.fetchLocation(inventoryItem.getEffectiveLocationId());
-                var library = inventoryService.fetchLibrary(location.getLibraryId());
-                contextBuilder.item(inventoryItem)
-                  .location(location)
-                  .library(library);
-              }
-            });
+      searchInstance.getItems().stream()
+        .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
+        .findFirst()
+        .ifPresent(searchItem -> {
+          log.info("buildRequestContext:: searchItem found {}", searchItem.getId());
+          String tenantId = searchItem.getTenantId();
+          executionService.executeAsyncSystemUserScoped(tenantId, () -> {
+            var inventoryItem = inventoryService.fetchItem(searchItem.getId());
+            if (inventoryItem != null) {
+              var location = inventoryService.fetchLocation(inventoryItem.getEffectiveLocationId());
+              var library = inventoryService.fetchLibrary(location.getLibraryId());
+              contextBuilder.item(inventoryItem)
+                .location(location)
+                .library(library);
+            }
+          });
         });
-
     }
 
     if (request.getPickupServicePointId() != null) {
