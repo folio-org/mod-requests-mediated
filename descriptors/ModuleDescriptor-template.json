@@ -94,6 +94,7 @@
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}/confirm",
           "permissionsRequired": ["requests-mediated.mediated-request.confirm.post"],
           "modulePermissions": [
+            "user-tenants.collection.get",
             "inventory-storage.instances.item.get",
             "inventory-storage.instances.collection.get",
             "inventory-storage.items.item.get",
