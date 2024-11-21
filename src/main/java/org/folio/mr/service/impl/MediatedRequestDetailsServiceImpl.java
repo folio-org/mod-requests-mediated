@@ -5,6 +5,7 @@ import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CONFIRMATION;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 import org.folio.mr.client.SearchClient;
 import org.folio.mr.domain.dto.Instance;
@@ -36,6 +37,7 @@ import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestDetailsService;
 import org.folio.mr.service.MetadataService;
 import org.folio.mr.service.UserService;
+import org.folio.spring.client.UsersClient;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
@@ -119,14 +121,19 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     log.info("buildRequestContext:: building request context");
     var contextBuilder = MediatedRequestContext.builder().request(request);
 
-    User requester = userService.fetchUser(request.getRequesterId());
+    User requester = Optional.ofNullable(userService.fetchUser(request.getRequesterId()))
+      .orElseGet(() -> createFallbackUser(request.getRequester()));
     UserGroup requesterGroup = userService.fetchUserGroup(requester.getPatronGroup());
 
     var searchInstances = searchClient.searchInstance(request.getInstanceId())
       .getInstances();
     if (searchInstances == null || searchInstances.isEmpty()) {
       log.info("buildRequestContext:: searchInstances not found");
-      return contextBuilder.instance(null).build();
+      return contextBuilder.instance(
+        new Instance()
+          .hrid(request.getInstance().getHrid())
+          .title(request.getInstance().getTitle()))
+        .build();
     }
     var searchInstance = searchInstances.get(0);
     executionService.executeAsyncSystemUserScoped(searchInstance.getTenantId(), () -> {
@@ -138,9 +145,21 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
     if (request.getProxyUserId() != null) {
       User proxy = userService.fetchUser(request.getProxyUserId());
-      UserGroup proxyGroup = userService.fetchUserGroup(proxy.getPatronGroup());
-      contextBuilder.proxy(proxy)
-        .proxyGroup(proxyGroup);
+      if (proxy != null) {
+        UserGroup proxyGroup = userService.fetchUserGroup(proxy.getPatronGroup());
+        contextBuilder.proxy(proxy)
+          .proxyGroup(proxyGroup);
+      } else {
+        log.info("buildRequestContext:: proxy {} not found", request.getProxyUserId());
+        MediatedRequestProxy medReqProxy = request.getProxy();
+        contextBuilder.proxy(
+          new User()
+            .barcode(medReqProxy.getBarcode())
+            .personal(new UserPersonal()
+              .firstName(medReqProxy.getFirstName())
+              .lastName(medReqProxy.getLastName())
+              .middleName(medReqProxy.getMiddleName())));
+      }
     }
 
     if (request.getItemId() != null) {
@@ -153,11 +172,16 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
           executionService.executeAsyncSystemUserScoped(tenantId, () -> {
             var inventoryItem = inventoryService.fetchItem(searchItem.getId());
             if (inventoryItem != null) {
+              log.info("buildRequestContext:: inventoryItem found {}", request.getItemId());
               var location = inventoryService.fetchLocation(inventoryItem.getEffectiveLocationId());
               var library = inventoryService.fetchLibrary(location.getLibraryId());
               contextBuilder.item(inventoryItem)
                 .location(location)
                 .library(library);
+            } else if (request.getItem() != null) {
+              log.info("buildRequestContext:: inventoryItem not found");
+              contextBuilder.item(new Item()
+                .barcode(request.getItem().getBarcode()));
             }
           });
         });
@@ -170,6 +194,14 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     log.info("buildRequestContext:: request context is built");
 
     return contextBuilder.build();
+  }
+
+  private User createFallbackUser(MediatedRequestRequester mediatedRequestRequester) {
+    return new User().barcode(mediatedRequestRequester.getBarcode())
+      .personal(new UserPersonal()
+        .firstName(mediatedRequestRequester.getFirstName())
+        .lastName(mediatedRequestRequester.getLastName())
+        .middleName(mediatedRequestRequester.getMiddleName()));
   }
 
   private static void addRequester(MediatedRequestContext context) {
