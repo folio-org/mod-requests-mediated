@@ -26,11 +26,15 @@ public class EcsRequestServiceImpl implements EcsRequestService {
   public EcsTlr create(MediatedRequestEntity mediatedRequest) {
     log.info("confirm:: creating ECS TLR for mediated request {}", mediatedRequest::getId);
     return executionService.executeSystemUserScoped(consortiumService.getCentralTenantId(),
-      () -> ecsTlrClient.post(buildEcsTlr(mediatedRequest)));
+      () -> ecsTlrClient.post(buildEcsTlr(consortiumService.getCurrentTenantId(),
+        mediatedRequest)));
   }
 
-  private static EcsTlr buildEcsTlr(MediatedRequestEntity mediatedRequest) {
+  private static EcsTlr buildEcsTlr(String primaryRequestTenantId,
+    MediatedRequestEntity mediatedRequest) {
+
     return new EcsTlr()
+      .primaryRequestTenantId(primaryRequestTenantId)
       .requestType(EcsTlr.RequestTypeEnum.fromValue(mediatedRequest.getRequestType().getValue()))
       .requestLevel(EcsTlr.RequestLevelEnum.fromValue(mediatedRequest.getRequestLevel().getValue()))
       .fulfillmentPreference(EcsTlr.FulfillmentPreferenceEnum.fromValue(
