@@ -136,6 +136,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
         .requesterGroup(requesterGroup);
     } else {
       var searchInstance = searchInstances.get(0);
+      log.info("buildRequestContext:: searchInstance: {}", searchInstance);
       executionService.executeAsyncSystemUserScoped(searchInstance.getTenantId(), () -> {
         Instance instance = inventoryService.fetchInstance(searchInstance.getId());
         contextBuilder.instance(instance)
@@ -143,13 +144,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
           .requesterGroup(requesterGroup);
       });
       if (request.getItemId() != null) {
+        log.info("buildRequestContext:: itemId is not null");
         searchInstance.getItems().stream()
           .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
           .findFirst()
-          .ifPresent(searchItem -> {
+          .ifPresentOrElse(searchItem -> {
             log.info("buildRequestContext:: searchItem found {}", searchItem.getId());
-            String tenantId = searchItem.getTenantId();
-            executionService.executeAsyncSystemUserScoped(tenantId, () -> {
+            executionService.executeAsyncSystemUserScoped(searchItem.getTenantId(), () -> {
               var inventoryItem = inventoryService.fetchItem(searchItem.getId());
               if (inventoryItem != null) {
                 log.info("buildRequestContext:: inventoryItem found {}", request.getItemId());
@@ -164,7 +165,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
                 contextBuilder.item(new Item().barcode(request.getItem().getBarcode()));
               }
             });
-          });
+          }, () -> contextBuilder.item(new Item().barcode(request.getItem().getBarcode())));
       }
     }
 
