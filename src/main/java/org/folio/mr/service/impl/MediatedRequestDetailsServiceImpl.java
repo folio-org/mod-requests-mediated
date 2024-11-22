@@ -153,12 +153,14 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
               var inventoryItem = inventoryService.fetchItem(searchItem.getId());
               if (inventoryItem != null) {
                 log.info("buildRequestContext:: inventoryItem found {}", request.getItemId());
+                log.info("buildRequestContext:: inventoryItem found {}", inventoryItem);
                 var location = inventoryService.fetchLocation(inventoryItem.getEffectiveLocationId());
                 var library = inventoryService.fetchLibrary(location.getLibraryId());
                 contextBuilder.item(inventoryItem)
                   .location(location)
                   .library(library);
               } else {
+                log.info("buildRequestContext:: inventoryItem not found {}", request.getItemId());
                 contextBuilder.item(new Item().barcode(request.getItem().getBarcode()));
               }
             });
