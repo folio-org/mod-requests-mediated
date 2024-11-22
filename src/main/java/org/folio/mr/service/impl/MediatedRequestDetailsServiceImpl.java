@@ -121,27 +121,50 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     log.info("buildRequestContext:: building request context");
     var contextBuilder = MediatedRequestContext.builder().request(request);
 
-    User requester = Optional.ofNullable(userService.fetchUser(request.getRequesterId()))
+    var requester = Optional.ofNullable(userService.fetchUser(request.getRequesterId()))
       .orElseGet(() -> createFallbackUser(request.getRequester()));
-    UserGroup requesterGroup = userService.fetchUserGroup(requester.getPatronGroup());
-
+    var requesterGroup = userService.fetchUserGroup(requester.getPatronGroup());
     var searchInstances = searchClient.searchInstance(request.getInstanceId())
       .getInstances();
     if (searchInstances == null || searchInstances.isEmpty()) {
       log.info("buildRequestContext:: searchInstances not found");
-      return contextBuilder.instance(
+      contextBuilder.instance(
         new Instance()
           .hrid(request.getInstance().getHrid())
           .title(request.getInstance().getTitle()))
-        .build();
-    }
-    var searchInstance = searchInstances.get(0);
-    executionService.executeAsyncSystemUserScoped(searchInstance.getTenantId(), () -> {
+        .requester(requester)
+        .requesterGroup(requesterGroup);
+    } else {
+      var searchInstance = searchInstances.get(0);
+      executionService.executeAsyncSystemUserScoped(searchInstance.getTenantId(), () -> {
         Instance instance = inventoryService.fetchInstance(searchInstance.getId());
         contextBuilder.instance(instance)
           .requester(requester)
           .requesterGroup(requesterGroup);
       });
+      if (request.getItemId() != null) {
+        searchInstance.getItems().stream()
+          .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
+          .findFirst()
+          .ifPresent(searchItem -> {
+            log.info("buildRequestContext:: searchItem found {}", searchItem.getId());
+            String tenantId = searchItem.getTenantId();
+            executionService.executeAsyncSystemUserScoped(tenantId, () -> {
+              var inventoryItem = inventoryService.fetchItem(searchItem.getId());
+              if (inventoryItem != null) {
+                log.info("buildRequestContext:: inventoryItem found {}", request.getItemId());
+                var location = inventoryService.fetchLocation(inventoryItem.getEffectiveLocationId());
+                var library = inventoryService.fetchLibrary(location.getLibraryId());
+                contextBuilder.item(inventoryItem)
+                  .location(location)
+                  .library(library);
+              } else {
+                contextBuilder.item(new Item().barcode(request.getItem().getBarcode()));
+              }
+            });
+          });
+      }
+    }
 
     if (request.getProxyUserId() != null) {
       User proxy = userService.fetchUser(request.getProxyUserId());
@@ -160,31 +183,6 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
               .lastName(medReqProxy.getLastName())
               .middleName(medReqProxy.getMiddleName())));
       }
-    }
-
-    if (request.getItemId() != null) {
-      searchInstance.getItems().stream()
-        .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
-        .findFirst()
-        .ifPresent(searchItem -> {
-          log.info("buildRequestContext:: searchItem found {}", searchItem.getId());
-          String tenantId = searchItem.getTenantId();
-          executionService.executeAsyncSystemUserScoped(tenantId, () -> {
-            var inventoryItem = inventoryService.fetchItem(searchItem.getId());
-            if (inventoryItem != null) {
-              log.info("buildRequestContext:: inventoryItem found {}", request.getItemId());
-              var location = inventoryService.fetchLocation(inventoryItem.getEffectiveLocationId());
-              var library = inventoryService.fetchLibrary(location.getLibraryId());
-              contextBuilder.item(inventoryItem)
-                .location(location)
-                .library(library);
-            } else if (request.getItem() != null) {
-              log.info("buildRequestContext:: inventoryItem not found");
-              contextBuilder.item(new Item()
-                .barcode(request.getItem().getBarcode()));
-            }
-          });
-        });
     }
 
     if (request.getPickupServicePointId() != null) {
