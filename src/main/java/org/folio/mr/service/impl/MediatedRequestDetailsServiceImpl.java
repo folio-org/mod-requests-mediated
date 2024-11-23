@@ -40,6 +40,7 @@ import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestDetailsService;
 import org.folio.mr.service.MetadataService;
 import org.folio.mr.service.UserService;
+import org.folio.mr.service.impl.MediatedRequestDetailsServiceImpl.MediatedRequestContext.MediatedRequestContextBuilder;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
@@ -129,8 +130,8 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
     var searchInstances = searchClient.searchInstance(request.getInstanceId()).getInstances();
     handleSearchInstances(searchInstances, contextBuilder, request);
-    handleProxyUser(request, contextBuilder);
-    handlePickupServicePoint(request, contextBuilder);
+    fetchProxyUser(request, contextBuilder);
+    fetchPickupServicePoint(request, contextBuilder);
 
     log.info("buildRequestContext:: request context is built");
     return contextBuilder.build();
@@ -157,8 +158,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private void fetchInventoryInstance(SearchInstance searchInstance,
-    MediatedRequestDetailsServiceImpl.MediatedRequestContext.MediatedRequestContextBuilder ctxBuilder,
-    MediatedRequest request) {
+    MediatedRequestContextBuilder ctxBuilder, MediatedRequest request) {
 
     log.info("fetchInventoryInstance: searchInstance: {}", searchInstance);
     executionService.executeAsyncSystemUserScoped(searchInstance.getTenantId(), () -> {
@@ -178,8 +178,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     }
   }
 
-  private void fetchInventoryItem(SearchItem searchItem,
-    MediatedRequestDetailsServiceImpl.MediatedRequestContext.MediatedRequestContextBuilder ctxBuilder,
+  private void fetchInventoryItem(SearchItem searchItem, MediatedRequestContextBuilder ctxBuilder,
     MediatedRequest request) {
 
     log.info("fetchInventoryItem:: fetching inventory item {}", searchItem.getId());
@@ -197,8 +196,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     });
   }
 
-  private void handleProxyUser(MediatedRequest request,
-    MediatedRequestDetailsServiceImpl.MediatedRequestContext.MediatedRequestContextBuilder ctxBuilder) {
+  private void fetchProxyUser(MediatedRequest request, MediatedRequestContextBuilder ctxBuilder) {
 
     if (request.getProxyUserId() != null) {
       User proxy = userService.fetchUser(request.getProxyUserId());
@@ -217,8 +215,8 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     }
   }
 
-  private void handlePickupServicePoint(MediatedRequest request,
-    MediatedRequestDetailsServiceImpl.MediatedRequestContext.MediatedRequestContextBuilder ctxBuilder) {
+  private void fetchPickupServicePoint(MediatedRequest request,
+    MediatedRequestContextBuilder ctxBuilder) {
 
     if (request.getPickupServicePointId() != null) {
       ServicePoint servicePoint = inventoryService.fetchServicePoint(request.getPickupServicePointId());
@@ -534,7 +532,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   @Builder
-  private record MediatedRequestContext(MediatedRequest request, User requester,
+  public record MediatedRequestContext(MediatedRequest request, User requester,
     UserGroup requesterGroup, User proxy, UserGroup proxyGroup, Item item,
     Instance instance, ServicePoint pickupServicePoint, Location location, Library library) {
   }
