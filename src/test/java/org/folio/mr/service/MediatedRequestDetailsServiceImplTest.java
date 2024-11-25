@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import org.folio.mr.client.SearchClient;
 import org.folio.mr.domain.dto.Instance;
