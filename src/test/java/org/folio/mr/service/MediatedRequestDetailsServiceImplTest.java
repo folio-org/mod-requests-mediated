@@ -80,7 +80,7 @@ class MediatedRequestDetailsServiceImplTest {
   }
 
   @Test
-  public void shouldFallbackToItemAndRequesterDetailsWhenSearchInstanceFindsNoItem() {
+  void shouldFallbackToItemAndRequesterDetailsWhenSearchInstanceFindsNoItem() {
     var originalRequest = new MediatedRequest()
       .requester(new MediatedRequestRequester()
         .barcode("111")
