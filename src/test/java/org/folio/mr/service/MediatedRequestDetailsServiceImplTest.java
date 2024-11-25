@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
+import java.util.List;
 
 import org.folio.mr.client.SearchClient;
 import org.folio.mr.domain.dto.Instance;
@@ -13,15 +14,17 @@ import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.MediatedRequestInstance;
 import org.folio.mr.domain.dto.MediatedRequestItem;
 import org.folio.mr.domain.dto.MediatedRequestRequester;
+import org.folio.mr.domain.dto.SearchInstance;
 import org.folio.mr.domain.dto.SearchInstancesResponse;
 import org.folio.mr.service.impl.MediatedRequestDetailsServiceImpl;
 import org.folio.spring.service.SystemUserScopedExecutionService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class MediatedRequestDetailsServiceImplTest {
 
   @Mock
@@ -39,13 +42,8 @@ class MediatedRequestDetailsServiceImplTest {
   @InjectMocks
   private MediatedRequestDetailsServiceImpl service;
 
-  @BeforeEach
-  public void setUp() {
-    MockitoAnnotations.initMocks(this);
-  }
-
   @Test
-  public void shouldFallbackToInstanceAndRequesterDetailsWhenSearchInstanceFindsNothing() {
+  void shouldFallbackToInstanceAndRequesterDetailsWhenSearchInstanceFindsNothing() {
     var originalRequest = new MediatedRequest()
       .requester(new MediatedRequestRequester()
         .barcode("111")
@@ -60,10 +58,8 @@ class MediatedRequestDetailsServiceImplTest {
       Collections.emptyList());
 
     when(searchClient.searchInstance(any())).thenReturn(searchInstanceResponse);
-    when(inventoryService.fetchInstance(any())).thenReturn(new Instance());
 
     var returnedRequest = service.addRequestDetailsForGet(originalRequest);
-
     assertThat(returnedRequest.getRequester().getBarcode(), is(
       originalRequest.getRequester().getBarcode()));
     assertThat(returnedRequest.getRequester().getFirstName(), is(

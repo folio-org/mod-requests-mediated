@@ -149,10 +149,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
     if (searchInstances == null || searchInstances.isEmpty()) {
       log.info("handleSearchInstances: searchInstances not found");
-      MediatedRequestInstance requestInstance = request.getInstance();
       ctxBuilder.instance(new Instance()
-        .hrid(requestInstance.getHrid())
-        .title(requestInstance.getTitle())
+        .hrid(request.getInstance().getHrid())
+        .title(request.getInstance().getTitle())
         .contributors(Collections.emptyList())
         .publication(Collections.emptyList())
         .editions(Collections.emptySet()));
