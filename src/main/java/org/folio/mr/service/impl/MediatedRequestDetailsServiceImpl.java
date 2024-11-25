@@ -5,6 +5,7 @@ import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CONFIRMATION;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -151,7 +152,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       MediatedRequestInstance requestInstance = request.getInstance();
       ctxBuilder.instance(new Instance()
         .hrid(requestInstance.getHrid())
-        .title(requestInstance.getTitle()));
+        .title(requestInstance.getTitle())
+        .contributors(Collections.emptyList())
+        .publication(Collections.emptyList())
+        .editions(Collections.emptySet()));
     } else {
       fetchInventoryInstance(searchInstances.get(0), ctxBuilder, request);
     }
