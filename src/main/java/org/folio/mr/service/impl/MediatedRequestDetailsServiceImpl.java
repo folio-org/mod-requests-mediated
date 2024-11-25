@@ -7,11 +7,11 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CO
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.folio.mr.client.SearchClient;
 import org.folio.mr.domain.dto.Instance;
-import org.folio.mr.domain.dto.InstanceContributorsInner;
 import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.Library;
 import org.folio.mr.domain.dto.Location;
@@ -144,20 +144,23 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private void handleSearchInstances(List<SearchInstance> searchInstances,
-    MediatedRequestDetailsServiceImpl.MediatedRequestContext.MediatedRequestContextBuilder ctxBuilder,
-    MediatedRequest request) {
+    MediatedRequestContextBuilder ctxBuilder, MediatedRequest request) {
 
     if (searchInstances == null || searchInstances.isEmpty()) {
-      log.info("handleSearchInstances: searchInstances not found");
-      ctxBuilder.instance(new Instance()
-        .hrid(request.getInstance().getHrid())
-        .title(request.getInstance().getTitle())
-        .contributors(Collections.emptyList())
-        .publication(Collections.emptyList())
-        .editions(Collections.emptySet()));
-    } else {
-      fetchInventoryInstance(searchInstances.get(0), ctxBuilder, request);
+      ctxBuilder.instance(createFallbackInstance(request));
+      return;
     }
+
+    fetchInventoryInstance(searchInstances.get(0), ctxBuilder, request);
+  }
+
+  private Instance createFallbackInstance(MediatedRequest request) {
+    log.info("createFallbackInstance:: instance: {}", request.getInstance());
+    MediatedRequestInstance requestInstance = request.getInstance();
+
+    return new Instance()
+      .hrid(requestInstance.getHrid())
+      .title(requestInstance.getTitle());
   }
 
   private void fetchInventoryInstance(SearchInstance searchInstance,
@@ -167,16 +170,18 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     executionService.executeAsyncSystemUserScoped(searchInstance.getTenantId(),
       () -> ctxBuilder.instance(inventoryService.fetchInstance(searchInstance.getId())));
 
-    if (request.getItemId() != null) {
-      log.info("fetchInventoryInstance:: itemId is not null");
-      searchInstance.getItems().stream()
-        .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
-        .findFirst()
-        .ifPresentOrElse(
-          searchItem -> fetchInventoryItem(searchItem, ctxBuilder, request),
-          () -> ctxBuilder.item(new Item().barcode(request.getItem().getBarcode()))
-        );
+    if (request.getItemId() == null) {
+      log.info("fetchInventoryInstance:: itemId is null");
+      return;
     }
+
+    searchInstance.getItems().stream()
+      .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
+      .findFirst()
+      .ifPresentOrElse(
+        searchItem -> fetchInventoryItem(searchItem, ctxBuilder, request),
+        () -> ctxBuilder.item(new Item().barcode(request.getItem().getBarcode()))
+      );
   }
 
   private void fetchInventoryItem(SearchItem searchItem, MediatedRequestContextBuilder ctxBuilder,
@@ -198,31 +203,35 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private void fetchProxyUser(MediatedRequest request, MediatedRequestContextBuilder ctxBuilder) {
-
-    if (request.getProxyUserId() != null) {
-      User proxy = userService.fetchUser(request.getProxyUserId());
-      if (proxy != null) {
-        UserGroup proxyGroup = userService.fetchUserGroup(proxy.getPatronGroup());
-        ctxBuilder.proxy(proxy).proxyGroup(proxyGroup);
-      } else {
-        log.info("handleProxyUser:: proxy user {} not found", request.getProxyUserId());
-        MediatedRequestProxy medReqProxy = request.getProxy();
-        ctxBuilder.proxy(new User().barcode(medReqProxy.getBarcode())
-          .personal(new UserPersonal()
-            .firstName(medReqProxy.getFirstName())
-            .lastName(medReqProxy.getLastName())
-            .middleName(medReqProxy.getMiddleName())));
-      }
+    if (request.getProxyUserId() == null) {
+      log.info("fetchProxyUser:: proxyUserId is null");
+      return;
+    }
+    User proxy = userService.fetchUser(request.getProxyUserId());
+    if (proxy != null) {
+      UserGroup proxyGroup = userService.fetchUserGroup(proxy.getPatronGroup());
+      ctxBuilder.proxy(proxy).proxyGroup(proxyGroup);
+    } else {
+      log.info("fetchProxyUser:: proxy user {} not found", request.getProxyUserId());
+      MediatedRequestProxy medReqProxy = request.getProxy();
+      ctxBuilder.proxy(new User().barcode(medReqProxy.getBarcode())
+        .personal(new UserPersonal()
+          .firstName(medReqProxy.getFirstName())
+          .lastName(medReqProxy.getLastName())
+          .middleName(medReqProxy.getMiddleName())));
     }
   }
 
   private void fetchPickupServicePoint(MediatedRequest request,
     MediatedRequestContextBuilder ctxBuilder) {
 
-    if (request.getPickupServicePointId() != null) {
-      ServicePoint servicePoint = inventoryService.fetchServicePoint(request.getPickupServicePointId());
-      ctxBuilder.pickupServicePoint(servicePoint);
+    if (request.getPickupServicePointId() == null) {
+      log.info("fetchPickupServicePoint:: pickupServicePointId is null");
+      return;
     }
+
+    ctxBuilder.pickupServicePoint(inventoryService.fetchServicePoint(
+      request.getPickupServicePointId()));
   }
 
   private User createFallbackUser(MediatedRequestRequester mediatedRequestRequester) {
@@ -258,14 +267,16 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private static void addRequesterGroup(MediatedRequestContext context) {
     log.info("addRequesterGroup:: adding requester user group data");
     UserGroup userGroup = context.requesterGroup();
-    if (userGroup != null) {
-      context.request()
-        .getRequester()
-        .patronGroup(new MediatedRequestRequesterPatronGroup()
-          .id(userGroup.getId())
-          .group(userGroup.getGroup())
-          .desc(userGroup.getDesc()));
+    if (userGroup == null) {
+      log.info("addRequesterGroup:: userGroup is null");
+      return;
     }
+    context.request()
+      .getRequester()
+      .patronGroup(new MediatedRequestRequesterPatronGroup()
+        .id(userGroup.getId())
+        .group(userGroup.getGroup())
+        .desc(userGroup.getDesc()));
   }
 
   private static void addProxy(MediatedRequestContext context) {
@@ -341,29 +352,36 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private void extendInstance(MediatedRequestContext context) {
     log.info("extendInstance:: extending instance data");
     var instance = context.instance();
-    var contributors = instance.getContributors()
+
+    var contributors = Optional.ofNullable(instance.getContributors())
+      .orElse(Collections.emptyList())
       .stream()
-      .map(InstanceContributorsInner::getName)
-      .map(name -> new MediatedRequestInstanceContributorNamesInner().name(name))
+      .map(contributor -> Optional.ofNullable(contributor.getName())
+        .map(name -> new MediatedRequestInstanceContributorNamesInner().name(name))
+        .orElse(null))
+      .filter(Objects::nonNull)
       .toList();
 
-    var publications = instance.getPublication()
+    var publications = Optional.ofNullable(instance.getPublication())
+      .orElse(Collections.emptyList())
       .stream()
       .map(publication -> new MediatedRequestInstancePublicationInner()
-        .publisher(publication.getPublisher())
-        .place(publication.getPlace())
-        .dateOfPublication(publication.getDateOfPublication())
-        .role(publication.getRole()))
+        .publisher(Optional.ofNullable(publication.getPublisher()).orElse(""))
+        .place(Optional.ofNullable(publication.getPlace()).orElse(""))
+        .dateOfPublication(Optional.ofNullable(publication.getDateOfPublication()).orElse(""))
+        .role(Optional.ofNullable(publication.getRole()).orElse("")))
       .toList();
+
+    var editions = new ArrayList<>(Optional.ofNullable(instance.getEditions())
+      .orElse(Collections.emptySet()));
 
     context.request()
       .getInstance()
       .contributorNames(contributors)
       .publication(publications)
-      .editions(new ArrayList<>(instance.getEditions()))
+      .editions(editions)
       .hrid(instance.getHrid());
   }
-
   private static void addItem(MediatedRequestContext context) {
     log.info("addItem:: adding item data");
     if (context.item() == null) {

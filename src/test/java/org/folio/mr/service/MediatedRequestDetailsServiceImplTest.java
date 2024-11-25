@@ -102,13 +102,9 @@ class MediatedRequestDetailsServiceImplTest {
       .instances(List.of(new SearchInstance()
         .tenantId("test tenant")
         .items(Collections.emptyList()))));
-    when(inventoryService.fetchInstance(any())).thenReturn(new Instance()
-      .contributors(Collections.emptyList())
-      .publication(Collections.emptyList())
-      .editions(Collections.emptySet()));
+    when(inventoryService.fetchInstance(any())).thenReturn(new Instance());
 
     var returnedRequest = service.addRequestDetailsForGet(originalRequest);
-
     assertThat(returnedRequest.getItem().getBarcode(), is(originalRequest.getItem().getBarcode()));
 
     assertThat(returnedRequest.getRequester().getBarcode(), is(originalRequest.getRequester().getBarcode()));
