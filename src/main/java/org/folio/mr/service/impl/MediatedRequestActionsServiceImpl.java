@@ -9,7 +9,6 @@ import static org.folio.mr.support.ConversionUtils.asString;
 import java.util.List;
 import java.util.UUID;
 
-import org.folio.mr.client.SearchClient;
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
@@ -222,6 +221,16 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     declineRequest(mediatedRequest);
     mediatedRequestsRepository.save(mediatedRequest);
     log.info("decline:: mediated request {} was successfully declined", id);
+  }
+
+  @Override
+  public void cancel(UUID id) {
+    log.info("cancel:: looking for mediated request: {}", id);
+    MediatedRequestEntity mediatedRequest = findMediatedRequest(id);
+    log.debug("cancel:: mediatedRequest: {}", mediatedRequest);
+    mediatedRequest.setStatus(MediatedRequest.StatusEnum.CLOSED_CANCELLED.getValue());
+    mediatedRequestsRepository.save(mediatedRequest);
+    log.info("cancel:: mediated request {} was successfully cancelled", id);
   }
 
   private void declineRequest(MediatedRequestEntity request) {

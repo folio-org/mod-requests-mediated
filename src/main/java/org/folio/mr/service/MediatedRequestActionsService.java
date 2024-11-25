@@ -10,5 +10,6 @@ public interface MediatedRequestActionsService {
   MediatedRequest sendItemInTransit(String itemBarcode);
   void confirm(UUID mediatedRequestId);
   void decline(UUID mediatedRequestId);
+  void cancel(UUID mediatedRequestId);
   MediatedRequestWorkflowLog saveMediatedRequestWorkflowLog(MediatedRequest request);
 }
