@@ -78,6 +78,7 @@ public class MediatedRequestEntity {
   private UUID instanceId;
 
   private String instanceTitle;
+  private String instanceHrid;
 
   @OneToMany(mappedBy="mediatedRequest", cascade = CascadeType.ALL)
   private Set<MediatedRequestInstanceIdentifier> instanceIdentifiers;
