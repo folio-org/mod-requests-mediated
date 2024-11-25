@@ -164,10 +164,8 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     MediatedRequestContextBuilder ctxBuilder, MediatedRequest request) {
 
     log.info("fetchInventoryInstance: searchInstance: {}", searchInstance);
-    executionService.executeAsyncSystemUserScoped(searchInstance.getTenantId(), () -> {
-      Instance instance = inventoryService.fetchInstance(searchInstance.getId());
-      ctxBuilder.instance(instance);
-    });
+    executionService.executeAsyncSystemUserScoped(searchInstance.getTenantId(),
+      () -> ctxBuilder.instance(inventoryService.fetchInstance(searchInstance.getId())));
 
     if (request.getItemId() != null) {
       log.info("fetchInventoryInstance:: itemId is not null");

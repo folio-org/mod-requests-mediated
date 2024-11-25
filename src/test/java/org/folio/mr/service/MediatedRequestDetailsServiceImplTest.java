@@ -3,12 +3,13 @@ package org.folio.mr.service;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 
 import org.folio.mr.client.SearchClient;
 import org.folio.mr.domain.dto.Instance;
@@ -25,8 +26,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class MediatedRequestDetailsServiceImplTest {
 
   @Mock
@@ -73,5 +77,42 @@ class MediatedRequestDetailsServiceImplTest {
       originalRequest.getInstance().getTitle()));
     assertThat(returnedRequest.getInstance().getHrid(), is(
       originalRequest.getInstance().getHrid()));
+  }
+
+  @Test
+  public void shouldFallbackToItemAndRequesterDetailsWhenSearchInstanceFindsNoItem() {
+    var originalRequest = new MediatedRequest()
+      .requester(new MediatedRequestRequester()
+        .barcode("111")
+        .firstName("Test firstName")
+        .lastName("Test lastName"))
+      .instance(new MediatedRequestInstance())
+      .itemId(UUID.randomUUID().toString())
+      .item(new MediatedRequestItem()
+        .barcode("1"));
+    var searchInstanceResponse = new SearchInstancesResponse()
+      .instances(List.of(new SearchInstance()
+        .items(Collections.emptyList())));
+
+    doAnswer(invocation -> {
+      ((Runnable) invocation.getArguments()[1]).run();
+      return null;
+    }).when(executionService).executeAsyncSystemUserScoped(anyString(), any(Runnable.class));
+    when(searchClient.searchInstance(any())).thenReturn(searchInstanceResponse
+      .instances(List.of(new SearchInstance()
+        .tenantId("test tenant")
+        .items(Collections.emptyList()))));
+    when(inventoryService.fetchInstance(any())).thenReturn(new Instance()
+      .contributors(Collections.emptyList())
+      .publication(Collections.emptyList())
+      .editions(Collections.emptySet()));
+
+    var returnedRequest = service.addRequestDetailsForGet(originalRequest);
+
+    assertThat(returnedRequest.getItem().getBarcode(), is(originalRequest.getItem().getBarcode()));
+
+    assertThat(returnedRequest.getRequester().getBarcode(), is(originalRequest.getRequester().getBarcode()));
+    assertThat(returnedRequest.getRequester().getFirstName(), is(originalRequest.getRequester().getFirstName()));
+    assertThat(returnedRequest.getRequester().getLastName(), is(originalRequest.getRequester().getLastName()));
   }
 }
