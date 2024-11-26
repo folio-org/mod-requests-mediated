@@ -45,7 +45,6 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
     mediatedRequestsRepository.findByConfirmedRequestId(UUID.fromString(requestId))
       .ifPresentOrElse(mediatedRequest -> handleRequestUpdateEvent(mediatedRequest, event),
         () -> log.info("handleRequestUpdateEvent:: request {} not found in mediated requests", requestId));
-    log.info("handleRequestUpdateEvent:: looking for ECS TLR for request {}", requestId);
   }
 
   private void handleRequestUpdateEvent(MediatedRequestEntity mediatedRequest,
@@ -53,7 +52,7 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
     log.debug("handleRequestUpdateEvent:: mediatedRequest={}", () -> mediatedRequest);
     Request updatedRequest = event.getData().getNewVersion();
     if (CLOSED_CANCELLED == updatedRequest.getStatus()) {
-      actionsService.cancel(mediatedRequest.getId());
+      actionsService.cancel(mediatedRequest.getId(), updatedRequest);
     }
   }
 }

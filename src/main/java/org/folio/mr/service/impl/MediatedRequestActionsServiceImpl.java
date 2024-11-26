@@ -6,6 +6,7 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIV
 import static org.folio.mr.domain.entity.MediatedRequestStep.from;
 import static org.folio.mr.support.ConversionUtils.asString;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -224,13 +225,15 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   @Override
-  public void cancel(UUID id) {
-    log.info("cancel:: looking for mediated request: {}", id);
-    MediatedRequestEntity mediatedRequest = findMediatedRequest(id);
+  public void cancel(UUID mediatedRequestId, Request confirmedRequest) {
+    log.info("cancel:: looking for mediated request: {}", mediatedRequestId);
+    MediatedRequestEntity mediatedRequest = findMediatedRequest(mediatedRequestId);
     log.debug("cancel:: mediatedRequest: {}", mediatedRequest);
     mediatedRequest.setStatus(MediatedRequest.StatusEnum.CLOSED_CANCELLED.getValue());
+    mediatedRequest.setCancellationReasonId(UUID.fromString(confirmedRequest.getCancellationReasonId()));
+    mediatedRequest.setCancelledDate(new Date());
     mediatedRequestsRepository.save(mediatedRequest);
-    log.info("cancel:: mediated request {} was successfully cancelled", id);
+    log.info("cancel:: mediated request {} was successfully cancelled", mediatedRequestId);
   }
 
   private void declineRequest(MediatedRequestEntity request) {
