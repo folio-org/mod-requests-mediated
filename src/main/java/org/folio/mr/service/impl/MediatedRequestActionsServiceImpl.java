@@ -232,6 +232,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     mediatedRequest.setStatus(MediatedRequest.StatusEnum.CLOSED_CANCELLED.getValue());
     mediatedRequest.setCancellationReasonId(UUID.fromString(confirmedRequest.getCancellationReasonId()));
     mediatedRequest.setCancelledDate(new Date());
+    mediatedRequest.setCancelledByUserId(UUID.fromString(confirmedRequest.getCancelledByUserId()));
     mediatedRequestsRepository.save(mediatedRequest);
     log.info("cancel:: mediated request {} was successfully cancelled", mediatedRequestId);
   }
