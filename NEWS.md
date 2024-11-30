@@ -1,3 +1,10 @@
+## 1.0.1 2024-11-30
+* Fetch items from all tenants for `Send item in transit` (MODREQMED-44)
+* Upgrade to folio-spring-support 8.2.1 and Spring Boot 3.3.4 (MODREQMED-8)
+* Add permission `user-tenants.collection.get` (MODREQMED-47)
+* User, Proxy, and Item data are stored and returned if reference records are deleted (MODREQMED-40)
+* Add system user section to the module descriptor (MODREQMED-52)
+
 ## 1.0.0 2024-10-31
 * Extend schema, add missed permissions (MODREQMED-41)
 * Fetching inventory from different tenants (MODREQMED-36)
