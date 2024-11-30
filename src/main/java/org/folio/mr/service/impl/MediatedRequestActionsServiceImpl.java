@@ -9,12 +9,15 @@ import static org.folio.mr.support.ConversionUtils.asString;
 import java.util.List;
 import java.util.UUID;
 
+import org.folio.mr.client.SearchClient;
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
+import org.folio.mr.domain.dto.SearchInstance;
+import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.entity.MediatedRequestStep;
 import org.folio.mr.domain.entity.MediatedRequestWorkflow;
@@ -29,6 +32,7 @@ import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestActionsService;
 import org.folio.mr.service.SearchService;
 import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -47,6 +51,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   private final EcsRequestService ecsRequestService;
   private final FolioExecutionContext folioExecutionContext;
   private final SearchService searchService;
+  private final SystemUserScopedExecutionService executionService;
 
   @Override
   public void confirm(UUID id) {
@@ -167,17 +172,32 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
   private void extendMediatedRequest(MediatedRequest request) {
     log.info("extendMediatedRequest:: extending mediated request with additional item details");
-    Item item = inventoryService.fetchItem(request.getItemId());
-    if (item == null) {
-      throw ExceptionFactory.notFound(format("Item %s not found", request.getItemId()));
-    } else {
-      request.getItem()
-        .enumeration(item.getEnumeration())
-        .volume(item.getVolume())
-        .chronology(item.getChronology())
-        .displaySummary(item.getDisplaySummary())
-        .copyNumber(item.getCopyNumber());
-    }
+
+    searchService.searchInstance(request.getInstanceId())
+      .map(SearchInstance::getItems)
+      .stream()
+      .flatMap(List::stream)
+      .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
+      .findFirst()
+      .ifPresent(searchItem -> fillItemDetailsFromInventoryItem(request, searchItem));
+  }
+
+  private void fillItemDetailsFromInventoryItem(MediatedRequest request, SearchItem searchItem) {
+    String tenantId = searchItem.getTenantId();
+    log.info("fillItemDetailsFromInventoryItem:: fetching item from tenant: {}", tenantId);
+    executionService.executeAsyncSystemUserScoped(tenantId, () -> {
+      Item item = inventoryService.fetchItem(request.getItemId());
+      if (item == null) {
+        throw ExceptionFactory.notFound(format("Item %s not found", request.getItemId()));
+      } else {
+        request.getItem()
+          .enumeration(item.getEnumeration())
+          .volume(item.getVolume())
+          .chronology(item.getChronology())
+          .displaySummary(item.getDisplaySummary())
+          .copyNumber(item.getCopyNumber());
+      }
+    });
   }
 
   private static MediatedRequestWorkflowLog buildMediatedRequestWorkflowLog(

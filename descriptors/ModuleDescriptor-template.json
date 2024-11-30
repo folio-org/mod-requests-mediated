@@ -12,7 +12,7 @@
           ],
           "pathPattern": "/requests-mediated/mediated-requests",
           "permissionsRequired": ["requests-mediated.mediated-request.collection.get"],
-          "modulePermissions": ["requests-mediated.internal.fetch-request-details"]
+          "modulePermissions": ["requests-mediated.internal.fetch-request-details.all"]
         },
         {
           "methods": [
@@ -20,19 +20,19 @@
           ],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
           "permissionsRequired": ["requests-mediated.mediated-request.item.get"],
-          "modulePermissions": ["requests-mediated.internal.fetch-request-details"]
+          "modulePermissions": ["requests-mediated.internal.fetch-request-details.all"]
         },
         {
           "methods": ["POST"],
           "pathPattern": "/requests-mediated/mediated-requests",
           "permissionsRequired": ["requests-mediated.mediated-request.item.post"],
-          "modulePermissions": ["requests-mediated.internal.fetch-request-details"]
+          "modulePermissions": ["requests-mediated.internal.fetch-request-details.all"]
         },
         {
           "methods": ["PUT"],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}",
           "permissionsRequired": ["requests-mediated.mediated-request.item.put"],
-          "modulePermissions": ["requests-mediated.internal.fetch-request-details"]
+          "modulePermissions": ["requests-mediated.internal.fetch-request-details.all"]
         },
         {
           "methods": ["DELETE"],
@@ -83,7 +83,8 @@
             "inventory-storage.material-types.item.get",
             "inventory-storage.material-types.collection.get",
             "inventory-storage.service-points.item.get",
-            "inventory-storage.service-points.collection.get"
+            "inventory-storage.service-points.collection.get",
+            "search.instances.collection.get"
           ]
         },
         {
@@ -93,6 +94,7 @@
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}/confirm",
           "permissionsRequired": ["requests-mediated.mediated-request.confirm.post"],
           "modulePermissions": [
+            "user-tenants.collection.get",
             "inventory-storage.instances.item.get",
             "inventory-storage.instances.collection.get",
             "inventory-storage.items.item.get",
@@ -105,7 +107,7 @@
             "POST"
           ],
           "pathPattern": "/requests-mediated/mediated-requests/{requestId}/decline",
-          "permissionsRequired": ["requests-mediated.decline-mediated-request.execute"],
+          "permissionsRequired": ["requests-mediated.mediated-requests.decline.execute"],
           "modulePermissions": []
         }
       ]
@@ -183,12 +185,13 @@
       "description": "Confirm mediated request"
     },
     {
-      "permissionName": "requests-mediated.decline-mediated-request.execute",
+      "permissionName": "requests-mediated.mediated-requests.decline.execute",
       "displayName": "requests-mediated - decline mediated request",
-      "description": "Decline mediated request"
+      "description": "Decline mediated request",
+      "replaces": ["requests-mediated.decline-mediated-request.execute"]
     },
     {
-      "permissionName": "requests-mediated.internal.fetch-request-details",
+      "permissionName": "requests-mediated.internal.fetch-request-details.all",
       "displayName": "Fetch mediated request details",
       "description": "Internal permission set for fetching mediated request details",
       "subPermissions": [
@@ -198,7 +201,6 @@
         "inventory-storage.instances.item.get",
         "inventory-storage.service-points.collection.get",
         "inventory-storage.service-points.item.get",
-        "search.instances.item.get",
         "search.instances.collection.get",
         "users.collection.get",
         "users.item.get",
@@ -242,6 +244,27 @@
       "version": "14.2"
     }
   ],
+  "metadata": {
+    "user": {
+      "type": "system",
+      "permissions": [
+        "tlr.ecs-tlr.post",
+        "users.collection.get",
+        "users.item.get",
+        "user-tenants.collection.get",
+        "consortium-search.items.collection.get",
+        "consortium-search.items.item.get",
+        "inventory-storage.items.item.get",
+        "inventory-storage.items.collection.get",
+        "inventory-storage.instances.item.get",
+        "inventory-storage.instances.collection.get",
+        "inventory-storage.locations.item.get",
+        "inventory-storage.locations.collection.get",
+        "inventory-storage.location-units.libraries.item.get",
+        "inventory-storage.location-units.libraries.collection.get"
+      ]
+    }
+  },
   "launchDescriptor": {
     "dockerImage": "@artifactId@:@version@",
     "dockerPull": false,
