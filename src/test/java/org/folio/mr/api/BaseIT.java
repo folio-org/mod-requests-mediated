@@ -53,6 +53,7 @@ import lombok.SneakyThrows;
 public class BaseIT {
   protected static final String TOKEN = "test_token";
   protected static final String TENANT_ID_CONSORTIUM = "consortium";
+  protected static final String TENANT_ID_COLLEGE = "college";
   protected static final String USER_ID = randomId();
   protected static final String HEADER_TENANT = "x-okapi-tenant";
 
