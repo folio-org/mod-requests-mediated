@@ -2,8 +2,6 @@ package org.folio.mr.api;
 
 import static java.util.stream.Collectors.toMap;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,7 +22,6 @@ import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.folio.test.extensions.EnablePostgres;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,8 +32,6 @@ import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -45,13 +40,11 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.support.TestPropertySourceUtils;
 import org.springframework.test.util.TestSocketUtils;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.testcontainers.containers.KafkaContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -99,9 +92,6 @@ public class BaseIT {
   @Autowired
   protected KafkaTemplate<String, String> kafkaTemplate;
 
-  @Container
-  private static final PostgreSQLContainer<?> postgresDBContainer =
-    new PostgreSQLContainer<>("postgres:12-alpine");
   @Container
   private static final KafkaContainer kafka = new KafkaContainer(
     DockerImageName.parse("confluentinc/cp-kafka:7.5.3"));
@@ -175,24 +165,6 @@ public class BaseIT {
     return new FolioExecutionContextSetter(moduleMetadata, headers);
   }
 
-  @SneakyThrows
-  protected static void setUpTenant(MockMvc mockMvc) {
-    mockMvc.perform(post("/_/tenant")
-      .content(asJsonString(new TenantAttributes().moduleTo("mod-requests-mediated")))
-      .headers(defaultHeaders())
-      .contentType(APPLICATION_JSON)).andExpect(status().isNoContent());
-  }
-
-  public static class DockerPostgresDataSourceInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-    @Override
-    public void initialize(@NotNull ConfigurableApplicationContext applicationContext) {
-      TestPropertySourceUtils.addInlinedPropertiesToEnvironment(applicationContext,
-        "spring.datasource.url=" + postgresDBContainer.getJdbcUrl(),
-        "spring.datasource.username=" + postgresDBContainer.getUsername(),
-        "spring.datasource.password=" + postgresDBContainer.getPassword());
-    }
-  }
-
   public static HttpHeaders defaultHeaders() {
     final HttpHeaders httpHeaders = new HttpHeaders();
 
@@ -219,11 +191,6 @@ public class BaseIT {
       .header(XOkapiHeaders.URL, wireMockServer.baseUrl())
       .header(XOkapiHeaders.TOKEN, TOKEN)
       .header(XOkapiHeaders.USER_ID, USER_ID);
-  }
-
-  protected WebTestClient.ResponseSpec doGet(String url) {
-    return buildRequest(HttpMethod.GET, url)
-      .exchange();
   }
 
   protected WebTestClient.ResponseSpec doPost(String url, Object payload) {
