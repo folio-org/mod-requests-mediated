@@ -17,6 +17,7 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.folio.mr.util.DbInitializer;
 import org.folio.mr.util.TestUtils;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
@@ -65,7 +66,7 @@ import lombok.SneakyThrows;
 
 @EnablePostgres
 @ActiveProfiles("test")
-@ContextConfiguration(initializers = BaseIT.DockerPostgresDataSourceInitializer.class)
+@ContextConfiguration(initializers = {DbInitializer.class})
 @EnableAutoConfiguration(exclude = {FlywayAutoConfiguration.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
