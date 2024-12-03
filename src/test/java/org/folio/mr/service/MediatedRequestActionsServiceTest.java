@@ -12,6 +12,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -211,11 +212,15 @@ class MediatedRequestActionsServiceTest {
       .thenReturn(emptyList());
     when(ecsRequestService.create(mediatedRequest))
       .thenReturn(ecsTlr);
+    when(circulationRequestService.get(primaryRequestId.toString()))
+      .thenReturn(new Request());
+    when(circulationRequestService.update(any(Request.class)))
+      .thenReturn(new Request());
 
     mediatedRequestActionsService.confirm(mediatedRequestId);
 
-    verify(mediatedRequestsRepository).save(mediatedRequest.withConfirmedRequestId(primaryRequestId));
-    verifyNoInteractions(circulationRequestService);
+    verify(mediatedRequestsRepository, times(2))
+      .save(mediatedRequest.withConfirmedRequestId(primaryRequestId));
   }
 
   @Test
@@ -239,11 +244,15 @@ class MediatedRequestActionsServiceTest {
       .thenReturn(null);
     when(ecsRequestService.create(mediatedRequest))
       .thenReturn(ecsTlr);
+    when(circulationRequestService.get(primaryRequestId.toString()))
+      .thenReturn(new Request());
+    when(circulationRequestService.update(any(Request.class)))
+      .thenReturn(new Request());
 
     mediatedRequestActionsService.confirm(mediatedRequestId);
 
-    verify(mediatedRequestsRepository).save(mediatedRequest.withConfirmedRequestId(primaryRequestId));
-    verifyNoInteractions(circulationRequestService);
+    verify(mediatedRequestsRepository, times(2))
+      .save(mediatedRequest.withConfirmedRequestId(primaryRequestId));
     verify(inventoryService).fetchInstance(instanceId.toString());
     verifyNoMoreInteractions(inventoryService);
   }
