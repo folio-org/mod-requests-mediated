@@ -12,6 +12,11 @@
       "type": "string",
       "enum": ["Item", "Title"]
     },
+    "ecsRequestPhase": {
+      "description": "Stage in ECS request process, absence of this field means this is a single-tenant request",
+      "type": "string",
+      "enum": ["Primary", "Secondary"]
+    },
     "requestType": {
       "description": "Whether the item should be held upon return, recalled or paged for",
       "type": "string",
@@ -210,6 +215,12 @@
       "type": "string",
       "format": "date-time",
       "readonly" : true
+    },
+    "searchIndex": {
+      "description": "Request fields used for search",
+      "type": "object",
+      "$ref": "request-search-index.json"
     }
-  }
+  },
+  "additionalProperties": true
 }
