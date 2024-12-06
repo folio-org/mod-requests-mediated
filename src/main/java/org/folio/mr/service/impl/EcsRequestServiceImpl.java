@@ -56,7 +56,7 @@ public class EcsRequestServiceImpl implements EcsRequestService {
 
     log.info("createFakePatron:: Creating remote fake shadow patron: ID {}", localFake.getId());
     executionService.executeSystemUserScoped(consortiumService.getCentralTenantId(),
-      () -> userService.create(userCloningService.clone(localFake)));
+      () -> userCloningService.clone(localFake));
 
     return localFake.getId();
   }
