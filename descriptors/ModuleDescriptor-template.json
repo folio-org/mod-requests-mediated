@@ -99,7 +99,9 @@
             "inventory-storage.instances.collection.get",
             "inventory-storage.items.item.get",
             "inventory-storage.items.collection.get",
-            "circulation.requests.item.post"
+            "circulation.requests.item.post",
+            "circulation.requests.item.put",
+            "users.item.post"
           ]
         },
         {
@@ -253,6 +255,7 @@
         "tlr.ecs-tlr.post",
         "users.collection.get",
         "users.item.get",
+        "users.item.post",
         "user-tenants.collection.get",
         "consortium-search.items.collection.get",
         "consortium-search.items.item.get",
