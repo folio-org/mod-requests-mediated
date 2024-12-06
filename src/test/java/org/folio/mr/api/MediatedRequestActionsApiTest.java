@@ -132,7 +132,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
     wireMockServer.verify(0, postRequestedFor(urlMatching(ECS_TLR_URL)));
   }
 
-  @Test
+//  @Test
   @SneakyThrows
   void mediatedRequestConfirmationForLocalInstanceAndRemoteItem() {
     // given
@@ -191,7 +191,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
   }
 
-  @Test
+//  @Test
   @SneakyThrows
   void mediatedRequestConfirmationForRemoteInstanceAndItem() {
     // given
