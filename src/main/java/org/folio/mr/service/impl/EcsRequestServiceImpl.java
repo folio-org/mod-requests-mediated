@@ -1,5 +1,6 @@
 package org.folio.mr.service.impl;
 
+import static java.lang.String.format;
 import static org.folio.mr.support.ConversionUtils.asString;
 
 import lombok.RequiredArgsConstructor;
@@ -63,6 +64,7 @@ public class EcsRequestServiceImpl implements EcsRequestService {
   private User buildFakePatron(String patronGroupId) {
     return new User()
       .active(true)
+      .barcode(format("securepatron_%s", UUID.randomUUID()))
       .type("patron")
       .patronGroup(patronGroupId)
       .personal(
