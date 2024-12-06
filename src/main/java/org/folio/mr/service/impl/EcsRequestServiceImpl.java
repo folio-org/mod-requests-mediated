@@ -29,7 +29,6 @@ public class EcsRequestServiceImpl implements EcsRequestService {
   private final EcsTlrClient ecsTlrClient;
   private final UserService userService;
   private final CloningService<User> userCloningService;
-
   private final SystemUserScopedExecutionService executionService;
   private final ConsortiumService consortiumService;
 

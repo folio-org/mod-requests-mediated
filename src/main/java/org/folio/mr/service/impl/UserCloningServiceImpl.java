@@ -34,6 +34,7 @@ public class UserCloningServiceImpl extends CloningServiceImpl<User> {
   protected User buildClone(User original) {
     User clone = new User()
       .id(original.getId())
+      .personal(original.getPersonal())
       .patronGroup(original.getPatronGroup())
       .type(UserType.SHADOW.getValue())
       .barcode(original.getBarcode())
