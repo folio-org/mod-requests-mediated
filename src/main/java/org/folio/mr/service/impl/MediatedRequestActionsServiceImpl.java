@@ -9,7 +9,6 @@ import static org.folio.mr.support.ConversionUtils.asString;
 import java.util.List;
 import java.util.UUID;
 
-import org.folio.mr.client.SearchClient;
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
@@ -69,22 +68,35 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       mediatedRequest.setConfirmedRequestId(UUID.fromString(request.getId()));
     } else {
       EcsTlr ecsTlr = ecsRequestService.create(mediatedRequest);
-      mediatedRequest.setConfirmedRequestId(UUID.fromString(ecsTlr.getPrimaryRequestId()));
+      Request request = updatePrimaryRequest(mediatedRequest, ecsTlr);
+      updateMediatedRequest(mediatedRequest, ecsTlr, request);
     }
   }
 
+  private Request updatePrimaryRequest(MediatedRequestEntity mediatedRequest, EcsTlr ecsTlr) {
+    Request request = circulationRequestService.get(ecsTlr.getPrimaryRequestId());
+    request.setRequesterId(mediatedRequest.getRequesterId().toString());
+    circulationRequestService.update(request);
+    return request;
+  }
+
+  private void updateMediatedRequest(MediatedRequestEntity mediatedRequest,
+    EcsTlr ecsTlr, Request request) {
+
+    mediatedRequest.setConfirmedRequestId(UUID.fromString(ecsTlr.getPrimaryRequestId()));
+    if (request.getStatus() == Request.StatusEnum.OPEN_NOT_YET_FILLED) {
+      mediatedRequest.setStatus(Request.StatusEnum.OPEN_NOT_YET_FILLED.getValue());
+    }
+    mediatedRequestsRepository.save(mediatedRequest);
+  }
+
   private boolean localInstanceExists(MediatedRequestEntity mediatedRequest) {
-    final String instanceId = mediatedRequest.getInstanceId().toString();
+    String instanceId = mediatedRequest.getInstanceId().toString();
     log.info("localInstanceExists:: searching for instance {} in local tenant", instanceId);
 
-    var instance = inventoryService.fetchInstance(instanceId);
-    if (instance == null) {
-      log.info("localInstanceExists:: instance not found");
-      return false;
-    } else {
-      log.info("localInstanceExists:: instance found");
-      return true;
-    }
+    var instanceFound = inventoryService.fetchInstance(instanceId) != null;
+    log.info("localInstanceExists:: instanceFound: {}", instanceFound);
+    return instanceFound;
   }
 
   private boolean localItemExists(MediatedRequestEntity mediatedRequest) {
