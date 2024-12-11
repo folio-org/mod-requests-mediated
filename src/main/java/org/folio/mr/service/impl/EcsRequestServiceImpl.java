@@ -28,7 +28,6 @@ public class EcsRequestServiceImpl implements EcsRequestService {
   private final FakePatronLinkRepository fakePatronLinkRepository;
   private final EcsTlrClient ecsTlrClient;
   private final UserService userService;
-  private final UserCloningServiceImpl userCloningService;
   private final SystemUserScopedExecutionService executionService;
   private final ConsortiumService consortiumService;
 
@@ -52,10 +51,6 @@ public class EcsRequestServiceImpl implements EcsRequestService {
 
     log.info("createFakePatron:: Creating local fake patron");
     User localFake = userService.create(fakePatron);
-
-//    log.info("createFakePatron:: Creating remote fake shadow patron: ID {}", localFake.getId());
-//    executionService.executeSystemUserScoped(consortiumService.getCentralTenantId(),
-//      () -> userCloningService.cloneUser(localFake, consortiumService.getCurrentTenantId()));
 
     return localFake.getId();
   }
