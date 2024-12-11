@@ -99,6 +99,8 @@
             "inventory-storage.instances.collection.get",
             "inventory-storage.items.item.get",
             "inventory-storage.items.collection.get",
+            "circulation.requests.item.get",
+            "circulation.requests.collection.get",
             "circulation.requests.item.post",
             "circulation.requests.item.put",
             "users.item.post"
