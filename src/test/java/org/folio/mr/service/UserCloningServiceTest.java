@@ -31,7 +31,7 @@ class UserCloningServiceTest {
     when(userService.fetchUser(user.getId())).thenReturn(user);
 
     // when
-    userCloningService.clone(user);
+    userCloningService.cloneUser(user, "tenantId");
 
     // then
     verifyNoMoreInteractions(userService);
@@ -45,7 +45,7 @@ class UserCloningServiceTest {
     when(userService.create(any())).thenReturn(user);
 
     // when
-    userCloningService.clone(user);
+    userCloningService.cloneUser(user, "tenantId");
 
     // then
     verifyNoMoreInteractions(userService);

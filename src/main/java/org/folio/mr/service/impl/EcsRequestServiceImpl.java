@@ -12,7 +12,6 @@ import org.folio.mr.domain.dto.UserPersonal;
 import org.folio.mr.domain.entity.FakePatronLink;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.repository.FakePatronLinkRepository;
-import org.folio.mr.service.CloningService;
 import org.folio.mr.service.ConsortiumService;
 import org.folio.mr.service.EcsRequestService;
 import org.folio.mr.service.UserService;
@@ -29,7 +28,7 @@ public class EcsRequestServiceImpl implements EcsRequestService {
   private final FakePatronLinkRepository fakePatronLinkRepository;
   private final EcsTlrClient ecsTlrClient;
   private final UserService userService;
-  private final CloningService<User> userCloningService;
+  private final UserCloningServiceImpl userCloningService;
   private final SystemUserScopedExecutionService executionService;
   private final ConsortiumService consortiumService;
 
@@ -56,15 +55,16 @@ public class EcsRequestServiceImpl implements EcsRequestService {
 
     log.info("createFakePatron:: Creating remote fake shadow patron: ID {}", localFake.getId());
     executionService.executeSystemUserScoped(consortiumService.getCentralTenantId(),
-      () -> userCloningService.clone(localFake));
+      () -> userCloningService.cloneUser(localFake, consortiumService.getCurrentTenantId()));
 
     return localFake.getId();
   }
 
   private User buildFakePatron(String patronGroupId) {
+    String randomSecurePatronStr = format("securepatron_%s", UUID.randomUUID());
     return new User()
       .active(true)
-      .barcode(format("securepatron_%s", UUID.randomUUID()))
+      .barcode(randomSecurePatronStr)
       .type("patron")
       .patronGroup(patronGroupId)
       .personal(
@@ -72,7 +72,7 @@ public class EcsRequestServiceImpl implements EcsRequestService {
           .preferredContactTypeId("002")
           .firstName("Secure")
           .lastName("Patron")
-          .email(UUID.randomUUID() + "@example.com")
+          .email(randomSecurePatronStr)
       );
   }
 

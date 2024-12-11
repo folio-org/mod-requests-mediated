@@ -48,7 +48,7 @@ public class CirculationRequestServiceImpl implements CirculationRequestService 
 
   @Override
   public Request update(Request request) {
-    log.info("update:: update circulation request {}", request);
+    log.info("update:: update circulation request {}", request.getId());
     return circulationClient.updateRequest(request.getId(), request);
   }
 }
