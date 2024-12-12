@@ -268,7 +268,10 @@
         "inventory-storage.locations.item.get",
         "inventory-storage.locations.collection.get",
         "inventory-storage.location-units.libraries.item.get",
-        "inventory-storage.location-units.libraries.collection.get"
+        "inventory-storage.location-units.libraries.collection.get",
+        "mod-settings.entries.item.get",
+        "mod-settings.entries.collection.get",
+        "mod-settings.global.read.circulation"
       ]
     }
   },
