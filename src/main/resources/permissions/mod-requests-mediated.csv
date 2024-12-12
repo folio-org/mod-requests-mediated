@@ -1,6 +1,7 @@
 tlr.ecs-tlr.post
 users.collection.get
 users.item.get
+users.item.post
 user-tenants.collection.get
 consortium-search.items.collection.get
 consortium-search.items.item.get

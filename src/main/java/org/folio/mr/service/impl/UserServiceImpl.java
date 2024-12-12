@@ -29,4 +29,10 @@ public class UserServiceImpl implements UserService {
     log.info("fetchUserGroup:: fetching user group {}", id);
     return userGroupClient.get(id).orElse(null);
   }
+
+  @Override
+  public User create(User user) {
+    log.info("create:: creating user {}", user.getId());
+    return userClient.postUser(user);
+  }
 }

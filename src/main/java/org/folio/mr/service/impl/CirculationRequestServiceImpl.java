@@ -19,6 +19,12 @@ public class CirculationRequestServiceImpl implements CirculationRequestService 
   private final CirculationClient circulationClient;
 
   @Override
+  public Request get(String id) {
+    log.info("get:: get circulation request by id {}", id);
+    return circulationClient.getRequest(id);
+  }
+
+  @Override
   public Request create(MediatedRequestEntity mediatedRequest) {
     log.info("create:: creating circulation request for mediated request {}", mediatedRequest.getId());
     return circulationClient.createRequest(buildRequest(mediatedRequest));
@@ -38,5 +44,11 @@ public class CirculationRequestServiceImpl implements CirculationRequestService 
       .requestDate(mediatedRequest.getRequestDate())
       .deliveryAddressTypeId(asString(mediatedRequest.getDeliveryAddressTypeId()))
       .patronComments(mediatedRequest.getPatronComments());
+  }
+
+  @Override
+  public Request update(Request request) {
+    log.info("update:: update circulation request {}", request.getId());
+    return circulationClient.updateRequest(request.getId(), request);
   }
 }
