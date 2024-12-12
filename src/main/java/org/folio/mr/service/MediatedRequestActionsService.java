@@ -3,6 +3,7 @@ package org.folio.mr.service;
 import java.util.UUID;
 
 import org.folio.mr.domain.dto.MediatedRequest;
+import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.entity.MediatedRequestWorkflowLog;
 
 public interface MediatedRequestActionsService {
@@ -10,5 +11,6 @@ public interface MediatedRequestActionsService {
   MediatedRequest sendItemInTransit(String itemBarcode);
   void confirm(UUID mediatedRequestId);
   void decline(UUID mediatedRequestId);
+  void cancel(UUID mediatedRequestId, Request confirmedRequest);
   MediatedRequestWorkflowLog saveMediatedRequestWorkflowLog(MediatedRequest request);
 }

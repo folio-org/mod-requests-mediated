@@ -236,6 +236,19 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     log.info("decline:: mediated request {} was successfully declined", id);
   }
 
+  @Override
+  public void cancel(UUID mediatedRequestId, Request confirmedRequest) {
+    log.info("cancel:: looking for mediated request: {}", mediatedRequestId);
+    MediatedRequestEntity mediatedRequest = findMediatedRequest(mediatedRequestId);
+    log.debug("cancel:: mediatedRequest: {}", mediatedRequest);
+    mediatedRequest.setStatus(MediatedRequest.StatusEnum.CLOSED_CANCELLED.getValue());
+    mediatedRequest.setCancellationReasonId(UUID.fromString(confirmedRequest.getCancellationReasonId()));
+    mediatedRequest.setCancelledDate(confirmedRequest.getCancelledDate());
+    mediatedRequest.setCancelledByUserId(UUID.fromString(confirmedRequest.getCancelledByUserId()));
+    mediatedRequestsRepository.save(mediatedRequest);
+    log.info("cancel:: mediated request {} was successfully cancelled", mediatedRequestId);
+  }
+
   private void declineRequest(MediatedRequestEntity request) {
     if (request.getMediatedRequestStatus() != MediatedRequestStatus.NEW ||
       !MediatedRequestStep.AWAITING_CONFIRMATION.getValue().equals(request.getMediatedRequestStep()))
