@@ -30,4 +30,18 @@ public class ConsortiumServiceImpl implements ConsortiumService {
     log.info("getCentralTenantId:: central tenant ID: {}", centralTenantId);
     return centralTenantId;
   }
+
+  @Override
+  public String getCurrentTenantId() {
+    log.info("getCurrentTenantId:: resolving current tenant ID");
+    String currentTenantId = userTenantsClient.getUserTenants(1)
+      .getUserTenants()
+      .stream()
+      .findFirst()
+      .map(UserTenant::getTenantId)
+      .orElseThrow();
+
+    log.info("getCurrentTenantId:: current tenant ID: {}", currentTenantId);
+    return currentTenantId;
+  }
 }

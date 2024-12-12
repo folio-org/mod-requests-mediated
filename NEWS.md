@@ -1,3 +1,7 @@
+## 1.0.2 2024-12-12
+* Mediated request confirmation - create ECS TLR on behalf of fake user (MODREQMED-48)
+* Make mod-tlr dependency optional (MODREQMED-51)
+
 ## 1.0.1 2024-11-30
 * Fetch items from all tenants for `Send item in transit` (MODREQMED-44)
 * Upgrade to folio-spring-support 8.2.1 and Spring Boot 3.3.4 (MODREQMED-8)
