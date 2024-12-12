@@ -163,9 +163,6 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
       .willReturn(jsonResponse(user, HttpStatus.SC_OK)));
 
-    wireMockServer.stubFor(WireMock.post(urlMatching(USERS_URL_TEMPLATE))
-      .willReturn(jsonResponse(user, HttpStatus.SC_OK)));
-
     wireMockServer.stubFor(WireMock.get(urlMatching(CIRCULATION_REQUESTS_URL + "/" + primaryRequestId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(jsonResponse(new Request().id(primaryRequestId), HttpStatus.SC_OK)));
@@ -213,9 +210,6 @@ class MediatedRequestActionsApiTest extends BaseIT {
     User user = new User().id(UUID.randomUUID().toString());
     wireMockServer.stubFor(WireMock.post(urlMatching(USERS_URL_TEMPLATE))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
-      .willReturn(jsonResponse(user, HttpStatus.SC_OK)));
-
-    wireMockServer.stubFor(WireMock.post(urlMatching(USERS_URL_TEMPLATE))
       .willReturn(jsonResponse(user, HttpStatus.SC_OK)));
 
     wireMockServer.stubFor(WireMock.get(urlMatching(CIRCULATION_REQUESTS_URL + "/" + primaryRequestId))
