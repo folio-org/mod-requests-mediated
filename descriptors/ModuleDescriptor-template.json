@@ -271,7 +271,9 @@
         "inventory-storage.location-units.libraries.collection.get",
         "mod-settings.entries.item.get",
         "mod-settings.entries.collection.get",
-        "mod-settings.global.read.circulation"
+        "mod-settings.global.read.circulation",
+        "mod-settings.users.read.circulation",
+        "mod-settings.owner.read.circulation"
       ]
     }
   },
