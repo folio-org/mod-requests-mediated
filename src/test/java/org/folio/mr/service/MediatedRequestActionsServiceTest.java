@@ -6,10 +6,13 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CO
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequestEntity;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -39,6 +42,8 @@ import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -77,6 +82,28 @@ class MediatedRequestActionsServiceTest {
 
   @InjectMocks
   private MediatedRequestActionsServiceImpl mediatedRequestActionsService;
+
+  @Captor
+  ArgumentCaptor<MediatedRequestEntity> mediatedRequestEntityCaptor;
+
+  @Test
+  void sendItemInTransitForApprovalSuccess() {
+    // given
+    UUID mediatedRequestId = UUID.randomUUID();
+    MediatedRequestEntity initialRequest = buildMediatedRequestEntity(OPEN_NOT_YET_FILLED)
+      .withId(mediatedRequestId);
+    when(mediatedRequestsRepository.save(mediatedRequestEntityCaptor.capture())).thenReturn(null);
+
+    // when
+    mediatedRequestActionsService.sendItemInTransitForApproval(initialRequest);
+
+    // then
+    MediatedRequestEntity updatedRequest = mediatedRequestEntityCaptor.getValue();
+    assertNotNull(updatedRequest);
+    assertEquals(updatedRequest.getMediatedRequestStatus(), MediatedRequestStatus.OPEN);
+    assertEquals(updatedRequest.getStatus(), OPEN_IN_TRANSIT_FOR_APPROVAL.getValue());
+    assertEquals(updatedRequest.getMediatedRequestStep(), MediatedRequestStep.IN_TRANSIT_FOR_APPROVAL.getValue());
+  }
 
   @Test
   void successfulItemArrivalConfirmation() {
