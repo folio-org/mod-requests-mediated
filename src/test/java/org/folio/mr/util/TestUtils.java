@@ -5,7 +5,9 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Date;
+import java.util.UUID;
 
+import org.folio.mr.support.KafkaEvent;
 import org.json.JSONObject;
 
 import lombok.SneakyThrows;
@@ -33,6 +35,29 @@ public class TestUtils {
       Base64.getEncoder().encodeToString(header.toString().getBytes()),
       Base64.getEncoder().encodeToString(payload.toString().getBytes()),
       signature);
+  }
+
+  public static <T> KafkaEvent<T> buildEvent(String tenant, KafkaEvent.EventType type,
+                                             T oldVersion, T newVersion) {
+
+    KafkaEvent.EventData<T> data = KafkaEvent.EventData.<T>builder()
+      .oldVersion(oldVersion)
+      .newVersion(newVersion)
+      .build();
+
+    return buildEvent(tenant, type, data);
+  }
+
+  private static <T> KafkaEvent<T> buildEvent(String tenant, KafkaEvent.EventType type,
+                                              KafkaEvent.EventData<T> data) {
+
+    return KafkaEvent.<T>builder()
+      .id(UUID.randomUUID().toString())
+      .type(type)
+      .timestamp(new Date().getTime())
+      .tenant(tenant)
+      .data(data)
+      .build();
   }
 
   public static String dateToString(Date date) {

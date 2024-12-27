@@ -32,6 +32,11 @@ spring:
     openfeign:
       okhttp:
         enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:9092}
+    consumer:
+      auto-offset-reset: latest
+      group-id: ${ENV:folio}-mod-requests-mediated-group
 folio:
   tenant:
     validation:
