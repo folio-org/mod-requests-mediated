@@ -1,6 +1,5 @@
 package org.folio.mr.service.impl;
 
-import static org.folio.mr.domain.dto.Request.StatusEnum.CLOSED_CANCELLED;
 import static org.folio.mr.support.KafkaEvent.EventType.UPDATED;
 
 import java.util.UUID;
@@ -51,7 +50,10 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
                                         KafkaEvent<Request> event) {
     log.debug("handleRequestUpdateEvent:: mediatedRequest={}", () -> mediatedRequest);
     Request updatedRequest = event.getData().getNewVersion();
-    if (CLOSED_CANCELLED == updatedRequest.getStatus()) {
+    if (updatedRequest.getStatus() == Request.StatusEnum.OPEN_IN_TRANSIT) {
+      actionsService.changeStatusToInTransitForApproval(mediatedRequest);
+    }
+    if (updatedRequest.getStatus() == Request.StatusEnum.CLOSED_CANCELLED) {
       actionsService.cancel(mediatedRequest.getId(), updatedRequest);
     }
   }

@@ -1,9 +1,9 @@
 package org.folio.mr.service.impl;
 
 import static java.lang.String.format;
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
-import static org.folio.mr.domain.entity.MediatedRequestStep.from;
 import static org.folio.mr.support.ConversionUtils.asString;
 
 import java.util.List;
@@ -118,6 +118,13 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   @Override
+  public void changeStatusToInTransitForApproval(MediatedRequestEntity request) {
+    log.info("sendItemInTransitForApproval:: request id: {}", request.getId());
+    request.setMediatedRequestStatus(MediatedRequestStatus.OPEN);
+    updateMediatedRequestStatus(request, OPEN_IN_TRANSIT_FOR_APPROVAL);
+  }
+
+  @Override
   public MediatedRequest confirmItemArrival(String itemBarcode) {
     log.info("confirmItemArrival:: item barcode: {}", itemBarcode);
     MediatedRequestEntity entity = findMediatedRequestForItemArrival(itemBarcode);
@@ -175,9 +182,9 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     MediatedRequest.StatusEnum newStatus) {
 
     log.info("updateMediatedRequestStatus:: changing mediated request status from '{}' to '{}'",
-      request::getStatus, newStatus::getValue);
+      request.getStatus(), newStatus.getValue());
     request.setStatus(newStatus.getValue());
-    request.setMediatedRequestStep(from(newStatus).getValue());
+    request.setMediatedRequestStep(MediatedRequestStep.from(newStatus).getValue());
 
     return mediatedRequestsRepository.save(request);
   }
