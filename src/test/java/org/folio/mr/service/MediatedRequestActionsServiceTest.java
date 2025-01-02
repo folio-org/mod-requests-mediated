@@ -95,7 +95,7 @@ class MediatedRequestActionsServiceTest {
     when(mediatedRequestsRepository.save(mediatedRequestEntityCaptor.capture())).thenReturn(null);
 
     // when
-    mediatedRequestActionsService.sendItemInTransitForApproval(initialRequest);
+    mediatedRequestActionsService.changeStatusToInTransitForApproval(initialRequest);
 
     // then
     MediatedRequestEntity updatedRequest = mediatedRequestEntityCaptor.getValue();

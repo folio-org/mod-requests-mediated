@@ -118,7 +118,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   @Override
-  public void sendItemInTransitForApproval(MediatedRequestEntity request) {
+  public void changeStatusToInTransitForApproval(MediatedRequestEntity request) {
     log.info("sendItemInTransitForApproval:: request id: {}", request.getId());
     request.setMediatedRequestStatus(MediatedRequestStatus.OPEN);
     updateMediatedRequestStatus(request, OPEN_IN_TRANSIT_FOR_APPROVAL);

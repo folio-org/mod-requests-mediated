@@ -51,7 +51,7 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
     log.debug("handleRequestUpdateEvent:: mediatedRequest={}", () -> mediatedRequest);
     Request updatedRequest = event.getData().getNewVersion();
     if (updatedRequest.getStatus() == Request.StatusEnum.OPEN_IN_TRANSIT) {
-      actionsService.sendItemInTransitForApproval(mediatedRequest);
+      actionsService.changeStatusToInTransitForApproval(mediatedRequest);
     }
     if (updatedRequest.getStatus() == Request.StatusEnum.CLOSED_CANCELLED) {
       actionsService.cancel(mediatedRequest.getId(), updatedRequest);
