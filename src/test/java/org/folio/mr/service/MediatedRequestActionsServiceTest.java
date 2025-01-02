@@ -100,9 +100,9 @@ class MediatedRequestActionsServiceTest {
     // then
     MediatedRequestEntity updatedRequest = mediatedRequestEntityCaptor.getValue();
     assertNotNull(updatedRequest);
-    assertEquals(updatedRequest.getMediatedRequestStatus(), MediatedRequestStatus.OPEN);
-    assertEquals(updatedRequest.getStatus(), OPEN_IN_TRANSIT_FOR_APPROVAL.getValue());
-    assertEquals(updatedRequest.getMediatedRequestStep(), MediatedRequestStep.IN_TRANSIT_FOR_APPROVAL.getValue());
+    assertEquals(MediatedRequestStatus.OPEN, updatedRequest.getMediatedRequestStatus());
+    assertEquals(OPEN_IN_TRANSIT_FOR_APPROVAL.getValue(), updatedRequest.getStatus());
+    assertEquals(MediatedRequestStep.IN_TRANSIT_FOR_APPROVAL.getValue(), updatedRequest.getMediatedRequestStep());
   }
 
   @Test
