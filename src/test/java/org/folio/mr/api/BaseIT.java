@@ -75,10 +75,15 @@ public class BaseIT {
   protected static final String USER_ID = randomId();
   protected static final String HEADER_TENANT = "x-okapi-tenant";
   private static final String FOLIO_ENVIRONMENT = "folio";
-
   private static final int WIRE_MOCK_PORT = TestSocketUtils.findAvailableTcpPort();
-
   protected static WireMockServer wireMockServer = new WireMockServer(WIRE_MOCK_PORT);
+  protected static final String REQUEST_KAFKA_TOPIC_NAME = buildTopicName("circulation", "request");
+  private static final String[] KAFKA_TOPICS = {REQUEST_KAFKA_TOPIC_NAME};
+  private FolioExecutionContextSetter contextSetter;
+  protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
+    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
+    .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
   @Autowired
   private WebTestClient webClient;
@@ -131,20 +136,6 @@ public class BaseIT {
     kafkaAdminClient.close();
     wireMockServer.stop();
   }
-
-  protected static final String REQUEST_KAFKA_TOPIC_NAME =
-    buildTopicName("circulation", "request");
-
-  private static final String[] KAFKA_TOPICS = {
-    REQUEST_KAFKA_TOPIC_NAME
-  };
-
-  private FolioExecutionContextSetter contextSetter;
-
-  protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
-    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
-    .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
   @SneakyThrows
   private static void createKafkaTopics(String... topicNames) {

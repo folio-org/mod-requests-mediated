@@ -1,6 +1,5 @@
 package org.folio.mr.listener.kafka;
 
-
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
@@ -30,7 +29,7 @@ public class KafkaEventListener {
   private final SystemUserScopedExecutionService systemUserScopedExecutionService;
 
   public KafkaEventListener(@Autowired RequestEventHandler requestEventHandler,
-                            @Autowired SystemUserScopedExecutionService systemUserScopedExecutionService) {
+    @Autowired SystemUserScopedExecutionService systemUserScopedExecutionService) {
 
     this.requestEventHandler = requestEventHandler;
     this.systemUserScopedExecutionService = systemUserScopedExecutionService;
@@ -43,9 +42,9 @@ public class KafkaEventListener {
   public void handleRequestEvent(String eventString, MessageHeaders messageHeaders) {
     log.debug("handleRequestEvent:: event: {}", () -> eventString);
     KafkaEvent<Request> event = deserialize(eventString, messageHeaders, Request.class);
-    log.info("handleRequestEvent:: event received: {}", event::getId);
+    log.info("handleRequestEvent:: event received: {}", event.getId());
     handleEvent(event, requestEventHandler);
-    log.info("handleRequestEvent:: event consumed: {}", event::getId);
+    log.info("handleRequestEvent:: event consumed: {}", event.getId());
   }
 
   private <T> void handleEvent(KafkaEvent<T> event, KafkaEventHandler<T> handler) {
@@ -55,7 +54,7 @@ public class KafkaEventListener {
   }
 
   private static <T> KafkaEvent<T> deserialize(String eventString, MessageHeaders messageHeaders,
-                                               Class<T> dataType) {
+    Class<T> dataType) {
 
     try {
       JavaType eventType = objectMapper.getTypeFactory()

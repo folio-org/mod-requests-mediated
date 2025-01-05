@@ -24,17 +24,17 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
 
   @Override
   public void handle(KafkaEvent<Request> event) {
-    log.info("handle:: processing request event: {}", event::getId);
+    log.info("handle:: processing request event: {}", event.getId());
     if (event.getType() == UPDATED) {
       handleRequestUpdateEvent(event);
     } else {
-      log.info("handle:: ignoring event {} of unsupported type: {}", event::getId, event::getType);
+      log.info("handle:: ignoring event {} of unsupported type: {}", event.getId(), event.getType());
     }
-    log.info("handle:: request event processed: {}", event::getId);
+    log.info("handle:: request event processed: {}", event.getId());
   }
 
   private void handleRequestUpdateEvent(KafkaEvent<Request> event) {
-    log.info("handleRequestUpdateEvent:: handling request update event: {}", event::getId);
+    log.info("handleRequestUpdateEvent:: handling request update event: {}", event.getId());
     Request updatedRequest = event.getData().getNewVersion();
     if (updatedRequest == null) {
       log.warn("handleRequestUpdateEvent:: event does not contain new version of request");
@@ -47,8 +47,8 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
   }
 
   private void handleRequestUpdateEvent(MediatedRequestEntity mediatedRequest,
-                                        KafkaEvent<Request> event) {
-    log.debug("handleRequestUpdateEvent:: mediatedRequest={}", () -> mediatedRequest);
+    KafkaEvent<Request> event) {
+    log.debug("handleRequestUpdateEvent:: mediatedRequest={}", mediatedRequest);
     Request updatedRequest = event.getData().getNewVersion();
     if (updatedRequest.getStatus() == Request.StatusEnum.OPEN_IN_TRANSIT) {
       actionsService.changeStatusToInTransitForApproval(mediatedRequest);
