@@ -49,7 +49,7 @@ public class TestUtils {
   }
 
   private static <T> KafkaEvent<T> buildEvent(String tenant, KafkaEvent.EventType type,
-                                              KafkaEvent.EventData<T> data) {
+    KafkaEvent.EventData<T> data) {
 
     return KafkaEvent.<T>builder()
       .id(UUID.randomUUID().toString())
