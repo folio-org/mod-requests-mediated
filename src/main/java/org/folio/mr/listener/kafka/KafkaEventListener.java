@@ -3,6 +3,7 @@ package org.folio.mr.listener.kafka;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
+import org.folio.mr.config.TenantConfig;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.exception.KafkaEventDeserializationException;
 import org.folio.mr.service.KafkaEventHandler;
@@ -27,12 +28,14 @@ public class KafkaEventListener {
   private static final ObjectMapper objectMapper = new ObjectMapper();
   private final RequestEventHandler requestEventHandler;
   private final SystemUserScopedExecutionService systemUserScopedExecutionService;
+  private final TenantConfig secureTenantConfig;
 
   public KafkaEventListener(@Autowired RequestEventHandler requestEventHandler,
-    @Autowired SystemUserScopedExecutionService systemUserScopedExecutionService) {
+    @Autowired SystemUserScopedExecutionService systemUserScopedExecutionService, TenantConfig secureTenantConfig) {
 
     this.requestEventHandler = requestEventHandler;
     this.systemUserScopedExecutionService = systemUserScopedExecutionService;
+    this.secureTenantConfig = secureTenantConfig;
   }
 
   @KafkaListener(
@@ -48,8 +51,8 @@ public class KafkaEventListener {
   }
 
   private <T> void handleEvent(KafkaEvent<T> event, KafkaEventHandler<T> handler) {
-    log.info("handleEvent:: event: {}", event);
-    systemUserScopedExecutionService.executeAsyncSystemUserScoped(event.getTenant(),
+    log.info("handleEvent:: event: {}", event.getId());
+    systemUserScopedExecutionService.executeAsyncSystemUserScoped(secureTenantConfig.getSecureTenantId(),
       () -> handler.handle(event));
   }
 

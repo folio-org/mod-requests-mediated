@@ -9,6 +9,7 @@ import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
 import static org.folio.mr.util.TestUtils.buildEvent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
 
 import java.util.Date;
 import java.util.List;
@@ -22,6 +23,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.awaitility.Awaitility;
 import org.folio.mr.api.BaseIT;
+import org.folio.mr.config.TenantConfig;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.RequestInstance;
@@ -38,6 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import lombok.SneakyThrows;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 class KafkaEventListenerTest extends BaseIT {
   private static final String CONSUMER_GROUP_ID = "folio-mod-requests-mediated-group";
@@ -47,6 +50,8 @@ class KafkaEventListenerTest extends BaseIT {
   private MediatedRequestsRepository mediatedRequestsRepository;
   @Autowired
   private SystemUserScopedExecutionService executionService;
+  @MockBean
+  private TenantConfig tenantConfig;
 
   @BeforeEach
   void beforeEach() {
@@ -55,6 +60,7 @@ class KafkaEventListenerTest extends BaseIT {
 
   @Test
   void shouldCancelMediatedRequestUponConfirmedRequestCancel() {
+    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
     KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_NOT_YET_FILLED, CLOSED_CANCELLED);
     MediatedRequest mediatedRequest =
       buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
