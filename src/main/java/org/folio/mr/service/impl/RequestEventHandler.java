@@ -48,6 +48,7 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
 
   private void handleRequestUpdateEvent(MediatedRequestEntity mediatedRequest,
     KafkaEvent<Request> event) {
+
     log.debug("handleRequestUpdateEvent:: mediatedRequest={}", mediatedRequest);
     Request updatedRequest = event.getData().getNewVersion();
     if (updatedRequest.getStatus() == Request.StatusEnum.OPEN_IN_TRANSIT) {

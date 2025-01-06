@@ -38,7 +38,7 @@ public class TestUtils {
   }
 
   public static <T> KafkaEvent<T> buildEvent(String tenant, KafkaEvent.EventType type,
-                                             T oldVersion, T newVersion) {
+    T oldVersion, T newVersion) {
 
     KafkaEvent.EventData<T> data = KafkaEvent.EventData.<T>builder()
       .oldVersion(oldVersion)

@@ -76,7 +76,7 @@ class KafkaEventListenerTest extends BaseIT {
   }
 
   private static KafkaEvent<Request> buildRequestUpdateEvent(Request.StatusEnum oldStatus,
-                                                                    Request.StatusEnum newStatus) {
+    Request.StatusEnum newStatus) {
     return buildUpdateEvent(TENANT_ID_CONSORTIUM,
       buildRequest(oldStatus, CONFIRMED_REQUEST_ID),
       buildRequest(newStatus, CONFIRMED_REQUEST_ID));
