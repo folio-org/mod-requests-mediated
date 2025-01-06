@@ -1,6 +1,7 @@
 package org.folio.mr.listener.kafka;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.Optional;
 
 import org.folio.mr.config.TenantConfig;
@@ -43,20 +44,22 @@ public class KafkaEventListener {
     groupId = "${spring.kafka.consumer.group-id}"
   )
   public void handleRequestEvent(String eventString, MessageHeaders messageHeaders) {
-    log.debug("handleRequestEvent:: event: {}", () -> eventString);
-    KafkaEvent<Request> event = deserialize(eventString, messageHeaders, Request.class);
-    log.info("handleRequestEvent:: event received: {}", event.getId());
-    handleEvent(event, requestEventHandler);
-    log.info("handleRequestEvent:: event consumed: {}", event.getId());
+    handleEvent(eventString, requestEventHandler, messageHeaders, Request.class);
   }
 
-  private <T> void handleEvent(KafkaEvent<T> event, KafkaEventHandler<T> handler) {
-    log.info("handleEvent:: event: {}", event.getId());
+  private <T> void handleEvent(String eventString, KafkaEventHandler<T> handler,
+    Map<String, Object> messageHeaders, Class<T> payloadType) {
+
+    log.debug("handleEvent:: event: {}", () -> eventString);
+    KafkaEvent<T> event = deserialize(eventString, messageHeaders, payloadType);
+    log.info("handleEvent:: event received: {}", event.getId());
+
     systemUserScopedExecutionService.executeAsyncSystemUserScoped(secureTenantConfig.getSecureTenantId(),
       () -> handler.handle(event));
+    log.info("handleEvent:: event consumed: {}", event.getId());
   }
 
-  private static <T> KafkaEvent<T> deserialize(String eventString, MessageHeaders messageHeaders,
+  private static <T> KafkaEvent<T> deserialize(String eventString, Map<String, Object> messageHeaders,
     Class<T> dataType) {
 
     try {
@@ -73,7 +76,7 @@ public class KafkaEventListener {
     }
   }
 
-  private static String getHeaderValue(MessageHeaders headers, String headerName) {
+  private static String getHeaderValue(Map<String, Object> headers, String headerName) {
     log.debug("getHeaderValue:: headers: {}, headerName: {}", () -> headers, () -> headerName);
     var headerValue = headers.get(headerName);
     var value = headerValue == null
