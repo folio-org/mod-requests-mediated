@@ -119,7 +119,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
   @Override
   public void changeStatusToInTransitForApproval(MediatedRequestEntity request) {
-    log.info("sendItemInTransitForApproval:: request id: {}", request.getId());
+    log.info("changeStatusToInTransitForApproval:: request id: {}", request.getId());
     request.setMediatedRequestStatus(MediatedRequestStatus.OPEN);
     updateMediatedRequestStatus(request, OPEN_IN_TRANSIT_FOR_APPROVAL);
   }
@@ -244,16 +244,14 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   @Override
-  public void cancel(UUID mediatedRequestId, Request confirmedRequest) {
-    log.info("cancel:: looking for mediated request: {}", mediatedRequestId);
-    MediatedRequestEntity mediatedRequest = findMediatedRequest(mediatedRequestId);
-    log.debug("cancel:: mediatedRequest: {}", mediatedRequest);
+  public void cancel(MediatedRequestEntity mediatedRequest, Request confirmedRequest) {
+    log.info("cancel:: mediatedRequest: {}", mediatedRequest::getId);
     mediatedRequest.setStatus(MediatedRequest.StatusEnum.CLOSED_CANCELLED.getValue());
     mediatedRequest.setCancellationReasonId(UUID.fromString(confirmedRequest.getCancellationReasonId()));
     mediatedRequest.setCancelledDate(confirmedRequest.getCancelledDate());
     mediatedRequest.setCancelledByUserId(UUID.fromString(confirmedRequest.getCancelledByUserId()));
     mediatedRequestsRepository.save(mediatedRequest);
-    log.info("cancel:: mediated request {} was successfully cancelled", mediatedRequestId);
+    log.info("cancel:: mediated request {} was successfully cancelled", mediatedRequest::getId);
   }
 
   private void declineRequest(MediatedRequestEntity request) {
