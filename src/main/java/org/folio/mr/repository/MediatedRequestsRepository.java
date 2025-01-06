@@ -29,4 +29,5 @@ public interface MediatedRequestsRepository extends JpaCqlRepository<MediatedReq
     """)
   Optional<MediatedRequestEntity> findRequestForSendingInTransit(String itemBarcode);
 
+  Optional<MediatedRequestEntity> findByConfirmedRequestId(UUID confirmedRequestId);
 }
