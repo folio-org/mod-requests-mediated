@@ -105,6 +105,7 @@ public class BaseIT {
   static void overrideProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
     registry.add("folio.okapi-url", wireMockServer::baseUrl);
+    registry.add("folio.tenant.secure-tenant-id", () -> TENANT_ID_CONSORTIUM);
   }
 
   @BeforeEach
