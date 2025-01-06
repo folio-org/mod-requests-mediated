@@ -11,27 +11,30 @@ FOLIO compatible mediated requests functionality, including secure requests.
 
 ### Environment variables
 
-| Name                 | Default value             | Description                                                                                                                                                                           |
-|:---------------------|:--------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| JAVA_OPTIONS         | -XX:MaxRAMPercentage=66.0 | Java options                                                                                                                                                                          |
-| DB_HOST              | postgres                  | Postgres hostname                                                                                                                                                                     |
-| DB_PORT              | 5432                      | Postgres port                                                                                                                                                                         |
-| DB_USERNAME          | folio_admin               | Postgres username                                                                                                                                                                     |
-| DB_PASSWORD          | folio_admin               | Postgres username password                                                                                                                                                            |
-| DB_DATABASE          | okapi_modules             | Postgres database name                                                                                                                                                                |
-| KAFKA_HOST           | kafka                     | Kafka broker hostname                                                                                                                                                                 |
-| KAFKA_PORT           | 9092                      | Kafka broker port                                                                                                                                                                     |
-| SYSTEM_USER_USERNAME | mod-requests-mediated     | Username for `mod-requests-mediated` system user                                                                                                                                      |
-| SYSTEM_USER_PASSWORD | mod-requests-mediated     | Password for `mod-requests-mediated` system user (not required for dev envs)                                                                                                          |
-| SYSTEM_USER_ENABLED  | true                      | Defines if system user must be created at service tenant initialization                                                                                                               |
-| SECURE_TENANT_ID     | -                         | Defines name of the tenant secure tenant                                                                                                                                              |
-| OKAPI_URL            | -                         | OKAPI URL used to login system user, required                                                                                                                                         |
-| ENV                  | folio                     | The logical name of the deployment, must be unique across all environments using the same shared Kafka/Elasticsearch clusters, `a-z (any case)`, `0-9`, `-`, `_` symbols only allowed |
-
+| Name                          | Default value             | Description                                                                                                                                                                           |
+|:------------------------------|:--------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| JAVA_OPTIONS                  | -XX:MaxRAMPercentage=66.0 | Java options                                                                                                                                                                          |
+| DB_HOST                       | postgres                  | Postgres hostname                                                                                                                                                                     |
+| DB_PORT                       | 5432                      | Postgres port                                                                                                                                                                         |
+| DB_USERNAME                   | folio_admin               | Postgres username                                                                                                                                                                     |
+| DB_PASSWORD                   | folio_admin               | Postgres username password                                                                                                                                                            |
+| DB_DATABASE                   | okapi_modules             | Postgres database name                                                                                                                                                                |
+| KAFKA_HOST                    | kafka                     | Kafka broker hostname                                                                                                                                                                 |
+| KAFKA_PORT                    | 9092                      | Kafka broker port                                                                                                                                                                     |
+| KAFKA_SECURITY_PROTOCOL       | PLAINTEXT                 | Kafka security protocol used to communicate with brokers (SSL or PLAINTEXT)                                                                                                           |
+| KAFKA_SSL_KEYSTORE_LOCATION   | -                         | The location of the Kafka key store file. This is optional for client and can be used for two-way authentication for client.                                                          |
+| KAFKA_SSL_KEYSTORE_PASSWORD   | -                         | The store password for the Kafka key store file. This is optional for client and only needed if 'ssl.keystore.location' is configured.                                                |
+| KAFKA_SSL_TRUSTSTORE_LOCATION | -                         | The location of the Kafka trust store file.                                                                                                                                           |
+| KAFKA_SSL_TRUSTSTORE_PASSWORD | -                         | The password for the Kafka trust store file. If a password is not set, trust store file configured will still be used, but integrity checking is disabled.                            |
+| SYSTEM_USER_USERNAME          | mod-requests-mediated     | Username for `mod-requests-mediated` system user                                                                                                                                      |
+| SYSTEM_USER_PASSWORD          | mod-requests-mediated     | Password for `mod-requests-mediated` system user (not required for dev envs)                                                                                                          |
+| SYSTEM_USER_ENABLED           | true                      | Defines if system user must be created at service tenant initialization                                                                                                               |
+| SECURE_TENANT_ID              | -                         | Defines name of the tenant secure tenant                                                                                                                                              |
+| OKAPI_URL                     | http://okapi:9130         | OKAPI URL used to login system user, required                                                                                                                                         |
+| ENV                           | folio                     | The logical name of the deployment, must be unique across all environments using the same shared Kafka/Elasticsearch clusters, `a-z (any case)`, `0-9`, `-`, `_` symbols only allowed |
 
 ## Further information
 
 ### Issue tracker
 
 Project [MODREQMED](https://issues.folio.org/browse/MODREQMED).
-
