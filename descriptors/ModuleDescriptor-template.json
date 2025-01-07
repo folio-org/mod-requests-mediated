@@ -304,7 +304,8 @@
       { "name": "KAFKA_SSL_TRUSTSTORE_PASSWORD", "value": "" },
       { "name": "SYSTEM_USER_ENABLED", "value": "true" },
       { "name": "SYSTEM_USER_NAME", "value": "mod-requests-mediated" },
-      { "name": "SYSTEM_USER_PASSWORD", "value": "mod-requests-mediated" }
+      { "name": "SYSTEM_USER_PASSWORD", "value": "mod-requests-mediated" },
+      { "name": "SECURE_TENANT_ID", "value": "" }
     ]
   }
 }
