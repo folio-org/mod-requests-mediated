@@ -1,3 +1,8 @@
+## 1.0.3 2025-01-09
+* Cancel mediated request when confirmed circulation request is cancelled (MODREQMED-27)
+* Mediated request status transition from `Not yet filled` to `In transit for approval` (MODREQMED-65)
+* Add missing required interfaces to module descriptor (MODREQMED-68)
+
 ## 1.0.2 2024-12-12
 * Mediated request confirmation - create ECS TLR on behalf of fake user (MODREQMED-48)
 * Make mod-tlr dependency optional (MODREQMED-51)
