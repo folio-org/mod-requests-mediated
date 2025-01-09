@@ -242,6 +242,30 @@
     {
       "id": "circulation",
       "version": "14.2"
+    },
+    {
+      "id": "location-units",
+      "version": "2.0"
+    },
+    {
+      "id": "locations",
+      "version": "3.1"
+    },
+    {
+      "id": "service-points",
+      "version": "3.4"
+    },
+    {
+      "id": "search",
+      "version": "1.3"
+    },
+    {
+      "id": "consortium-search",
+      "version": "2.1"
+    },
+    {
+      "id": "user-tenants",
+      "version": "1.0"
     }
   ],
   "optional": [
@@ -285,9 +309,8 @@
       }
     },
     "env": [
-      { "name": "JAVA_OPTIONS",
-        "value": "-XX:MaxRAMPercentage=66.0"
-      },
+      { "name": "JAVA_OPTIONS", "value": "-XX:MaxRAMPercentage=66.0" },
+      { "name": "OKAPI_URL", "value": "http://okapi:9130" },
       { "name": "DB_HOST", "value": "postgres" },
       { "name": "DB_PORT", "value": "5432" },
       { "name": "DB_USERNAME", "value": "folio_admin" },
@@ -296,6 +319,13 @@
       { "name": "DB_QUERYTIMEOUT", "value": "60000" },
       { "name": "DB_CHARSET", "value": "UTF-8" },
       { "name": "DB_MAXPOOLSIZE", "value": "5" },
+      { "name": "KAFKA_HOST", "value": "kafka" },
+      { "name": "KAFKA_PORT", "value": "9092" },
+      { "name": "KAFKA_SECURITY_PROTOCOL", "value": "PLAINTEXT" },
+      { "name": "KAFKA_SSL_KEYSTORE_LOCATION", "value": "" },
+      { "name": "KAFKA_SSL_KEYSTORE_PASSWORD", "value": "" },
+      { "name": "KAFKA_SSL_TRUSTSTORE_LOCATION", "value": "" },
+      { "name": "KAFKA_SSL_TRUSTSTORE_PASSWORD", "value": "" },
       { "name": "SYSTEM_USER_ENABLED", "value": "true" },
       { "name": "SYSTEM_USER_NAME", "value": "mod-requests-mediated" },
       { "name": "SYSTEM_USER_PASSWORD", "value": "mod-requests-mediated" }
