@@ -3,6 +3,8 @@ package org.folio.mr.controller;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.mr.domain.dto.Request.StatusEnum.CLOSED_CANCELLED;
+import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_AWAITING_PICKUP;
+import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_IN_TRANSIT;
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_NOT_YET_FILLED;
 import static org.folio.mr.support.KafkaEvent.EventType.UPDATED;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
@@ -73,6 +75,23 @@ class KafkaEventListenerTest extends BaseIT {
 
     MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
     assertEquals(MediatedRequest.StatusEnum.CLOSED_CANCELLED.getValue(), updatedMediatedRequest.getStatus());
+  }
+
+  @Test
+  void shouldUpdateMediatedRequestStatusOnItemCheckout() {
+    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
+    KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_IN_TRANSIT, OPEN_AWAITING_PICKUP);
+    MediatedRequest mediatedRequest =
+      buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
+    mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
+    var initialMediatedRequest =
+      createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
+    assertNotNull(initialMediatedRequest.getId());
+
+    publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
+
+    MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
+    assertEquals(MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP.getValue(), updatedMediatedRequest.getStatus());
   }
 
   private static KafkaEvent<Request> buildRequestUpdateEvent(Request.StatusEnum oldStatus,
