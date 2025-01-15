@@ -3,6 +3,7 @@ package org.folio.mr.service;
 import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CONFIRMATION;
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
@@ -87,7 +88,7 @@ class MediatedRequestActionsServiceTest {
   ArgumentCaptor<MediatedRequestEntity> mediatedRequestEntityCaptor;
 
   @Test
-  void sendItemInTransitForApprovalSuccess() {
+  void changeStatusToInTransitForApprovalSuccess() {
     // given
     UUID mediatedRequestId = UUID.randomUUID();
     MediatedRequestEntity initialRequest = buildMediatedRequestEntity(OPEN_NOT_YET_FILLED)
@@ -182,6 +183,25 @@ class MediatedRequestActionsServiceTest {
       () -> mediatedRequestActionsService.sendItemInTransit("item-barcode"));
     assertThat(exception.getMessage(),
       is("Send item in transit: mediated request for item 'item-barcode' was not found"));
+  }
+
+  @Test
+  void changeStatusToAwaitingPickupSuccess() {
+    // given
+    UUID mediatedRequestId = UUID.randomUUID();
+    MediatedRequestEntity initialRequest = buildMediatedRequestEntity(OPEN_NOT_YET_FILLED)
+      .withId(mediatedRequestId);
+    when(mediatedRequestsRepository.save(mediatedRequestEntityCaptor.capture())).thenReturn(null);
+
+    // when
+    mediatedRequestActionsService.changeStatusToAwaitingPickup(initialRequest);
+
+    // then
+    MediatedRequestEntity updatedRequest = mediatedRequestEntityCaptor.getValue();
+    assertNotNull(updatedRequest);
+    assertEquals(MediatedRequestStatus.OPEN, updatedRequest.getMediatedRequestStatus());
+    assertEquals(OPEN_AWAITING_PICKUP.getValue(), updatedRequest.getStatus());
+    assertEquals(MediatedRequestStep.AWAITING_PICKUP.getValue(), updatedRequest.getMediatedRequestStep());
   }
 
   @Test
