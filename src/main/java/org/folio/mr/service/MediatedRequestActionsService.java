@@ -12,6 +12,7 @@ public interface MediatedRequestActionsService {
   void changeStatusToInTransitForApproval(MediatedRequestEntity request);
   MediatedRequest confirmItemArrival(String itemBarcode);
   MediatedRequest sendItemInTransit(String itemBarcode);
+  void changeStatusToAwaitingPickup(MediatedRequestEntity request);
   void decline(UUID mediatedRequestId);
   void cancel(MediatedRequestEntity mediatedRequest, Request confirmedRequest);
   MediatedRequestWorkflowLog saveMediatedRequestWorkflowLog(MediatedRequest request);
