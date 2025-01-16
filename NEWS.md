@@ -1,3 +1,7 @@
+## 1.0.4 2025-01-16
+* Upgrade to Spring Boot 3.3.7, folio-spring 8.2.2 (MODREQMED-73)
+* Mediated request workflow - Open - Awaiting pickup status change (MODREQMED-74)
+
 ## 1.0.3 2025-01-09
 * Cancel mediated request when confirmed circulation request is cancelled (MODREQMED-27)
 * Mediated request status transition from `Not yet filled` to `In transit for approval` (MODREQMED-65)

@@ -1,6 +1,7 @@
 package org.folio.mr.service.impl;
 
 import static java.lang.String.format;
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
@@ -176,6 +177,13 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     log.info("findMediatedRequestForSendingInTransit:: mediated request found: {}", entity::getId);
 
     return entity;
+  }
+
+  @Override
+  public void changeStatusToAwaitingPickup(MediatedRequestEntity request) {
+    log.info("changeStatusToAwaitingPickup:: request id: {}", request.getId());
+    request.setMediatedRequestStatus(MediatedRequestStatus.OPEN);
+    updateMediatedRequestStatus(request, OPEN_AWAITING_PICKUP);
   }
 
   private MediatedRequestEntity updateMediatedRequestStatus(MediatedRequestEntity request,
