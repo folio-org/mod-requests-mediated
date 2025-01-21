@@ -16,6 +16,7 @@ import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
+import org.folio.mr.domain.dto.RequestPickupServicePoint;
 import org.folio.mr.domain.dto.RequestDeliveryAddress;
 import org.folio.mr.domain.dto.RequestPickupServicePoint;
 import org.folio.mr.domain.dto.SearchInstance;
