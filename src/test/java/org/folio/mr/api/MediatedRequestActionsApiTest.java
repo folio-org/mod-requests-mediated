@@ -312,6 +312,15 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @SneakyThrows
   void successfulItemArrivalConfirmation() {
     MediatedRequestEntity request = createMediatedRequestEntity();
+    String primaryRequestId = request.getConfirmedRequestId().toString();
+    wireMockServer.stubFor(WireMock.get(urlMatching(CIRCULATION_REQUESTS_URL + "/" + primaryRequestId))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new Request().id(primaryRequestId),
+        HttpStatus.SC_OK)));
+    wireMockServer.stubFor(WireMock.put(urlMatching(CIRCULATION_REQUESTS_URL + "/" + primaryRequestId))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new Request().id(primaryRequestId),
+        HttpStatus.SC_OK)));
 
     confirmItemArrival("A14837334314", request)
       .andExpect(status().isOk())
