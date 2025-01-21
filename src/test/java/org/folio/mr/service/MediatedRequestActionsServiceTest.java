@@ -14,7 +14,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -53,6 +55,10 @@ import jakarta.persistence.EntityNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
 class MediatedRequestActionsServiceTest {
+  private static final String INTERIM_SERVICE_POINT_ID = "32c6f0c7-26e4-4350-8c29-1e11c2e3efc4";
+  private static final String INTERIM_SERVICE_POINT_NAME = "Interim service point";
+  private static final String INTERIM_SERVICE_POINT_CODE = "interimsp";
+  private static final String INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME= "Interim service point";
 
   @Mock
   private MediatedRequestsRepository mediatedRequestsRepository;
@@ -232,6 +238,7 @@ class MediatedRequestActionsServiceTest {
 
     verify(mediatedRequestsRepository).save(mediatedRequest.withConfirmedRequestId(circulationRequestId));
     verifyNoInteractions(ecsRequestService);
+    verify(circulationRequestService, times(0)).update(any(Request.class));
   }
 
   @Test
@@ -268,6 +275,9 @@ class MediatedRequestActionsServiceTest {
 
     verify(mediatedRequestsRepository, times(2))
       .save(mediatedRequest.withConfirmedRequestId(primaryRequestId));
+    ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+    verify(circulationRequestService).update(requestCaptor.capture());
+    verifyUpdatedRequestWithInterimServicePoint(requestCaptor.getValue());
   }
 
   @Test
@@ -302,6 +312,9 @@ class MediatedRequestActionsServiceTest {
       .save(mediatedRequest.withConfirmedRequestId(primaryRequestId));
     verify(inventoryService).fetchInstance(instanceId.toString());
     verifyNoMoreInteractions(inventoryService);
+    ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+    verify(circulationRequestService).update(requestCaptor.capture());
+    verifyUpdatedRequestWithInterimServicePoint(requestCaptor.getValue());
   }
 
   @Test
@@ -344,6 +357,19 @@ class MediatedRequestActionsServiceTest {
         .withMediatedRequestStep(MediatedRequestStep.DECLINED.getValue())
         .withMediatedWorkflow(MediatedRequestWorkflow.PRIVATE_REQUEST.getValue())
     );
+  }
+
+  private void verifyUpdatedRequestWithInterimServicePoint(Request request) {
+    assertEquals(INTERIM_SERVICE_POINT_ID, request.getPickupServicePointId());
+    assertEquals(INTERIM_SERVICE_POINT_NAME, request.getPickupServicePoint().getName());
+    assertEquals(INTERIM_SERVICE_POINT_CODE, request.getPickupServicePoint().getCode());
+    assertEquals(INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME, request.getPickupServicePoint()
+      .getDiscoveryDisplayName());
+    assertNotNull(request.getPickupServicePoint());
+    assertTrue(request.getPickupServicePoint().getPickupLocation());
+    assertNull(request.getDeliveryAddress());
+    assertNull(request.getDeliveryAddressTypeId());
+    assertNotNull(request.getRequesterId());
   }
 
 }
