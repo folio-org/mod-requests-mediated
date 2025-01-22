@@ -143,7 +143,7 @@ class MediatedRequestActionsServiceTest {
 
     ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
     verify(circulationRequestService).update(requestCaptor.capture());
-    verifyUpdatedPrimaryRequestWithInitialValues(requestCaptor.getValue(), mappedRequest);
+    verifyDeliveryInfoUpdatedUponArrival(requestCaptor.getValue(), mappedRequest);
   }
 
   @Test
@@ -380,7 +380,7 @@ class MediatedRequestActionsServiceTest {
     assertNotNull(request.getRequesterId());
   }
 
-  private void verifyUpdatedPrimaryRequestWithInitialValues(Request request,
+  private void verifyDeliveryInfoUpdatedUponArrival(Request request,
     MediatedRequest mediatedRequest) {
 
     assertEquals(mediatedRequest.getFulfillmentPreference().getValue(),
