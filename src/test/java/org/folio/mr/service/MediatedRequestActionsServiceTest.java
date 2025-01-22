@@ -132,8 +132,7 @@ class MediatedRequestActionsServiceTest {
     when(mediatedRequestMapper.mapEntityToDto(any(MediatedRequestEntity.class)))
       .thenReturn(mappedRequest);
     when(circulationRequestService.get(anyString())).thenReturn(new Request());
-    when(circulationRequestService.update(any(Request.class)))
-      .thenReturn(new Request());
+    when(circulationRequestService.update(any(Request.class))).thenReturn(new Request());
 
     MediatedRequest result = mediatedRequestActionsService.confirmItemArrival(itemBarcode);
 
