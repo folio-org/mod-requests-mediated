@@ -1,3 +1,7 @@
+## 1.0.5 2025-01-23
+* Update primary request on arrival confirmation stage (MODREQMED-70)
+* Update primary request on mediated request confirmation stage (MODREQMED-67)
+
 ## 1.0.4 2025-01-16
 * Upgrade to Spring Boot 3.3.7, folio-spring 8.2.2 (MODREQMED-73)
 * Mediated request workflow - Open - Awaiting pickup status change (MODREQMED-74)

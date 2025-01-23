@@ -16,6 +16,8 @@ import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
+import org.folio.mr.domain.dto.RequestDeliveryAddress;
+import org.folio.mr.domain.dto.RequestPickupServicePoint;
 import org.folio.mr.domain.dto.SearchInstance;
 import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
@@ -42,6 +44,11 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @RequiredArgsConstructor
 public class MediatedRequestActionsServiceImpl implements MediatedRequestActionsService {
+
+  private static final String INTERIM_SERVICE_POINT_ID = "32c6f0c7-26e4-4350-8c29-1e11c2e3efc4";
+  private static final String INTERIM_SERVICE_POINT_NAME = "Interim service point";
+  private static final String INTERIM_SERVICE_POINT_CODE = "interimsp";
+  private static final String INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME= "Interim service point";
 
   private final MediatedRequestsRepository mediatedRequestsRepository;
   private final InventoryService inventoryService;
@@ -76,7 +83,21 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
   private Request updatePrimaryRequest(MediatedRequestEntity mediatedRequest, EcsTlr ecsTlr) {
     Request request = circulationRequestService.get(ecsTlr.getPrimaryRequestId());
+
+    // Changing requesterId from fake proxy ID back to the real ID of the secure patron
     request.setRequesterId(mediatedRequest.getRequesterId().toString());
+
+    // Changing real delivery information to the Interim service point as a pickup service point
+    request.setFulfillmentPreference(Request.FulfillmentPreferenceEnum.HOLD_SHELF);
+    request.setDeliveryAddress(null);
+    request.setDeliveryAddressTypeId(null);
+    request.setPickupServicePointId(INTERIM_SERVICE_POINT_ID);
+    request.setPickupServicePoint(new RequestPickupServicePoint()
+      .name(INTERIM_SERVICE_POINT_NAME)
+      .code(INTERIM_SERVICE_POINT_CODE)
+      .discoveryDisplayName(INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME)
+      .pickupLocation(true));
+
     circulationRequestService.update(request);
     return request;
   }
@@ -132,9 +153,40 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     MediatedRequestEntity updatedEntity = updateMediatedRequestStatus(entity, OPEN_ITEM_ARRIVED);
     MediatedRequest dto = mediatedRequestMapper.mapEntityToDto(updatedEntity);
     extendMediatedRequest(dto);
+    updatePrimaryRequest(dto);
 
     log.debug("confirmItemArrival:: result: {}", dto);
     return dto;
+  }
+
+  private void updatePrimaryRequest(MediatedRequest medRequest) {
+    log.info("updatePrimaryRequest:: medRequest: {}", medRequest.getId());
+    var primaryRequest = circulationRequestService.get(medRequest.getConfirmedRequestId());
+    primaryRequest.setFulfillmentPreference(Request.FulfillmentPreferenceEnum.fromValue(
+      medRequest.getFulfillmentPreference().getValue()));
+    var deliveryAddress = medRequest.getDeliveryAddress();
+    if (deliveryAddress != null) {
+      log.info("updatePrimaryRequest:: updating deliveryAddress for request: {}", medRequest.getId());
+      primaryRequest.setDeliveryAddress(new RequestDeliveryAddress()
+        .region(deliveryAddress.getRegion())
+        .city(deliveryAddress.getCity())
+        .countryId(deliveryAddress.getCountryId())
+        .addressTypeId(deliveryAddress.getAddressTypeId())
+        .addressLine1(deliveryAddress.getAddressLine1())
+        .addressLine2(deliveryAddress.getAddressLine2())
+        .postalCode(deliveryAddress.getPostalCode()));
+    }
+    primaryRequest.setPickupServicePointId(medRequest.getPickupServicePointId());
+    var medRequestPickupServicePoint = medRequest.getPickupServicePoint();
+    if (medRequestPickupServicePoint != null) {
+      log.info("updatePrimaryRequest:: updating pickupServicePoint for primary request: {}", medRequest.getId());
+      primaryRequest.setPickupServicePoint(new RequestPickupServicePoint()
+        .name(medRequestPickupServicePoint.getName())
+        .code(medRequestPickupServicePoint.getCode())
+        .discoveryDisplayName(medRequestPickupServicePoint.getDiscoveryDisplayName())
+        .pickupLocation(medRequestPickupServicePoint.getPickupLocation()));
+    }
+    circulationRequestService.update(primaryRequest);
   }
 
   @Override

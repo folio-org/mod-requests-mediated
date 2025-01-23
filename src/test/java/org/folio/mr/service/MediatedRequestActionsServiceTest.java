@@ -14,8 +14,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -53,6 +56,10 @@ import jakarta.persistence.EntityNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
 class MediatedRequestActionsServiceTest {
+  private static final String INTERIM_SERVICE_POINT_ID = "32c6f0c7-26e4-4350-8c29-1e11c2e3efc4";
+  private static final String INTERIM_SERVICE_POINT_NAME = "Interim service point";
+  private static final String INTERIM_SERVICE_POINT_CODE = "interimsp";
+  private static final String INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME= "Interim service point";
 
   @Mock
   private MediatedRequestsRepository mediatedRequestsRepository;
@@ -117,19 +124,26 @@ class MediatedRequestActionsServiceTest {
     MediatedRequest mappedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
     String itemBarcode = initialRequest.getItemBarcode();
 
+    // when
     when(mediatedRequestsRepository.findRequestForItemArrivalConfirmation(itemBarcode))
       .thenReturn(Optional.of(initialRequest));
     when(mediatedRequestsRepository.save(any(MediatedRequestEntity.class)))
       .thenReturn(updatedRequest);
     when(mediatedRequestMapper.mapEntityToDto(any(MediatedRequestEntity.class)))
       .thenReturn(mappedRequest);
-    // when
+    when(circulationRequestService.get(anyString())).thenReturn(new Request());
+    when(circulationRequestService.update(any(Request.class))).thenReturn(new Request());
+
     MediatedRequest result = mediatedRequestActionsService.confirmItemArrival(itemBarcode);
 
     // then
     verify(mediatedRequestsRepository).save(any(MediatedRequestEntity.class));
     assertThat(result.getStatus().getValue(), is("Open - Item arrived"));
     assertThat(result.getMediatedRequestStep(), is("Item arrived"));
+
+    ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+    verify(circulationRequestService).update(requestCaptor.capture());
+    verifyDeliveryInfoUpdatedUponArrival(requestCaptor.getValue(), mappedRequest);
   }
 
   @Test
@@ -232,6 +246,7 @@ class MediatedRequestActionsServiceTest {
 
     verify(mediatedRequestsRepository).save(mediatedRequest.withConfirmedRequestId(circulationRequestId));
     verifyNoInteractions(ecsRequestService);
+    verify(circulationRequestService, times(0)).update(any(Request.class));
   }
 
   @Test
@@ -268,6 +283,9 @@ class MediatedRequestActionsServiceTest {
 
     verify(mediatedRequestsRepository, times(2))
       .save(mediatedRequest.withConfirmedRequestId(primaryRequestId));
+    ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+    verify(circulationRequestService).update(requestCaptor.capture());
+    verifyUpdatedRequestWithInterimServicePoint(requestCaptor.getValue());
   }
 
   @Test
@@ -302,6 +320,9 @@ class MediatedRequestActionsServiceTest {
       .save(mediatedRequest.withConfirmedRequestId(primaryRequestId));
     verify(inventoryService).fetchInstance(instanceId.toString());
     verifyNoMoreInteractions(inventoryService);
+    ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+    verify(circulationRequestService).update(requestCaptor.capture());
+    verifyUpdatedRequestWithInterimServicePoint(requestCaptor.getValue());
   }
 
   @Test
@@ -346,4 +367,49 @@ class MediatedRequestActionsServiceTest {
     );
   }
 
+  private void verifyUpdatedRequestWithInterimServicePoint(Request request) {
+    assertEquals(INTERIM_SERVICE_POINT_ID, request.getPickupServicePointId());
+    assertEquals(INTERIM_SERVICE_POINT_NAME, request.getPickupServicePoint().getName());
+    assertEquals(INTERIM_SERVICE_POINT_CODE, request.getPickupServicePoint().getCode());
+    assertEquals(INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME, request.getPickupServicePoint()
+      .getDiscoveryDisplayName());
+    assertNotNull(request.getPickupServicePoint());
+    assertTrue(request.getPickupServicePoint().getPickupLocation());
+    assertNull(request.getDeliveryAddress());
+    assertNull(request.getDeliveryAddressTypeId());
+    assertNotNull(request.getRequesterId());
+  }
+
+  private void verifyDeliveryInfoUpdatedUponArrival(Request request,
+    MediatedRequest mediatedRequest) {
+
+    assertEquals(mediatedRequest.getFulfillmentPreference().getValue(),
+      request.getFulfillmentPreference().getValue());
+    assertEquals(mediatedRequest.getPickupServicePointId(), request.getPickupServicePointId());
+
+    assertNotNull(request.getDeliveryAddress());
+    assertEquals(mediatedRequest.getDeliveryAddress().getRegion(),
+      request.getDeliveryAddress().getRegion());
+    assertEquals(mediatedRequest.getDeliveryAddress().getCity(),
+      request.getDeliveryAddress().getCity());
+    assertEquals(mediatedRequest.getDeliveryAddress().getCountryId(),
+      request.getDeliveryAddress().getCountryId());
+    assertEquals(mediatedRequest.getDeliveryAddress().getAddressTypeId(),
+      request.getDeliveryAddress().getAddressTypeId());
+    assertEquals(mediatedRequest.getDeliveryAddress().getAddressLine1(),
+      request.getDeliveryAddress().getAddressLine1());
+    assertEquals(mediatedRequest.getDeliveryAddress().getAddressLine2(),
+      request.getDeliveryAddress().getAddressLine2());
+    assertEquals(mediatedRequest.getDeliveryAddress().getPostalCode(),
+      request.getDeliveryAddress().getPostalCode());
+
+    assertEquals(mediatedRequest.getPickupServicePoint().getName(),
+      request.getPickupServicePoint().getName());
+    assertEquals(mediatedRequest.getPickupServicePoint().getCode(),
+      request.getPickupServicePoint().getCode());
+    assertEquals(mediatedRequest.getPickupServicePoint().getDiscoveryDisplayName(),
+      request.getPickupServicePoint().getDiscoveryDisplayName());
+    assertEquals(mediatedRequest.getPickupServicePoint().getPickupLocation(),
+      request.getPickupServicePoint().getPickupLocation());
+  }
 }

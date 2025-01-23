@@ -10,7 +10,7 @@
   <groupId>org.folio</groupId>
   <artifactId>mod-requests-mediated</artifactId>
   <name>mod-requests-mediated</name>
-  <version>1.0.5-SNAPSHOT</version>
+  <version>1.0.6-SNAPSHOT</version>
   <description>FOLIO mod-requests-mediated module</description>
   <packaging>jar</packaging>
 
