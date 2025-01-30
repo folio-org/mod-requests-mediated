@@ -5,6 +5,7 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_AWAITING_P
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
+import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_NOT_YET_FILLED;
 import static org.folio.mr.support.ConversionUtils.asString;
 
 import java.util.List;
@@ -84,6 +85,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private void updateLocalRequest(Request request) {
+    log.info("updateLocalRequest:: updating local request {}", request::getId);
     changeFulfillmentPreferenceToInterimServicePoint(request);
     circulationRequestService.update(request);
   }
@@ -96,6 +98,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private void updatePrimaryRequest(MediatedRequestEntity mediatedRequest, Request primaryRequest) {
+    log.info("updatePrimaryRequest:: updating primary request {}", primaryRequest::getId);
     // Changing requesterId from fake proxy ID back to the real ID of the secure patron
     primaryRequest.setRequesterId(mediatedRequest.getRequesterId().toString());
     changeFulfillmentPreferenceToInterimServicePoint(primaryRequest);
@@ -103,6 +106,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private static void changeFulfillmentPreferenceToInterimServicePoint(Request request) {
+    log.info("changeFulfillmentPreferenceToInterimServicePoint:: updating fulfillment preference");
     request.setFulfillmentPreference(Request.FulfillmentPreferenceEnum.HOLD_SHELF);
     request.setDeliveryAddress(null);
     request.setDeliveryAddressTypeId(null);
@@ -115,9 +119,11 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private void updateMediatedRequest(MediatedRequestEntity mediatedRequest, Request request) {
+    log.info("updateMediatedRequest:: updating mediated request {}", mediatedRequest::getId);
     mediatedRequest.setConfirmedRequestId(UUID.fromString(request.getId()));
-    if (request.getStatus() == Request.StatusEnum.OPEN_NOT_YET_FILLED) {
-      mediatedRequest.setStatus(Request.StatusEnum.OPEN_NOT_YET_FILLED.getValue());
+    if (request.getStatus() == OPEN_NOT_YET_FILLED) {
+      log.info("updateMediatedRequest:: changing mediated request status to {}", OPEN_NOT_YET_FILLED);
+      mediatedRequest.setStatus(OPEN_NOT_YET_FILLED.getValue());
     }
     mediatedRequestsRepository.save(mediatedRequest);
   }
