@@ -63,31 +63,46 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   @Override
   public void confirm(UUID id) {
     MediatedRequestEntity mediatedRequest = findMediatedRequest(id);
-    log.info("confirm:: found mediated request: {}", mediatedRequest);
+    log.info("confirm:: found mediated request: {}", id);
     createRequest(mediatedRequest);
-    log.info("confirm:: request created: {}", mediatedRequest.getConfirmedRequestId());
-    mediatedRequestsRepository.save(mediatedRequest);
     log.info("confirm:: mediated request {} was successfully confirmed", id);
   }
 
   private void createRequest(MediatedRequestEntity mediatedRequest) {
     if (localInstanceExists(mediatedRequest) && localItemExists(mediatedRequest)) {
-      Request request = circulationRequestService.create(mediatedRequest);
-      mediatedRequest.setConfirmedRequestId(UUID.fromString(request.getId()));
+      createLocalRequest(mediatedRequest);
     } else {
-      EcsTlr ecsTlr = ecsRequestService.create(mediatedRequest);
-      Request request = updatePrimaryRequest(mediatedRequest, ecsTlr);
-      updateMediatedRequest(mediatedRequest, ecsTlr, request);
+      createEcsTlr(mediatedRequest);
     }
+    log.info("createRequest:: request created: {}", mediatedRequest::getConfirmedRequestId);
   }
 
-  private Request updatePrimaryRequest(MediatedRequestEntity mediatedRequest, EcsTlr ecsTlr) {
-    Request request = circulationRequestService.get(ecsTlr.getPrimaryRequestId());
+  private void createLocalRequest(MediatedRequestEntity mediatedRequest) {
+    Request localRequest = circulationRequestService.create(mediatedRequest);
+    updateLocalRequest(localRequest);
+    updateMediatedRequest(mediatedRequest, localRequest);
+  }
 
+  private void updateLocalRequest(Request request) {
+    changeFulfillmentPreferenceToInterimServicePoint(request);
+    circulationRequestService.update(request);
+  }
+
+  private void createEcsTlr(MediatedRequestEntity mediatedRequest) {
+    EcsTlr ecsTlr = ecsRequestService.create(mediatedRequest);
+    Request primaryRequest = circulationRequestService.get(ecsTlr.getPrimaryRequestId());
+    updatePrimaryRequest(mediatedRequest, primaryRequest);
+    updateMediatedRequest(mediatedRequest, primaryRequest);
+  }
+
+  private void updatePrimaryRequest(MediatedRequestEntity mediatedRequest, Request primaryRequest) {
     // Changing requesterId from fake proxy ID back to the real ID of the secure patron
-    request.setRequesterId(mediatedRequest.getRequesterId().toString());
+    primaryRequest.setRequesterId(mediatedRequest.getRequesterId().toString());
+    changeFulfillmentPreferenceToInterimServicePoint(primaryRequest);
+    circulationRequestService.update(primaryRequest);
+  }
 
-    // Changing real delivery information to the Interim service point as a pickup service point
+  private static void changeFulfillmentPreferenceToInterimServicePoint(Request request) {
     request.setFulfillmentPreference(Request.FulfillmentPreferenceEnum.HOLD_SHELF);
     request.setDeliveryAddress(null);
     request.setDeliveryAddressTypeId(null);
@@ -97,15 +112,10 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       .code(INTERIM_SERVICE_POINT_CODE)
       .discoveryDisplayName(INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME)
       .pickupLocation(true));
-
-    circulationRequestService.update(request);
-    return request;
   }
 
-  private void updateMediatedRequest(MediatedRequestEntity mediatedRequest,
-    EcsTlr ecsTlr, Request request) {
-
-    mediatedRequest.setConfirmedRequestId(UUID.fromString(ecsTlr.getPrimaryRequestId()));
+  private void updateMediatedRequest(MediatedRequestEntity mediatedRequest, Request request) {
+    mediatedRequest.setConfirmedRequestId(UUID.fromString(request.getId()));
     if (request.getStatus() == Request.StatusEnum.OPEN_NOT_YET_FILLED) {
       mediatedRequest.setStatus(Request.StatusEnum.OPEN_NOT_YET_FILLED.getValue());
     }

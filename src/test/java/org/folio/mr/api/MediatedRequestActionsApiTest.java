@@ -3,7 +3,9 @@ package org.folio.mr.api;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
@@ -114,6 +116,10 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(jsonResponse(new Request().id(circulationRequestId.toString()), HttpStatus.SC_OK)));
 
+    wireMockServer.stubFor(WireMock.put(urlMatching(CIRCULATION_REQUESTS_URL + "/" + circulationRequestId))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(noContent()));
+
     confirmMediatedRequest(initialRequest.getId())
       .andExpect(status().isNoContent());
 
@@ -128,6 +134,8 @@ class MediatedRequestActionsApiTest extends BaseIT {
         .withQueryParam("tenantId", equalTo(TENANT_ID_CONSORTIUM))
         .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
     wireMockServer.verify(postRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
+    wireMockServer.verify(putRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL + "/" + circulationRequestId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
     wireMockServer.verify(0, postRequestedFor(urlMatching(ECS_TLR_URL)));
   }
