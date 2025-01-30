@@ -166,7 +166,6 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private void fetchInventoryInstance(SearchInstance searchInstance,
     MediatedRequestContextBuilder ctxBuilder, MediatedRequest request) {
 
-    log.info("fetchInventoryInstance: searchInstance: {}", searchInstance);
     executionService.executeAsyncSystemUserScoped(searchInstance.getTenantId(),
       () -> ctxBuilder.instance(inventoryService.fetchInstance(searchInstance.getId())));
 
