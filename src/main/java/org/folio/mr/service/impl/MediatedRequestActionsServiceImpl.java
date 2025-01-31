@@ -65,23 +65,22 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   public void confirm(UUID id) {
     MediatedRequestEntity mediatedRequest = findMediatedRequest(id);
     log.info("confirm:: found mediated request: {}", id);
-    createRequest(mediatedRequest);
+    Request request = createRequest(mediatedRequest);
+    updateMediatedRequest(mediatedRequest, request);
     log.info("confirm:: mediated request {} was successfully confirmed", id);
   }
 
-  private void createRequest(MediatedRequestEntity mediatedRequest) {
-    if (localInstanceExists(mediatedRequest) && localItemExists(mediatedRequest)) {
-      createLocalRequest(mediatedRequest);
-    } else {
-      createEcsTlr(mediatedRequest);
-    }
-    log.info("createRequest:: request created: {}", mediatedRequest::getConfirmedRequestId);
+  private Request createRequest(MediatedRequestEntity mediatedRequest) {
+    log.info("createRequest:: creating request for mediated request: {}", mediatedRequest::getId);
+    return localInstanceExists(mediatedRequest) && localItemExists(mediatedRequest)
+      ? createLocalRequest(mediatedRequest)
+      : createEcsTlr(mediatedRequest);
   }
 
-  private void createLocalRequest(MediatedRequestEntity mediatedRequest) {
+  private Request createLocalRequest(MediatedRequestEntity mediatedRequest) {
     Request localRequest = circulationRequestService.create(mediatedRequest);
     updateLocalRequest(localRequest);
-    updateMediatedRequest(mediatedRequest, localRequest);
+    return localRequest;
   }
 
   private void updateLocalRequest(Request request) {
@@ -90,11 +89,11 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     circulationRequestService.update(request);
   }
 
-  private void createEcsTlr(MediatedRequestEntity mediatedRequest) {
+  private Request createEcsTlr(MediatedRequestEntity mediatedRequest) {
     EcsTlr ecsTlr = ecsRequestService.create(mediatedRequest);
     Request primaryRequest = circulationRequestService.get(ecsTlr.getPrimaryRequestId());
     updatePrimaryRequest(mediatedRequest, primaryRequest);
-    updateMediatedRequest(mediatedRequest, primaryRequest);
+    return primaryRequest;
   }
 
   private void updatePrimaryRequest(MediatedRequestEntity mediatedRequest, Request primaryRequest) {
@@ -126,6 +125,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       mediatedRequest.setStatus(OPEN_NOT_YET_FILLED.getValue());
     }
     mediatedRequestsRepository.save(mediatedRequest);
+    log.info("updateMediatedRequest:: mediated request {} updated", mediatedRequest::getId);
   }
 
   private boolean localInstanceExists(MediatedRequestEntity mediatedRequest) {
