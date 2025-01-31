@@ -58,8 +58,11 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
     if (updatedRequestStatus == Request.StatusEnum.OPEN_AWAITING_PICKUP) {
       actionsService.changeStatusToAwaitingPickup(mediatedRequest);
     }
+    if (updatedRequestStatus == Request.StatusEnum.CLOSED_FILLED) {
+      actionsService.changeStatusToClosedFilled(mediatedRequest);
+    }
     if (updatedRequestStatus == Request.StatusEnum.CLOSED_CANCELLED) {
-      actionsService.cancel(mediatedRequest, updatedRequest);
+      actionsService.changeStatusToClosedCanceled(mediatedRequest, updatedRequest);
     }
   }
 }
