@@ -378,8 +378,8 @@ class MediatedRequestActionsServiceTest {
     MediatedRequestEntity updatedRequest = mediatedRequestEntityCaptor.getValue();
     assertNotNull(updatedRequest);
     assertEquals(request.getCancellationReasonId(), updatedRequest.getCancellationReasonId().toString());
-    assertEquals(request.getCancellationReasonId(), updatedRequest.getCancellationReasonId().toString());
-    assertEquals(request.getCancellationReasonId(), updatedRequest.getCancellationReasonId().toString());
+    assertEquals(request.getCancelledDate(), updatedRequest.getCancelledDate());
+    assertEquals(request.getCancelledByUserId(), updatedRequest.getCancelledByUserId().toString());
     assertEquals(MediatedRequestStatus.CLOSED, updatedRequest.getMediatedRequestStatus());
     assertEquals(CLOSED_CANCELLED.getValue(), updatedRequest.getStatus());
     assertEquals(MediatedRequestStep.CANCELLED.getValue(), updatedRequest.getMediatedRequestStep());
