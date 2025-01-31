@@ -1,6 +1,9 @@
 package org.folio.mr.service.impl;
 
 import static java.lang.String.format;
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.CLOSED_CANCELLED;
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.CLOSED_DECLINED;
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.CLOSED_FILLED;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
@@ -218,7 +221,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       .orElseThrow(() -> ExceptionFactory.notFound(format(
         "Mediated request for arrival confirmation of item with barcode '%s' was not found", itemBarcode)));
 
-    log.info("findMediatedRequestForItemArrival:: mediated request found: {}", entity::getId);
+    log.info("findMediatedRequestForItemArrival:: mediated request found: {}", entity.getId());
     return entity;
   }
 
@@ -242,7 +245,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
         "Send item in transit: mediated request for item '%s' was not found",
         itemBarcode)));
 
-    log.info("findMediatedRequestForSendingInTransit:: mediated request found: {}", entity::getId);
+    log.info("findMediatedRequestForSendingInTransit:: mediated request found: {}", entity.getId());
 
     return entity;
   }
@@ -252,17 +255,6 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     log.info("changeStatusToAwaitingPickup:: request id: {}", request.getId());
     request.setMediatedRequestStatus(MediatedRequestStatus.OPEN);
     updateMediatedRequestStatus(request, OPEN_AWAITING_PICKUP);
-  }
-
-  private MediatedRequestEntity updateMediatedRequestStatus(MediatedRequestEntity request,
-    MediatedRequest.StatusEnum newStatus) {
-
-    log.info("updateMediatedRequestStatus:: changing mediated request status from '{}' to '{}'",
-      request.getStatus(), newStatus.getValue());
-    request.setStatus(newStatus.getValue());
-    request.setMediatedRequestStep(MediatedRequestStep.from(newStatus).getValue());
-
-    return mediatedRequestsRepository.save(request);
   }
 
   private void extendMediatedRequest(MediatedRequest request) {
@@ -315,19 +307,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     log.debug("decline:: mediatedRequest: {}", mediatedRequest);
 
     declineRequest(mediatedRequest);
-    mediatedRequestsRepository.save(mediatedRequest);
     log.info("decline:: mediated request {} was successfully declined", id);
-  }
-
-  @Override
-  public void cancel(MediatedRequestEntity mediatedRequest, Request confirmedRequest) {
-    log.info("cancel:: mediatedRequest: {}", mediatedRequest::getId);
-    mediatedRequest.setStatus(MediatedRequest.StatusEnum.CLOSED_CANCELLED.getValue());
-    mediatedRequest.setCancellationReasonId(UUID.fromString(confirmedRequest.getCancellationReasonId()));
-    mediatedRequest.setCancelledDate(confirmedRequest.getCancelledDate());
-    mediatedRequest.setCancelledByUserId(UUID.fromString(confirmedRequest.getCancelledByUserId()));
-    mediatedRequestsRepository.save(mediatedRequest);
-    log.info("cancel:: mediated request {} was successfully cancelled", mediatedRequest::getId);
   }
 
   private void declineRequest(MediatedRequestEntity request) {
@@ -336,10 +316,37 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     {
       throw ExceptionFactory.validationError("Mediated request status should be 'New - Awaiting conformation'");
     }
-    request.setMediatedRequestStatus(MediatedRequestStatus.CLOSED);
-    request.setStatus(MediatedRequest.StatusEnum.CLOSED_DECLINED.getValue());
-    request.setMediatedRequestStep(MediatedRequestStep.DECLINED.getValue());
     request.setMediatedWorkflow(MediatedRequestWorkflow.PRIVATE_REQUEST.getValue());
+    request.setMediatedRequestStatus(MediatedRequestStatus.CLOSED);
+    updateMediatedRequestStatus(request, CLOSED_DECLINED);
+  }
+
+  @Override
+  public void changeStatusToClosedFilled(MediatedRequestEntity request) {
+    log.info("changeStatusToClosedFilled:: request id: {}", request.getId());
+    request.setMediatedRequestStatus(MediatedRequestStatus.CLOSED);
+    updateMediatedRequestStatus(request, CLOSED_FILLED);
+  }
+
+  @Override
+  public void changeStatusToClosedCanceled(MediatedRequestEntity request, Request confirmedRequest) {
+    log.info("changeStatusToClosedCanceled:: request id: {}", request.getId());
+    request.setCancellationReasonId(UUID.fromString(confirmedRequest.getCancellationReasonId()));
+    request.setCancelledDate(confirmedRequest.getCancelledDate());
+    request.setCancelledByUserId(UUID.fromString(confirmedRequest.getCancelledByUserId()));
+    request.setMediatedRequestStatus(MediatedRequestStatus.CLOSED);
+    updateMediatedRequestStatus(request, CLOSED_CANCELLED);
+  }
+
+  private MediatedRequestEntity updateMediatedRequestStatus(MediatedRequestEntity request,
+    MediatedRequest.StatusEnum newStatus) {
+
+    log.info("updateMediatedRequestStatus:: changing mediated request status from '{}' to '{}'",
+      request.getStatus(), newStatus.getValue());
+    request.setStatus(newStatus.getValue());
+    request.setMediatedRequestStep(MediatedRequestStep.from(newStatus).getValue());
+
+    return mediatedRequestsRepository.save(request);
   }
 
   private MediatedRequestEntity findMediatedRequest(UUID id) {
