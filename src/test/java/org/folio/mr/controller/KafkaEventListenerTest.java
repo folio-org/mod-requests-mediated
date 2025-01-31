@@ -65,8 +65,7 @@ class KafkaEventListenerTest extends BaseIT {
   void shouldCancelMediatedRequestUponConfirmedRequestCancel() {
     when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
     KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_NOT_YET_FILLED, CLOSED_CANCELLED);
-    MediatedRequest mediatedRequest =
-      buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
+    var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
     var initialMediatedRequest =
       createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
@@ -82,8 +81,7 @@ class KafkaEventListenerTest extends BaseIT {
   void shouldUpdateMediatedRequestStatusOnItemCheckout() {
     when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
     KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_IN_TRANSIT, OPEN_AWAITING_PICKUP);
-    MediatedRequest mediatedRequest =
-      buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
+    var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
     var initialMediatedRequest =
       createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
@@ -99,8 +97,7 @@ class KafkaEventListenerTest extends BaseIT {
   void shouldCancelMediatedRequestUponConfirmedRequestFill() {
     when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
     KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_NOT_YET_FILLED, CLOSED_FILLED);
-    MediatedRequest mediatedRequest =
-      buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
+    var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
     var initialMediatedRequest =
       createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));

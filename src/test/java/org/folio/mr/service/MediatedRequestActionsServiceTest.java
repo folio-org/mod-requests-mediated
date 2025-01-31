@@ -99,16 +99,13 @@ class MediatedRequestActionsServiceTest {
 
   @Test
   void changeStatusToInTransitForApprovalSuccess() {
-    // given
     UUID mediatedRequestId = UUID.randomUUID();
     MediatedRequestEntity initialRequest = buildMediatedRequestEntity(OPEN_NOT_YET_FILLED)
       .withId(mediatedRequestId);
     when(mediatedRequestsRepository.save(mediatedRequestEntityCaptor.capture())).thenReturn(null);
 
-    // when
     mediatedRequestActionsService.changeStatusToInTransitForApproval(initialRequest);
 
-    // then
     MediatedRequestEntity updatedRequest = mediatedRequestEntityCaptor.getValue();
     assertNotNull(updatedRequest);
     assertEquals(MediatedRequestStatus.OPEN, updatedRequest.getMediatedRequestStatus());
@@ -127,7 +124,6 @@ class MediatedRequestActionsServiceTest {
     MediatedRequest mappedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
     String itemBarcode = initialRequest.getItemBarcode();
 
-    // when
     when(mediatedRequestsRepository.findRequestForItemArrivalConfirmation(itemBarcode))
       .thenReturn(Optional.of(initialRequest));
     when(mediatedRequestsRepository.save(any(MediatedRequestEntity.class)))
@@ -137,6 +133,7 @@ class MediatedRequestActionsServiceTest {
     when(circulationRequestService.get(anyString())).thenReturn(new Request());
     when(circulationRequestService.update(any(Request.class))).thenReturn(new Request());
 
+    // when
     MediatedRequest result = mediatedRequestActionsService.confirmItemArrival(itemBarcode);
 
     // then
@@ -151,11 +148,9 @@ class MediatedRequestActionsServiceTest {
 
   @Test
   void confirmItemArrivalRequestNotFound() {
-    // given
     when(mediatedRequestsRepository.findRequestForItemArrivalConfirmation(any(String.class)))
       .thenReturn(Optional.empty());
 
-    // when-then
     EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
       () -> mediatedRequestActionsService.confirmItemArrival("item-barcode"));
     assertThat(exception.getMessage(),
@@ -191,11 +186,9 @@ class MediatedRequestActionsServiceTest {
 
   @Test
   void sendItemInTransitRequestNotFound() {
-    // given
     when(mediatedRequestsRepository.findRequestForSendingInTransit(any(String.class)))
       .thenReturn(Optional.empty());
 
-    // when-then
     EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
       () -> mediatedRequestActionsService.sendItemInTransit("item-barcode"));
     assertThat(exception.getMessage(),
@@ -204,16 +197,13 @@ class MediatedRequestActionsServiceTest {
 
   @Test
   void changeStatusToAwaitingPickupSuccess() {
-    // given
     UUID mediatedRequestId = UUID.randomUUID();
     MediatedRequestEntity initialRequest = buildMediatedRequestEntity(OPEN_NOT_YET_FILLED)
       .withId(mediatedRequestId);
     when(mediatedRequestsRepository.save(mediatedRequestEntityCaptor.capture())).thenReturn(null);
 
-    // when
     mediatedRequestActionsService.changeStatusToAwaitingPickup(initialRequest);
 
-    // then
     MediatedRequestEntity updatedRequest = mediatedRequestEntityCaptor.getValue();
     assertNotNull(updatedRequest);
     assertEquals(MediatedRequestStatus.OPEN, updatedRequest.getMediatedRequestStatus());
@@ -330,16 +320,13 @@ class MediatedRequestActionsServiceTest {
 
   @Test
   void mediatedRequestDeclineWrongStatus() {
-    // given
     UUID mediatedRequestId = randomUUID();
-
     MediatedRequestEntity mediatedRequest = buildMediatedRequestEntity(OPEN_ITEM_ARRIVED)
       .withId(mediatedRequestId);
 
     when(mediatedRequestsRepository.findById(mediatedRequestId))
       .thenReturn(Optional.of(mediatedRequest));
 
-    // when-then
     RuntimeException exception = assertThrows(RuntimeException.class,
       () -> mediatedRequestActionsService.decline(mediatedRequestId));
     assertThat(exception.getMessage(),
@@ -348,19 +335,14 @@ class MediatedRequestActionsServiceTest {
 
   @Test
   void mediatedRequestDeclineSuccess() {
-    // given
     UUID mediatedRequestId = randomUUID();
-
     MediatedRequestEntity mediatedRequest = buildMediatedRequestEntity(NEW_AWAITING_CONFIRMATION)
       .withId(mediatedRequestId);
-
     when(mediatedRequestsRepository.findById(mediatedRequestId))
       .thenReturn(Optional.of(mediatedRequest));
 
-    // when
     mediatedRequestActionsService.decline(mediatedRequestId);
 
-    // then
     verify(mediatedRequestsRepository).save(
       mediatedRequest
         .withMediatedRequestStatus(MediatedRequestStatus.CLOSED)
@@ -372,16 +354,13 @@ class MediatedRequestActionsServiceTest {
 
   @Test
   void changeStatusToClosedFilled() {
-    // given
     UUID mediatedRequestId = UUID.randomUUID();
     MediatedRequestEntity initialRequest = buildMediatedRequestEntity(OPEN_NOT_YET_FILLED)
       .withId(mediatedRequestId);
     when(mediatedRequestsRepository.save(mediatedRequestEntityCaptor.capture())).thenReturn(null);
 
-    // when
     mediatedRequestActionsService.changeStatusToClosedFilled(initialRequest);
 
-    // then
     MediatedRequestEntity updatedRequest = mediatedRequestEntityCaptor.getValue();
     assertNotNull(updatedRequest);
     assertEquals(MediatedRequestStatus.CLOSED, updatedRequest.getMediatedRequestStatus());
@@ -391,7 +370,6 @@ class MediatedRequestActionsServiceTest {
 
   @Test
   void changeStatusToClosedCanceled() {
-    // given
     UUID mediatedRequestId = UUID.randomUUID();
     MediatedRequestEntity initialRequest = buildMediatedRequestEntity(OPEN_NOT_YET_FILLED)
       .withId(mediatedRequestId);
@@ -401,10 +379,8 @@ class MediatedRequestActionsServiceTest {
       .cancelledDate(new Date())
       .cancelledByUserId(UUID.randomUUID().toString());
 
-    // when
     mediatedRequestActionsService.changeStatusToClosedCanceled(initialRequest, request);
 
-    // then
     MediatedRequestEntity updatedRequest = mediatedRequestEntityCaptor.getValue();
     assertNotNull(updatedRequest);
     assertEquals(request.getCancellationReasonId(), updatedRequest.getCancellationReasonId().toString());

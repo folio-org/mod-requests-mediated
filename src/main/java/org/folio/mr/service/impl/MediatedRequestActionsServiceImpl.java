@@ -323,7 +323,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private MediatedRequestEntity updateMediatedRequestStatus(MediatedRequestEntity request,
-                                                            MediatedRequest.StatusEnum newStatus) {
+    MediatedRequest.StatusEnum newStatus) {
 
     log.info("updateMediatedRequestStatus:: changing mediated request status from '{}' to '{}'",
       request.getStatus(), newStatus.getValue());
