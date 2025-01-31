@@ -115,7 +115,6 @@ class MediatedRequestActionsServiceTest {
 
   @Test
   void successfulItemArrivalConfirmation() {
-    // given
     UUID mediatedRequestId = UUID.randomUUID();
     MediatedRequestEntity initialRequest = buildMediatedRequestEntity(OPEN_IN_TRANSIT_FOR_APPROVAL)
       .withId(mediatedRequestId);
@@ -133,10 +132,8 @@ class MediatedRequestActionsServiceTest {
     when(circulationRequestService.get(anyString())).thenReturn(new Request());
     when(circulationRequestService.update(any(Request.class))).thenReturn(new Request());
 
-    // when
     MediatedRequest result = mediatedRequestActionsService.confirmItemArrival(itemBarcode);
 
-    // then
     verify(mediatedRequestsRepository).save(any(MediatedRequestEntity.class));
     assertThat(result.getStatus().getValue(), is("Open - Item arrived"));
     assertThat(result.getMediatedRequestStep(), is("Item arrived"));
@@ -159,7 +156,6 @@ class MediatedRequestActionsServiceTest {
 
   @Test
   void sendItemInTransitSuccess() {
-    // given
     UUID mediatedRequestId = UUID.randomUUID();
     MediatedRequestEntity initialRequest = buildMediatedRequestEntity(OPEN_ITEM_ARRIVED)
       .withId(mediatedRequestId);
@@ -175,10 +171,8 @@ class MediatedRequestActionsServiceTest {
     when(mediatedRequestMapper.mapEntityToDto(any(MediatedRequestEntity.class)))
       .thenReturn(mappedRequest);
 
-    // when
     MediatedRequest result = mediatedRequestActionsService.sendItemInTransit(itemBarcode);
 
-    // then
     verify(mediatedRequestsRepository).save(any(MediatedRequestEntity.class));
     assertThat(result.getStatus().getValue(), is("Open - In transit to be checked out"));
     assertThat(result.getMediatedRequestStep(), is("In transit to be checked out"));
