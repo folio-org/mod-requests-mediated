@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -246,7 +245,11 @@ class MediatedRequestActionsServiceTest {
 
     verify(mediatedRequestsRepository).save(mediatedRequest.withConfirmedRequestId(circulationRequestId));
     verifyNoInteractions(ecsRequestService);
-    verify(circulationRequestService, times(0)).update(any(Request.class));
+
+    ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+    verify(circulationRequestService).update(requestCaptor.capture());
+    Request actualRequest = requestCaptor.getValue();
+    verifyUpdatedRequestWithInterimServicePoint(actualRequest);
   }
 
   @Test
@@ -275,17 +278,19 @@ class MediatedRequestActionsServiceTest {
     when(ecsRequestService.create(mediatedRequest))
       .thenReturn(ecsTlr);
     when(circulationRequestService.get(primaryRequestId.toString()))
-      .thenReturn(new Request());
+      .thenReturn(new Request().id(primaryRequestId.toString()));
     when(circulationRequestService.update(any(Request.class)))
       .thenReturn(new Request());
 
     mediatedRequestActionsService.confirm(mediatedRequestId);
 
-    verify(mediatedRequestsRepository, times(2))
+    verify(mediatedRequestsRepository)
       .save(mediatedRequest.withConfirmedRequestId(primaryRequestId));
     ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
     verify(circulationRequestService).update(requestCaptor.capture());
-    verifyUpdatedRequestWithInterimServicePoint(requestCaptor.getValue());
+    Request actualRequest = requestCaptor.getValue();
+    verifyUpdatedRequestWithInterimServicePoint(actualRequest);
+    assertNotNull(actualRequest.getRequesterId());
   }
 
   @Test
@@ -310,19 +315,21 @@ class MediatedRequestActionsServiceTest {
     when(ecsRequestService.create(mediatedRequest))
       .thenReturn(ecsTlr);
     when(circulationRequestService.get(primaryRequestId.toString()))
-      .thenReturn(new Request());
+      .thenReturn(new Request().id(primaryRequestId.toString()));
     when(circulationRequestService.update(any(Request.class)))
       .thenReturn(new Request());
 
     mediatedRequestActionsService.confirm(mediatedRequestId);
 
-    verify(mediatedRequestsRepository, times(2))
+    verify(mediatedRequestsRepository)
       .save(mediatedRequest.withConfirmedRequestId(primaryRequestId));
     verify(inventoryService).fetchInstance(instanceId.toString());
     verifyNoMoreInteractions(inventoryService);
     ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
     verify(circulationRequestService).update(requestCaptor.capture());
-    verifyUpdatedRequestWithInterimServicePoint(requestCaptor.getValue());
+    Request actualRequest = requestCaptor.getValue();
+    verifyUpdatedRequestWithInterimServicePoint(actualRequest);
+    assertNotNull(actualRequest.getRequesterId());
   }
 
   @Test
@@ -377,7 +384,6 @@ class MediatedRequestActionsServiceTest {
     assertTrue(request.getPickupServicePoint().getPickupLocation());
     assertNull(request.getDeliveryAddress());
     assertNull(request.getDeliveryAddressTypeId());
-    assertNotNull(request.getRequesterId());
   }
 
   private void verifyDeliveryInfoUpdatedUponArrival(Request request,
