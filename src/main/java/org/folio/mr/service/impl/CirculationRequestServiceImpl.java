@@ -16,6 +16,11 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class CirculationRequestServiceImpl implements CirculationRequestService {
 
+  private static final String INTERIM_SERVICE_POINT_ID = "32c6f0c7-26e4-4350-8c29-1e11c2e3efc4";
+  private static final String INTERIM_SERVICE_POINT_NAME = "Interim service point";
+  private static final String INTERIM_SERVICE_POINT_CODE = "interimsp";
+  private static final String INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME= "Interim service point";
+
   private final CirculationClient circulationClient;
 
   @Override
@@ -38,11 +43,10 @@ public class CirculationRequestServiceImpl implements CirculationRequestService 
       .holdingsRecordId(asString(mediatedRequest.getHoldingsRecordId()))
       .itemId(asString(mediatedRequest.getItemId()))
       .requesterId(asString(mediatedRequest.getRequesterId()))
-      .fulfillmentPreference(Request.FulfillmentPreferenceEnum.fromValue(
-        mediatedRequest.getFulfillmentPreference().getValue()))
-      .pickupServicePointId(asString(mediatedRequest.getPickupServicePointId()))
+      .fulfillmentPreference(Request.FulfillmentPreferenceEnum.HOLD_SHELF)
+      .pickupServicePointId(INTERIM_SERVICE_POINT_ID)
       .requestDate(mediatedRequest.getRequestDate())
-      .deliveryAddressTypeId(asString(mediatedRequest.getDeliveryAddressTypeId()))
+      .deliveryAddressTypeId(null)
       .patronComments(mediatedRequest.getPatronComments());
   }
 

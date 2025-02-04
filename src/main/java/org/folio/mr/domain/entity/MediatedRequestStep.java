@@ -16,6 +16,7 @@ public enum MediatedRequestStep {
   ITEM_ARRIVED("Item arrived"),
   IN_TRANSIT_TO_BE_CHECKED_OUT("In transit to be checked out"),
   AWAITING_PICKUP("Awaiting pickup"),
+  AWAITING_DELIVERY("Awaiting delivery"),
   CANCELLED("Cancelled"),
   DECLINED("Declined"),
   FILLED("Filled");
