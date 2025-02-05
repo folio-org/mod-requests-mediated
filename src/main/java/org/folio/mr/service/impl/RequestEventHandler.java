@@ -24,6 +24,7 @@ import org.folio.mr.service.KafkaEventHandler;
 import org.folio.mr.service.MediatedRequestActionsService;
 import org.folio.mr.support.KafkaEvent;
 import org.springframework.stereotype.Service;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -75,7 +76,11 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
       log.info("handleRequestUpdateEvent:: mediated request not found by confirmed request ID {}",
         requestId);
       return;
+    } else {
+      log.info("handleRequestUpdateEvent:: mediated request found, status {}, step {}",
+        mediatedRequest.getMediatedRequestStatus(), mediatedRequest.getMediatedRequestStep());
     }
+
     if (newRequestStatus == OPEN_IN_TRANSIT && oldRequestStatus == OPEN_NOT_YET_FILLED &&
       mediatedRequestStatusEquals(mediatedRequest, OPEN, NOT_YET_FILLED)) {
       actionsService.changeStatusToInTransitForApproval(mediatedRequest);
@@ -101,7 +106,11 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
   private boolean mediatedRequestStatusEquals(MediatedRequestEntity mediatedRequest,
     MediatedRequestStatus status, MediatedRequestStep step) {
 
-    return mediatedRequest.getMediatedRequestStatus() == status &&
+    log.info("mediatedRequestStatusEquals:: checking mediated request {} status {}, step {}",
+      mediatedRequest.getId(), status, step);
+    boolean result = mediatedRequest.getMediatedRequestStatus() == status &&
       step.getValue().equals(mediatedRequest.getMediatedRequestStep());
+    log.info("mediatedRequestStatusEquals:: result {}", result);
+    return result;
   }
 }
