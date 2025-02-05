@@ -25,6 +25,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class EcsRequestServiceImpl implements EcsRequestService {
 
+  private static final String INTERIM_SERVICE_POINT_ID = "32c6f0c7-26e4-4350-8c29-1e11c2e3efc4";
+  private static final String INTERIM_SERVICE_POINT_NAME = "Interim service point";
+  private static final String INTERIM_SERVICE_POINT_CODE = "interimsp";
+  private static final String INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME= "Interim service point";
+
   private final FakePatronLinkRepository fakePatronLinkRepository;
   private final EcsTlrClient ecsTlrClient;
   private final UserService userService;
@@ -83,13 +88,12 @@ public class EcsRequestServiceImpl implements EcsRequestService {
       .primaryRequestTenantId(consortiumService.getCurrentTenantId())
       .requestType(EcsTlr.RequestTypeEnum.fromValue(mediatedRequest.getRequestType().getValue()))
       .requestLevel(EcsTlr.RequestLevelEnum.fromValue(mediatedRequest.getRequestLevel().getValue()))
-      .fulfillmentPreference(EcsTlr.FulfillmentPreferenceEnum.fromValue(
-        mediatedRequest.getFulfillmentPreference().getValue()))
       .instanceId(asString(mediatedRequest.getInstanceId()))
       .itemId(asString(mediatedRequest.getItemId()))
       .holdingsRecordId(asString(mediatedRequest.getHoldingsRecordId()))
       .requesterId(requesterId)
-      .pickupServicePointId(asString(mediatedRequest.getPickupServicePointId()))
+      .fulfillmentPreference(EcsTlr.FulfillmentPreferenceEnum.HOLD_SHELF)
+      .pickupServicePointId(INTERIM_SERVICE_POINT_ID)
       .requestDate(mediatedRequest.getRequestDate())
       .patronComments(mediatedRequest.getPatronComments());
     return executionService.executeSystemUserScoped(consortiumService.getCentralTenantId(),
