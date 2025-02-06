@@ -1,3 +1,7 @@
+## 1.0.6 2025-02-06
+* Mediated request workflow - `Closed - Filled` status change (MODREQMED-76)
+* Update local request upon confirmation (MODREQMED-82)
+
 ## 1.0.5 2025-01-23
 * Update primary request on arrival confirmation stage (MODREQMED-70)
 * Update primary request on mediated request confirmation stage (MODREQMED-67)
