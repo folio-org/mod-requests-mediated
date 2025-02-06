@@ -2,6 +2,8 @@ package org.folio.mr.api;
 
 import static java.util.stream.Collectors.toMap;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,7 +18,6 @@ import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.folio.mr.util.DbInitializer;
-import org.folio.mr.util.TestUtils;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.scope.FolioExecutionContextSetter;
@@ -33,7 +34,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -41,9 +41,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.TestSocketUtils;
-import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -86,9 +84,6 @@ public class BaseIT {
     .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
   @Autowired
-  private WebTestClient webClient;
-
-  @Autowired
   protected MockMvc mockMvc;
 
   @Autowired
@@ -109,9 +104,12 @@ public class BaseIT {
   }
 
   @BeforeEach
+  @SneakyThrows
   void beforeEachTest() {
-    doPost("/_/tenant", asJsonString(new TenantAttributes().moduleTo("mod-requests-mediated")))
-      .expectStatus().isNoContent();
+    mockMvc.perform(post("/_/tenant")
+            .content(asJsonString(new TenantAttributes().moduleTo("mod-requests-mediated")))
+            .headers(defaultHeaders())
+            .contentType(APPLICATION_JSON)).andExpect(status().isNoContent());
 
     contextSetter = initFolioContext();
     wireMockServer.resetAll();
@@ -172,32 +170,6 @@ public class BaseIT {
   @SneakyThrows
   public static String asJsonString(Object value) {
     return OBJECT_MAPPER.writeValueAsString(value);
-  }
-
-  protected WebTestClient.RequestBodySpec buildRequest(HttpMethod method, String uri) {
-    return webClient.method(method)
-      .uri(uri)
-      .accept(APPLICATION_JSON)
-      .contentType(APPLICATION_JSON)
-      .header(XOkapiHeaders.TENANT, TENANT_ID_CONSORTIUM)
-      .header(XOkapiHeaders.URL, wireMockServer.baseUrl())
-      .header(XOkapiHeaders.TOKEN, TOKEN)
-      .header(XOkapiHeaders.USER_ID, USER_ID);
-  }
-
-  protected WebTestClient.ResponseSpec doPost(String url, Object payload) {
-    return doPostWithTenant(url, payload, TENANT_ID_CONSORTIUM);
-  }
-
-  protected WebTestClient.ResponseSpec doPostWithTenant(String url, Object payload, String tenantId) {
-    return doPostWithToken(url, payload, TestUtils.buildToken(tenantId));
-  }
-
-  protected WebTestClient.ResponseSpec doPostWithToken(String url, Object payload, String token) {
-    return buildRequest(HttpMethod.POST, url)
-      .cookie("folioAccessToken", token)
-      .body(BodyInserters.fromValue(payload))
-      .exchange();
   }
 
   protected static String buildTopicName(String module, String objectType) {
