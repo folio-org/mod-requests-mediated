@@ -9,6 +9,7 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_NOT_YET_FILLED;
+import static org.folio.mr.support.Constants.INTERIM_SERVICE_POINT_ID;
 import static org.folio.mr.support.ConversionUtils.asString;
 
 import java.util.List;
@@ -48,12 +49,6 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @RequiredArgsConstructor
 public class MediatedRequestActionsServiceImpl implements MediatedRequestActionsService {
-
-//  private static final String INTERIM_SERVICE_POINT_ID = "32c6f0c7-26e4-4350-8c29-1e11c2e3efc4";
-//  private static final String INTERIM_SERVICE_POINT_NAME = "Interim service point";
-//  private static final String INTERIM_SERVICE_POINT_CODE = "interimsp";
-//  private static final String INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME= "Interim service point";
-
   private final MediatedRequestsRepository mediatedRequestsRepository;
   private final InventoryService inventoryService;
   private final MediatedRequestMapper mediatedRequestMapper;
@@ -81,14 +76,14 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private Request createLocalRequest(MediatedRequestEntity mediatedRequest) {
-    Request localRequest = circulationRequestService.create(mediatedRequest);
+    Request localRequest = circulationRequestService.create(mediatedRequest,
+      INTERIM_SERVICE_POINT_ID);
     updateLocalRequest(localRequest);
     return localRequest;
   }
 
   private void updateLocalRequest(Request request) {
     log.info("updateLocalRequest:: updating local request {}", request::getId);
-//    changeFulfillmentPreferenceToInterimServicePoint(request);
     circulationRequestService.update(request);
   }
 
@@ -103,22 +98,8 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     log.info("updatePrimaryRequest:: updating primary request {}", primaryRequest::getId);
     // Changing requesterId from fake proxy ID back to the real ID of the secure patron
     primaryRequest.setRequesterId(mediatedRequest.getRequesterId().toString());
-//    changeFulfillmentPreferenceToInterimServicePoint(primaryRequest);
     circulationRequestService.update(primaryRequest);
   }
-
-//  private static void changeFulfillmentPreferenceToInterimServicePoint(Request request) {
-//    log.info("changeFulfillmentPreferenceToInterimServicePoint:: updating fulfillment preference");
-//    request.setFulfillmentPreference(Request.FulfillmentPreferenceEnum.HOLD_SHELF);
-//    request.setDeliveryAddress(null);
-//    request.setDeliveryAddressTypeId(null);
-//    request.setPickupServicePointId(INTERIM_SERVICE_POINT_ID);
-//    request.setPickupServicePoint(new RequestPickupServicePoint()
-//      .name(INTERIM_SERVICE_POINT_NAME)
-//      .code(INTERIM_SERVICE_POINT_CODE)
-//      .discoveryDisplayName(INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME)
-//      .pickupLocation(true));
-//  }
 
   private void updateMediatedRequest(MediatedRequestEntity mediatedRequest, Request request) {
     log.info("updateMediatedRequest:: updating mediated request {}", mediatedRequest::getId);
@@ -166,7 +147,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     MediatedRequestEntity updatedEntity = changeMediatedRequestStatus(entity, OPEN_ITEM_ARRIVED);
     MediatedRequest dto = mediatedRequestMapper.mapEntityToDto(updatedEntity);
     extendMediatedRequest(dto);
-//    revertPrimaryRequestDeliveryInfo(dto);
+    revertPrimaryRequestDeliveryInfo(dto);
 
     log.debug("confirmItemArrival:: result: {}", dto);
     return dto;
@@ -226,7 +207,6 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     var updatedEntity = changeMediatedRequestStatus(entity, OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
     var dto = mediatedRequestMapper.mapEntityToDto(updatedEntity);
     extendMediatedRequest(dto);
-    revertPrimaryRequestDeliveryInfo(dto);
 
     log.debug("sendItemInTransit:: result: {}", dto);
 

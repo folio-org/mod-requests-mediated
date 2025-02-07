@@ -1,10 +1,11 @@
 package org.folio.mr.service.impl;
 
 import static java.lang.String.format;
+import static org.folio.mr.support.Constants.INTERIM_SERVICE_POINT_ID;
 import static org.folio.mr.support.ConversionUtils.asString;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import java.util.UUID;
+
 import org.folio.mr.client.EcsTlrClient;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.User;
@@ -18,18 +19,13 @@ import org.folio.mr.service.UserService;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
 @Log4j2
 @RequiredArgsConstructor
 public class EcsRequestServiceImpl implements EcsRequestService {
-
-  private static final String INTERIM_SERVICE_POINT_ID = "32c6f0c7-26e4-4350-8c29-1e11c2e3efc4";
-  private static final String INTERIM_SERVICE_POINT_NAME = "Interim service point";
-  private static final String INTERIM_SERVICE_POINT_CODE = "interimsp";
-  private static final String INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME= "Interim service point";
-
   private final FakePatronLinkRepository fakePatronLinkRepository;
   private final EcsTlrClient ecsTlrClient;
   private final UserService userService;
@@ -47,7 +43,7 @@ public class EcsRequestServiceImpl implements EcsRequestService {
 
     log.info("create:: Creating ECS request for fake patron {}, mediated request {}", fakeUserId,
       mediatedRequest.getId());
-    return createEcsTlr(mediatedRequest, fakeUserId);
+    return createEcsTlr(mediatedRequest, fakeUserId, INTERIM_SERVICE_POINT_ID);
   }
 
   private String createFakePatron(MediatedRequestEntity mediatedRequest) {
@@ -83,7 +79,9 @@ public class EcsRequestServiceImpl implements EcsRequestService {
     return fakePatronLinkRepository.save(fakePatronLink);
   }
 
-  private EcsTlr createEcsTlr(MediatedRequestEntity mediatedRequest, String requesterId) {
+  private EcsTlr createEcsTlr(MediatedRequestEntity mediatedRequest, String requesterId,
+    String pickupServicePointId) {
+
     EcsTlr ecsTlr = new EcsTlr()
       .primaryRequestTenantId(consortiumService.getCurrentTenantId())
       .requestType(EcsTlr.RequestTypeEnum.fromValue(mediatedRequest.getRequestType().getValue()))
@@ -93,7 +91,7 @@ public class EcsRequestServiceImpl implements EcsRequestService {
       .holdingsRecordId(asString(mediatedRequest.getHoldingsRecordId()))
       .requesterId(requesterId)
       .fulfillmentPreference(EcsTlr.FulfillmentPreferenceEnum.HOLD_SHELF)
-      .pickupServicePointId(INTERIM_SERVICE_POINT_ID)
+      .pickupServicePointId(pickupServicePointId)
       .requestDate(mediatedRequest.getRequestDate())
       .patronComments(mediatedRequest.getPatronComments());
     return executionService.executeSystemUserScoped(consortiumService.getCentralTenantId(),

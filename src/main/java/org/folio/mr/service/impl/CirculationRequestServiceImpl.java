@@ -15,12 +15,6 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @RequiredArgsConstructor
 public class CirculationRequestServiceImpl implements CirculationRequestService {
-
-  private static final String INTERIM_SERVICE_POINT_ID = "32c6f0c7-26e4-4350-8c29-1e11c2e3efc4";
-  private static final String INTERIM_SERVICE_POINT_NAME = "Interim service point";
-  private static final String INTERIM_SERVICE_POINT_CODE = "interimsp";
-  private static final String INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME= "Interim service point";
-
   private final CirculationClient circulationClient;
 
   @Override
@@ -30,12 +24,14 @@ public class CirculationRequestServiceImpl implements CirculationRequestService 
   }
 
   @Override
-  public Request create(MediatedRequestEntity mediatedRequest) {
+  public Request create(MediatedRequestEntity mediatedRequest, String pickupServicePointId) {
     log.info("create:: creating circulation request for mediated request {}", mediatedRequest.getId());
-    return circulationClient.createRequest(buildRequest(mediatedRequest));
+    return circulationClient.createRequest(buildRequest(mediatedRequest, pickupServicePointId));
   }
 
-  private static Request buildRequest(MediatedRequestEntity mediatedRequest) {
+  private static Request buildRequest(MediatedRequestEntity mediatedRequest,
+    String pickupServicePointId) {
+
     return new Request()
       .requestLevel(Request.RequestLevelEnum.fromValue(mediatedRequest.getRequestLevel().getValue()))
       .requestType(Request.RequestTypeEnum.fromValue(mediatedRequest.getRequestType().getValue()))
@@ -44,7 +40,7 @@ public class CirculationRequestServiceImpl implements CirculationRequestService 
       .itemId(asString(mediatedRequest.getItemId()))
       .requesterId(asString(mediatedRequest.getRequesterId()))
       .fulfillmentPreference(Request.FulfillmentPreferenceEnum.HOLD_SHELF)
-      .pickupServicePointId(INTERIM_SERVICE_POINT_ID)
+      .pickupServicePointId(pickupServicePointId)
       .requestDate(mediatedRequest.getRequestDate())
       .deliveryAddressTypeId(null)
       .patronComments(mediatedRequest.getPatronComments());

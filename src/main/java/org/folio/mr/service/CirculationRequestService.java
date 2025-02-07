@@ -5,6 +5,8 @@ import org.folio.mr.domain.entity.MediatedRequestEntity;
 
 public interface CirculationRequestService {
   Request get(String id);
-  Request create(MediatedRequestEntity mediatedRequest);
+
+  Request create(MediatedRequestEntity mediatedRequest, String pickupServicePointId);
+
   Request update(Request request);
 }
