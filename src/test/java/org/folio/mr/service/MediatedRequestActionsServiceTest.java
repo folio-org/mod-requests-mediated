@@ -57,9 +57,6 @@ import jakarta.persistence.EntityNotFoundException;
 @ExtendWith(MockitoExtension.class)
 class MediatedRequestActionsServiceTest {
   private static final String INTERIM_SERVICE_POINT_ID = "32c6f0c7-26e4-4350-8c29-1e11c2e3efc4";
-  private static final String INTERIM_SERVICE_POINT_NAME = "Interim service point";
-  private static final String INTERIM_SERVICE_POINT_CODE = "interimsp";
-  private static final String INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME= "Interim service point";
 
   @Mock
   private MediatedRequestsRepository mediatedRequestsRepository;
