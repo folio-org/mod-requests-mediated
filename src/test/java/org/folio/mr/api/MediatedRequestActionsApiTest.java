@@ -3,6 +3,7 @@ package org.folio.mr.api;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
@@ -15,6 +16,7 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CO
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
+import static org.folio.mr.support.Constants.INTERIM_SERVICE_POINT_ID;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequestEntity;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -134,7 +136,9 @@ class MediatedRequestActionsApiTest extends BaseIT {
         .withQueryParam("tenantId", equalTo(TENANT_ID_CONSORTIUM))
         .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
     wireMockServer.verify(postRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL))
-      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .withRequestBody(matchingJsonPath("fulfillmentPreference", equalTo("Hold Shelf")))
+      .withRequestBody(matchingJsonPath("pickupServicePointId", equalTo(INTERIM_SERVICE_POINT_ID))));
     wireMockServer.verify(putRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL + "/" + circulationRequestId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
     wireMockServer.verify(0, postRequestedFor(urlMatching(ECS_TLR_URL)));
@@ -199,7 +203,10 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
     wireMockServer.verify(0, postRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL)));
     wireMockServer.verify(postRequestedFor(urlMatching(ECS_TLR_URL))
-      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
+      .withRequestBody(matchingJsonPath("fulfillmentPreference", equalTo("Hold Shelf")))
+      .withRequestBody(matchingJsonPath("pickupServicePointId", equalTo(INTERIM_SERVICE_POINT_ID)))
+    );
   }
 
   @Test
@@ -248,7 +255,9 @@ class MediatedRequestActionsApiTest extends BaseIT {
     wireMockServer.verify(0, getRequestedFor(urlPathMatching(SEARCH_ITEMS_URL)));
     wireMockServer.verify(0, postRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL)));
     wireMockServer.verify(postRequestedFor(urlMatching(ECS_TLR_URL))
-      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
+      .withRequestBody(matchingJsonPath("fulfillmentPreference", equalTo("Hold Shelf")))
+      .withRequestBody(matchingJsonPath("pickupServicePointId", equalTo(INTERIM_SERVICE_POINT_ID))));
   }
 
   @Test

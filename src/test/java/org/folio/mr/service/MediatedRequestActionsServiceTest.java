@@ -16,9 +16,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -232,11 +230,6 @@ class MediatedRequestActionsServiceTest {
 
     verify(mediatedRequestsRepository).save(mediatedRequest.withConfirmedRequestId(circulationRequestId));
     verifyNoInteractions(ecsRequestService);
-
-    ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
-    verify(circulationRequestService).update(requestCaptor.capture());
-    Request actualRequest = requestCaptor.getValue();
-    verifyUpdatedRequestWithInterimServicePoint(actualRequest);
   }
 
   @Test
@@ -276,7 +269,6 @@ class MediatedRequestActionsServiceTest {
     ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
     verify(circulationRequestService).update(requestCaptor.capture());
     Request actualRequest = requestCaptor.getValue();
-    verifyUpdatedRequestWithInterimServicePoint(actualRequest);
     assertNotNull(actualRequest.getRequesterId());
   }
 
@@ -315,7 +307,6 @@ class MediatedRequestActionsServiceTest {
     ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
     verify(circulationRequestService).update(requestCaptor.capture());
     Request actualRequest = requestCaptor.getValue();
-    verifyUpdatedRequestWithInterimServicePoint(actualRequest);
     assertNotNull(actualRequest.getRequesterId());
   }
 
@@ -390,18 +381,6 @@ class MediatedRequestActionsServiceTest {
     assertEquals(MediatedRequestStatus.CLOSED, updatedRequest.getMediatedRequestStatus());
     assertEquals(CLOSED_CANCELLED.getValue(), updatedRequest.getStatus());
     assertEquals(MediatedRequestStep.CANCELLED.getValue(), updatedRequest.getMediatedRequestStep());
-  }
-
-  private void verifyUpdatedRequestWithInterimServicePoint(Request request) {
-    assertEquals(INTERIM_SERVICE_POINT_ID, request.getPickupServicePointId());
-    assertEquals(INTERIM_SERVICE_POINT_NAME, request.getPickupServicePoint().getName());
-    assertEquals(INTERIM_SERVICE_POINT_CODE, request.getPickupServicePoint().getCode());
-    assertEquals(INTERIM_SERVICE_POINT_DISCOVERY_DISPLAY_NAME, request.getPickupServicePoint()
-      .getDiscoveryDisplayName());
-    assertNotNull(request.getPickupServicePoint());
-    assertTrue(request.getPickupServicePoint().getPickupLocation());
-    assertNull(request.getDeliveryAddress());
-    assertNull(request.getDeliveryAddressTypeId());
   }
 
   private void verifyDeliveryInfoUpdatedUponArrival(Request request,
