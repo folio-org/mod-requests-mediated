@@ -12,6 +12,7 @@ import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
 import static org.folio.mr.util.TestUtils.buildEvent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
 import static org.mockito.Mockito.when;
 
 import java.util.Date;
@@ -35,11 +36,14 @@ import org.folio.mr.domain.dto.RequestRequester;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.mapper.MediatedRequestMapperImpl;
 import org.folio.mr.repository.MediatedRequestsRepository;
+import org.folio.mr.service.MediatedRequestActionsService;
 import org.folio.mr.support.KafkaEvent;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import lombok.SneakyThrows;
@@ -53,12 +57,135 @@ class KafkaEventListenerTest extends BaseIT {
   private MediatedRequestsRepository mediatedRequestsRepository;
   @Autowired
   private SystemUserScopedExecutionService executionService;
+  @Autowired
+  private MediatedRequestActionsService actionsService;
   @MockBean
   private TenantConfig tenantConfig;
 
   @BeforeEach
   void beforeEach() {
     mediatedRequestsRepository.deleteAll();
+  }
+
+  @Test
+  void mediatedRequestInStatusOpenNotYetFilledIsUpdatedUponConfirmedRequestUpdate() {
+    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
+    KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_NOT_YET_FILLED, OPEN_IN_TRANSIT);
+    var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
+    mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
+    var initialMediatedRequest =
+      createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
+    assertNotNull(initialMediatedRequest.getId());
+
+    publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
+
+    MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
+    assertEquals(MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL.getValue(),
+      updatedMediatedRequest.getStatus());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = Request.StatusEnum.class, mode = EXCLUDE,
+    names = {"OPEN_IN_TRANSIT", "CLOSED_CANCELLED"})
+  void mediatedRequestInStatusOpenNotYetFilledIsNotUpdatedUponConfirmedRequestUpdate(
+    Request.StatusEnum newRequestStatus) {
+
+    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
+    KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_NOT_YET_FILLED, newRequestStatus);
+    var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
+    mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
+    var initialMediatedRequest =
+      createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
+    assertNotNull(initialMediatedRequest.getId());
+
+    publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
+
+    MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
+    assertEquals(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED.getValue(),
+      updatedMediatedRequest.getStatus());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = Request.StatusEnum.class, names = {"OPEN_AWAITING_PICKUP", "OPEN_AWAITING_DELIVERY"})
+  void mediatedRequestInStatusOpenInTransitToBeCheckedOutIsUpdatedUponConfirmedRequestUpdate(
+    Request.StatusEnum newRequestStatus) {
+
+    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
+    KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_IN_TRANSIT, newRequestStatus);
+    var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
+    mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
+    var initialMediatedRequest =
+      createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
+    assertNotNull(initialMediatedRequest.getId());
+
+    publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
+
+    MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
+    assertEquals(MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP.getValue(),
+      updatedMediatedRequest.getStatus());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = Request.StatusEnum.class, mode = EXCLUDE,
+    names = {"OPEN_AWAITING_PICKUP", "OPEN_AWAITING_DELIVERY", "CLOSED_CANCELLED"})
+  void mediatedRequestInStatusOpenInTransitToBeCheckedOutIsNotUpdatedUponConfirmedRequestUpdate(
+    Request.StatusEnum newRequestStatus) {
+
+    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
+    KafkaEvent<Request> event = buildRequestUpdateEvent(newRequestStatus, OPEN_NOT_YET_FILLED );
+    var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
+    mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
+    var initialMediatedRequest =
+      createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
+    assertNotNull(initialMediatedRequest.getId());
+
+    publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
+
+    MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
+    assertEquals(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED.getValue(),
+      updatedMediatedRequest.getStatus());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = Request.StatusEnum.class,
+    names = {"OPEN_AWAITING_PICKUP", "OPEN_AWAITING_DELIVERY"})
+  void mediatedRequestInStatusOpenAwaitingPickupIsUpdatedUponConfirmedRequestUpdate(
+    Request.StatusEnum oldRequestStatus) {
+
+    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
+    KafkaEvent<Request> event = buildRequestUpdateEvent(oldRequestStatus, CLOSED_FILLED);
+    var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP);
+    mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
+    var initialMediatedRequest =
+      createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
+    assertNotNull(initialMediatedRequest.getId());
+
+    publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
+
+    MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
+    assertEquals(MediatedRequest.StatusEnum.CLOSED_FILLED.getValue(),
+      updatedMediatedRequest.getStatus());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = Request.StatusEnum.class, mode = EXCLUDE,
+    names = {"OPEN_AWAITING_PICKUP", "OPEN_AWAITING_DELIVERY", "CLOSED_CANCELLED"})
+  void mediatedRequestInStatusOpenAwaitingPickupIsNotUpdatedUponConfirmedRequestUpdate(
+    Request.StatusEnum oldRequestStatus) {
+
+    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
+    KafkaEvent<Request> event = buildRequestUpdateEvent(oldRequestStatus, CLOSED_FILLED);
+    var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP);
+    mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
+    var initialMediatedRequest =
+      createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
+    assertNotNull(initialMediatedRequest.getId());
+
+    publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
+
+    MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
+    assertEquals(MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP.getValue(),
+      updatedMediatedRequest.getStatus());
   }
 
   @Test
@@ -94,10 +221,10 @@ class KafkaEventListenerTest extends BaseIT {
   }
 
   @Test
-  void shouldCancelMediatedRequestUponConfirmedRequestFill() {
+  void shouldCloseMediatedRequestUponConfirmedRequestFill() {
     when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
-    KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_NOT_YET_FILLED, CLOSED_FILLED);
-    var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
+    KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_AWAITING_PICKUP, CLOSED_FILLED);
+    var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
     var initialMediatedRequest =
       createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
