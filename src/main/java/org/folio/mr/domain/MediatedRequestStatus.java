@@ -1,5 +1,7 @@
 package org.folio.mr.domain;
 
+import org.folio.mr.domain.dto.MediatedRequest;
+
 public enum MediatedRequestStatus {
   NEW("New"),
   OPEN("Open"),
@@ -27,5 +29,9 @@ public enum MediatedRequestStatus {
       }
     }
     throw new IllegalArgumentException("Unexpected value '" + value + "'");
+  }
+
+  public static MediatedRequestStatus from(MediatedRequest.StatusEnum status) {
+    return fromValue(status.getValue().split(" - ")[0]);
   }
 }
