@@ -24,14 +24,12 @@ public class CirculationRequestServiceImpl implements CirculationRequestService 
   }
 
   @Override
-  public Request create(MediatedRequestEntity mediatedRequest, String pickupServicePointId) {
+  public Request create(MediatedRequestEntity mediatedRequest) {
     log.info("create:: creating circulation request for mediated request {}", mediatedRequest.getId());
-    return circulationClient.createRequest(buildRequest(mediatedRequest, pickupServicePointId));
+    return circulationClient.createRequest(buildRequest(mediatedRequest));
   }
 
-  private static Request buildRequest(MediatedRequestEntity mediatedRequest,
-    String pickupServicePointId) {
-
+  private static Request buildRequest(MediatedRequestEntity mediatedRequest) {
     return new Request()
       .requestLevel(Request.RequestLevelEnum.fromValue(mediatedRequest.getRequestLevel().getValue()))
       .requestType(Request.RequestTypeEnum.fromValue(mediatedRequest.getRequestType().getValue()))
@@ -39,10 +37,11 @@ public class CirculationRequestServiceImpl implements CirculationRequestService 
       .holdingsRecordId(asString(mediatedRequest.getHoldingsRecordId()))
       .itemId(asString(mediatedRequest.getItemId()))
       .requesterId(asString(mediatedRequest.getRequesterId()))
-      .fulfillmentPreference(Request.FulfillmentPreferenceEnum.HOLD_SHELF)
-      .pickupServicePointId(pickupServicePointId)
+      .fulfillmentPreference(Request.FulfillmentPreferenceEnum.fromValue(
+        mediatedRequest.getFulfillmentPreference().getValue()))
+      .pickupServicePointId(asString(mediatedRequest.getPickupServicePointId()))
       .requestDate(mediatedRequest.getRequestDate())
-      .deliveryAddressTypeId(null)
+      .deliveryAddressTypeId(asString(mediatedRequest.getDeliveryAddressTypeId()))
       .patronComments(mediatedRequest.getPatronComments());
   }
 

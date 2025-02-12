@@ -76,8 +76,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private Request createLocalRequest(MediatedRequestEntity mediatedRequest) {
-    Request localRequest = circulationRequestService.create(mediatedRequest,
-      INTERIM_SERVICE_POINT_ID);
+    Request localRequest = circulationRequestService.create(mediatedRequest);
     updateLocalRequest(localRequest);
     return localRequest;
   }

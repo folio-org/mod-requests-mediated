@@ -220,7 +220,7 @@ class MediatedRequestActionsServiceTest {
       .thenReturn("consortium");
     when(searchService.searchItems(instanceId.toString(), "consortium"))
       .thenReturn(List.of(requestedItem));
-    when(circulationRequestService.create(mediatedRequest, INTERIM_SERVICE_POINT_ID))
+    when(circulationRequestService.create(mediatedRequest))
       .thenReturn(circulationRequest);
 
     mediatedRequestActionsService.confirm(mediatedRequestId);
