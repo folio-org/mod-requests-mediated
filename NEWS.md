@@ -1,3 +1,6 @@
+## 1.0.7 2025-02-13
+* Fix secure request synchronization issues (MODREQMED-86)
+
 ## 1.0.6 2025-02-06
 * Mediated request workflow - `Closed - Filled` status change (MODREQMED-76)
 * Update local request upon confirmation (MODREQMED-82)
