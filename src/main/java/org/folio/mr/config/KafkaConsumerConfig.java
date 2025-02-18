@@ -25,7 +25,13 @@ public class KafkaConsumerConfig {
       ConsumerConfig.GROUP_ID_CONFIG, kafkaProperties.getConsumer().getGroupId(),
       ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, kafkaProperties.getConsumer().getAutoOffsetReset(),
       ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
-      ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+      ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+
+      ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 50,
+
+      ConsumerConfig.FETCH_MAX_BYTES_CONFIG, 1048576,
+      ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG, 524288
+    );
 
     return new DefaultKafkaConsumerFactory<>(consumerConfig);
   }
@@ -36,6 +42,7 @@ public class KafkaConsumerConfig {
 
     var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
     factory.setConsumerFactory(consumerFactory(kafkaProperties));
+    factory.setConcurrency(3);
 
     return factory;
   }
