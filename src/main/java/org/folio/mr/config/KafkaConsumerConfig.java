@@ -14,6 +14,7 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Configuration
 @RequiredArgsConstructor
@@ -23,7 +24,7 @@ public class KafkaConsumerConfig {
 
   @Bean
   public ConsumerFactory<String, String> consumerFactory() {
-    var consumerConfig = new HashMap<>(kafkaProperties.buildConsumerProperties(null));
+    var consumerConfig = new HashMap<>(kafkaProperties.buildConsumerProperties());
     consumerConfig.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     consumerConfig.put(VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 
