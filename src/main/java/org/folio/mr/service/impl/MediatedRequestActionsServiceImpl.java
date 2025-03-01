@@ -64,6 +64,8 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     MediatedRequestEntity mediatedRequest = findMediatedRequest(id);
     log.info("confirm:: found mediated request: {}", id);
     Request request = createRequest(mediatedRequest);
+    log.info("ANTON:: MEDIATED request: {}", mediatedRequest);
+    log.info("ANTON::  REQUEST: {}", request);
     updateMediatedRequest(mediatedRequest, request);
     log.info("confirm:: mediated request {} was successfully confirmed", id);
   }
@@ -89,6 +91,8 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   private Request createEcsTlr(MediatedRequestEntity mediatedRequest) {
     EcsTlr ecsTlr = ecsRequestService.create(mediatedRequest);
     Request primaryRequest = circulationRequestService.get(ecsTlr.getPrimaryRequestId());
+    log.info("ANTON:: MEDIATED request {}", mediatedRequest);
+    log.info("ANTON:: PRIMARY request {}", primaryRequest);
     revertPrimaryRequestDeliveryInfo(mediatedRequest, primaryRequest);
     return primaryRequest;
   }
