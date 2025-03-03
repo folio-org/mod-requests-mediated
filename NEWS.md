@@ -1,4 +1,7 @@
 ## 1.0.7 2025-02-13
+* Add Kafka TLS support (MODREQMED-89)
+
+## 1.0.7 2025-02-13
 * Fix secure request synchronization issues (MODREQMED-86)
 
 ## 1.0.6 2025-02-06
