@@ -12,6 +12,8 @@ import org.folio.mr.domain.converter.FulfillmentPreferenceJdbcType;
 import org.folio.mr.domain.converter.MediatedRequestStatusJdbcType;
 import org.folio.mr.domain.converter.RequestLevelJdbcType;
 import org.folio.mr.domain.converter.RequestTypeJdbcType;
+import org.folio.spring.cql.RespectAccents;
+import org.folio.spring.cql.RespectCase;
 import org.hibernate.annotations.JdbcType;
 
 import jakarta.persistence.CascadeType;
@@ -36,6 +38,8 @@ import lombok.With;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@RespectCase
+@RespectAccents
 public class MediatedRequestEntity {
 
   @Id
