@@ -82,8 +82,10 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
         mediatedRequest.getMediatedRequestStatus(), mediatedRequest.getMediatedRequestStep());
     }
 
-    if (newRequest.getEcsRequestPhase() == PRIMARY) {
-      updateMediatedRequest(mediatedRequest, newRequest);
+    Request.EcsRequestPhaseEnum ecsRequestPhase = newRequest.getEcsRequestPhase();
+    log.info("handleRequestUpdateEvent:: updated request ECS phase: {}", ecsRequestPhase);
+    if (ecsRequestPhase == PRIMARY) {
+      mediatedRequest = updateMediatedRequest(mediatedRequest, newRequest);
     }
 
     // Update statuses
@@ -120,10 +122,10 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
     return result;
   }
 
-  private void updateMediatedRequest(MediatedRequestEntity mediatedRequest, Request updatedRequest) {
+  private MediatedRequestEntity updateMediatedRequest(MediatedRequestEntity mediatedRequest, Request updatedRequest) {
     if (mediatedRequest.getItemId() != null || updatedRequest.getItemId() == null) {
       log.info("updateItemInfo:: no need to update item info");
-      return;
+      return mediatedRequest;
     }
 
     log.info("updateItemInfo:: updating mediated request item info");
@@ -145,6 +147,7 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
         mediatedRequest.setCallNumberSuffix(callNumberComponents.getSuffix());
       }
     }
+    return mediatedRequestsRepository.save(mediatedRequest);
   }
 
 }
