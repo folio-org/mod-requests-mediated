@@ -1,6 +1,7 @@
 package org.folio.mr.service.impl;
 
 import static org.folio.mr.domain.MediatedRequestStatus.OPEN;
+import static org.folio.mr.domain.dto.Request.EcsRequestPhaseEnum.PRIMARY;
 import static org.folio.mr.domain.dto.Request.StatusEnum.CLOSED_CANCELLED;
 import static org.folio.mr.domain.dto.Request.StatusEnum.CLOSED_FILLED;
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_AWAITING_DELIVERY;
@@ -17,6 +18,8 @@ import java.util.UUID;
 
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.Request;
+import org.folio.mr.domain.dto.RequestSearchIndex;
+import org.folio.mr.domain.dto.RequestSearchIndexCallNumberComponents;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.entity.MediatedRequestStep;
 import org.folio.mr.repository.MediatedRequestsRepository;
@@ -62,8 +65,6 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
       return;
     }
 
-    // Update statuses
-
     String requestId = newRequest.getId();
     var newRequestStatus = newRequest.getStatus();
     var oldRequestStatus = oldRequest.getStatus();
@@ -81,6 +82,11 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
         mediatedRequest.getMediatedRequestStatus(), mediatedRequest.getMediatedRequestStep());
     }
 
+    if (newRequest.getEcsRequestPhase() == PRIMARY) {
+      updateMediatedRequest(mediatedRequest, newRequest);
+    }
+
+    // Update statuses
     if (newRequestStatus == OPEN_IN_TRANSIT && oldRequestStatus == OPEN_NOT_YET_FILLED &&
       mediatedRequestStatusEquals(mediatedRequest, OPEN, NOT_YET_FILLED)) {
       actionsService.changeStatusToInTransitForApproval(mediatedRequest);
@@ -113,4 +119,32 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
     log.info("mediatedRequestStatusEquals:: result {}", result);
     return result;
   }
+
+  private void updateMediatedRequest(MediatedRequestEntity mediatedRequest, Request updatedRequest) {
+    if (mediatedRequest.getItemId() != null || updatedRequest.getItemId() == null) {
+      log.info("updateItemInfo:: no need to update item info");
+      return;
+    }
+
+    log.info("updateItemInfo:: updating mediated request item info");
+    mediatedRequest.setItemId(UUID.fromString(updatedRequest.getItemId()));
+    mediatedRequest.setHoldingsRecordId(UUID.fromString(updatedRequest.getHoldingsRecordId()));
+
+    if (updatedRequest.getItem() != null) {
+      mediatedRequest.setItemBarcode(updatedRequest.getItem().getBarcode());
+    }
+
+    RequestSearchIndex searchIndex = updatedRequest.getSearchIndex();
+    if (searchIndex != null) {
+      mediatedRequest.setShelvingOrder(searchIndex.getShelvingOrder());
+
+      RequestSearchIndexCallNumberComponents callNumberComponents = searchIndex.getCallNumberComponents();
+      if (callNumberComponents != null) {
+        mediatedRequest.setCallNumber(callNumberComponents.getCallNumber());
+        mediatedRequest.setCallNumberPrefix(callNumberComponents.getPrefix());
+        mediatedRequest.setCallNumberSuffix(callNumberComponents.getSuffix());
+      }
+    }
+  }
+
 }
