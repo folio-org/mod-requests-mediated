@@ -65,6 +65,9 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
       return;
     }
 
+    log.info("OLD REQUEST: {}", oldRequest);
+    log.info("NEW REQUEST: {}", newRequest);
+
     String requestId = newRequest.getId();
     var newRequestStatus = newRequest.getStatus();
     var oldRequestStatus = oldRequest.getStatus();
