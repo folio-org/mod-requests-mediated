@@ -14,18 +14,22 @@ import static org.folio.mr.domain.entity.MediatedRequestStep.IN_TRANSIT_TO_BE_CH
 import static org.folio.mr.domain.entity.MediatedRequestStep.NOT_YET_FILLED;
 import static org.folio.mr.support.KafkaEvent.EventType.UPDATED;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.folio.mr.domain.MediatedRequestStatus;
+import org.folio.mr.domain.dto.Item;
+import org.folio.mr.domain.dto.ItemEffectiveCallNumberComponents;
 import org.folio.mr.domain.dto.Request;
-import org.folio.mr.domain.dto.RequestSearchIndex;
-import org.folio.mr.domain.dto.RequestSearchIndexCallNumberComponents;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.entity.MediatedRequestStep;
 import org.folio.mr.repository.MediatedRequestsRepository;
+import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.KafkaEventHandler;
 import org.folio.mr.service.MediatedRequestActionsService;
+import org.folio.mr.service.SearchService;
 import org.folio.mr.support.KafkaEvent;
+import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
 import lombok.AllArgsConstructor;
@@ -38,6 +42,9 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
 
   private final MediatedRequestsRepository mediatedRequestsRepository;
   private final MediatedRequestActionsService actionsService;
+  private final SystemUserScopedExecutionService systemUserService;
+  private final SearchService searchService;
+  private final InventoryService inventoryService;
 
   @Override
   public void handle(KafkaEvent<Request> event) {
@@ -64,9 +71,6 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
       log.warn("handleRequestUpdateEvent:: event does not contain old version of request");
       return;
     }
-
-    log.info("OLD REQUEST: {}", oldRequest);
-    log.info("NEW REQUEST: {}", newRequest);
 
     String requestId = newRequest.getId();
     var newRequestStatus = newRequest.getStatus();
@@ -126,31 +130,38 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
   }
 
   private MediatedRequestEntity updateMediatedRequest(MediatedRequestEntity mediatedRequest, Request updatedRequest) {
-    if (mediatedRequest.getItemId() != null || updatedRequest.getItemId() == null) {
+    String itemId = updatedRequest.getItemId();
+    if (mediatedRequest.getItemId() != null || itemId == null) {
       log.info("updateItemInfo:: no need to update item info");
       return mediatedRequest;
     }
 
     log.info("updateItemInfo:: updating mediated request item info");
-    mediatedRequest.setItemId(UUID.fromString(updatedRequest.getItemId()));
+    mediatedRequest.setItemId(UUID.fromString(itemId));
     mediatedRequest.setHoldingsRecordId(UUID.fromString(updatedRequest.getHoldingsRecordId()));
 
     if (updatedRequest.getItem() != null) {
       mediatedRequest.setItemBarcode(updatedRequest.getItem().getBarcode());
     }
 
-    RequestSearchIndex searchIndex = updatedRequest.getSearchIndex();
-    if (searchIndex != null) {
-      mediatedRequest.setShelvingOrder(searchIndex.getShelvingOrder());
-
-      RequestSearchIndexCallNumberComponents callNumberComponents = searchIndex.getCallNumberComponents();
-      if (callNumberComponents != null) {
-        mediatedRequest.setCallNumber(callNumberComponents.getCallNumber());
-        mediatedRequest.setCallNumberPrefix(callNumberComponents.getPrefix());
-        mediatedRequest.setCallNumberSuffix(callNumberComponents.getSuffix());
+    findItem(itemId).ifPresent(item -> {
+      log.info("updateItemInfo:: item found, updating mediated request");
+      mediatedRequest.setShelvingOrder(item.getEffectiveShelvingOrder());
+      ItemEffectiveCallNumberComponents components = item.getEffectiveCallNumberComponents();
+      if (components != null) {
+        mediatedRequest.setCallNumber(components.getCallNumber());
+        mediatedRequest.setCallNumberPrefix(components.getPrefix());
+        mediatedRequest.setCallNumberSuffix(components.getSuffix());
       }
-    }
+    });
+
     return mediatedRequestsRepository.save(mediatedRequest);
+  }
+
+  private Optional<Item> findItem(String itemId) {
+    return searchService.searchItem(itemId)
+      .map(searchItem -> systemUserService.executeSystemUserScoped(searchItem.getTenantId(),
+        () -> inventoryService.fetchItem(itemId)));
   }
 
 }

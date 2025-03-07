@@ -33,6 +33,23 @@ public class SearchServiceImpl implements SearchService {
   }
 
   @Override
+  public Optional<ConsortiumItem> searchItem(String itemId) {
+    log.info("searchItem: searching for item {}", itemId);
+    // this search can only be done in central tenant
+    ConsortiumItem item = executionService.executeSystemUserScoped(
+      consortiumService.getCentralTenantId(), () -> searchClient.searchItem(itemId));
+
+    // this search returns 200 with empty body if item is not found
+    if (item == null || item.getId() == null) {
+      log.info("searchItem: item {} not found", itemId);
+      return Optional.empty();
+    }
+
+    log.info("searchItem: item {} found in tenant {}", itemId, item.getTenantId());
+    return Optional.of(item);
+  }
+
+  @Override
   public Optional<SearchInstance> searchInstance(String instanceId) {
     log.info("searchInstance:: parameters instanceId: {}", instanceId);
 
