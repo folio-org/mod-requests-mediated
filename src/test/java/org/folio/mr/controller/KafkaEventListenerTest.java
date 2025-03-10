@@ -424,7 +424,7 @@ class KafkaEventListenerTest extends BaseIT {
       .requestDate(new Date())
       .status(status)
       .position(1)
-      .itemId(INSTANCE_ID)
+      .itemId(ITEM_ID)
       .instance(new RequestInstance().title("Test title"))
       .item(new RequestItem().barcode("test"))
       .cancellationReasonId(UUID.randomUUID().toString())
