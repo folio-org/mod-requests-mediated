@@ -66,6 +66,13 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
       return;
     }
 
+    Request.EcsRequestPhaseEnum ecsRequestPhase = newRequest.getEcsRequestPhase();
+    log.info("handleRequestUpdateEvent:: updated request ECS phase: {}", ecsRequestPhase);
+    if (ecsRequestPhase != PRIMARY) {
+      log.info("handleRequestUpdateEvent:: ignoring non-primary request");
+      return;
+    }
+
     Request oldRequest = event.getData().getOldVersion();
     if (oldRequest == null) {
       log.warn("handleRequestUpdateEvent:: event does not contain old version of request");
@@ -89,22 +96,20 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
         mediatedRequest.getMediatedRequestStatus(), mediatedRequest.getMediatedRequestStep());
     }
 
-    Request.EcsRequestPhaseEnum ecsRequestPhase = newRequest.getEcsRequestPhase();
-    log.info("handleRequestUpdateEvent:: updated request ECS phase: {}", ecsRequestPhase);
-    if (ecsRequestPhase == PRIMARY) {
-      mediatedRequest = updateMediatedRequest(mediatedRequest, newRequest);
-    }
+      boolean wasMediatedRequestUpdated = updateMediatedRequest(mediatedRequest, newRequest);
 
     // Update statuses
     if (newRequestStatus == OPEN_IN_TRANSIT && oldRequestStatus == OPEN_NOT_YET_FILLED &&
       mediatedRequestStatusEquals(mediatedRequest, OPEN, NOT_YET_FILLED)) {
       actionsService.changeStatusToInTransitForApproval(mediatedRequest);
+      wasMediatedRequestUpdated = true;
     }
     if ((newRequestStatus == OPEN_AWAITING_PICKUP || newRequestStatus == OPEN_AWAITING_DELIVERY) &&
       oldRequestStatus == OPEN_IN_TRANSIT &&
       mediatedRequestStatusEquals(mediatedRequest, OPEN, IN_TRANSIT_TO_BE_CHECKED_OUT)
     ) {
       actionsService.changeStatusToAwaitingPickup(mediatedRequest);
+      wasMediatedRequestUpdated = true;
     }
     if (newRequestStatus == CLOSED_FILLED &&
       (oldRequestStatus == OPEN_AWAITING_PICKUP || oldRequestStatus == OPEN_AWAITING_DELIVERY) &&
@@ -112,9 +117,15 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
         mediatedRequestStatusEquals(mediatedRequest, OPEN, AWAITING_DELIVERY))
     ) {
       actionsService.changeStatusToClosedFilled(mediatedRequest);
+      wasMediatedRequestUpdated = true;
     }
     if (newRequestStatus == CLOSED_CANCELLED) {
       actionsService.changeStatusToClosedCanceled(mediatedRequest, newRequest);
+      wasMediatedRequestUpdated = true;
+    }
+
+    if (wasMediatedRequestUpdated) {
+      mediatedRequestsRepository.save(mediatedRequest);
     }
   }
 
@@ -129,11 +140,11 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
     return result;
   }
 
-  private MediatedRequestEntity updateMediatedRequest(MediatedRequestEntity mediatedRequest, Request updatedRequest) {
+  private boolean updateMediatedRequest(MediatedRequestEntity mediatedRequest, Request updatedRequest) {
     String itemId = updatedRequest.getItemId();
     if (mediatedRequest.getItemId() != null || itemId == null) {
       log.info("updateItemInfo:: no need to update item info");
-      return mediatedRequest;
+      return false;
     }
 
     log.info("updateItemInfo:: updating mediated request item info");
@@ -155,7 +166,7 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
       }
     });
 
-    return mediatedRequestsRepository.save(mediatedRequest);
+    return true;
   }
 
   private Optional<Item> findItem(String itemId) {
