@@ -1,3 +1,6 @@
+## 1.0.9 2025-03-17
+* Update item info in title-level mediated request (MODREQMED-93)
+
 ## 1.0.8 2025-03-03
 * Add Kafka TLS support (MODREQMED-89)
 
