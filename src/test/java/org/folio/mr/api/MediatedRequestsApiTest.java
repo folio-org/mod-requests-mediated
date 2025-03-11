@@ -309,7 +309,7 @@ class MediatedRequestsApiTest extends BaseIT {
   @Test
   void mediatedRequestsShouldBeRetrievedByQuery() {
     MediatedRequest mediatedRequest = createMediatedRequest();
-    getRequestsByQuery("requestType==Page")
+    getRequestsByQuery("status==(\"New - Awaiting confirmation\" or \"Closed - Filled\")")
       .andExpect(status().isOk())
       .andExpect(jsonPath("mediatedRequests", iterableWithSize(1)))
       .andExpect(jsonPath("mediatedRequests[0].id", is(mediatedRequest.getId())));
@@ -512,7 +512,8 @@ class MediatedRequestsApiTest extends BaseIT {
   @SneakyThrows
   private ResultActions getRequestsByQuery(String query) {
     return mockMvc.perform(
-      get(URL_MEDIATED_REQUESTS + "?query=" + query)
+      get(URL_MEDIATED_REQUESTS)
+        .queryParam("query", query)
         .headers(defaultHeaders())
         .contentType(MediaType.APPLICATION_JSON));
   }

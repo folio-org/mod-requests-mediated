@@ -122,7 +122,7 @@
         "urlPath": "/users",
         "queryParameters": {
           "query": {
-            "equalTo": "username==mod-requests-mediated"
+            "equalTo": "username==\"mod-requests-mediated\""
           }
         }
       },
