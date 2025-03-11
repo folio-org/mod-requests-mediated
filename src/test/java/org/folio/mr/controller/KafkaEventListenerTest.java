@@ -57,7 +57,6 @@ class KafkaEventListenerTest extends BaseIT {
   private static final UUID CONFIRMED_REQUEST_ID = randomUUID();
   private static final String ITEM_ID = "9428231b-dd31-4f70-8406-fe22fbdeabc2";
   private static final String HOLDINGS_RECORD_ID = randomId();
-  private static final String INSTANCE_ID = randomId();
   private static final String ITEM_BARCODE = "A14837334314";
 
   private static final String ITEM_STORAGE_URL = "/item-storage/items";

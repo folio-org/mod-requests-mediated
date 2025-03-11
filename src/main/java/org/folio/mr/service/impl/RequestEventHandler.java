@@ -143,11 +143,11 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
   private boolean updateMediatedRequest(MediatedRequestEntity mediatedRequest, Request updatedRequest) {
     String itemId = updatedRequest.getItemId();
     if (mediatedRequest.getItemId() != null || itemId == null) {
-      log.info("updateItemInfo:: no need to update item info");
+      log.info("updateMediatedRequest:: no need to update item info");
       return false;
     }
 
-    log.info("updateItemInfo:: updating mediated request item info");
+    log.info("updateMediatedRequest:: updating mediated request item info");
     mediatedRequest.setItemId(UUID.fromString(itemId));
     mediatedRequest.setHoldingsRecordId(UUID.fromString(updatedRequest.getHoldingsRecordId()));
 
@@ -156,7 +156,7 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
     }
 
     findItem(itemId).ifPresent(item -> {
-      log.info("updateItemInfo:: item found, updating mediated request");
+      log.info("updateMediatedRequest:: item found, updating mediated request");
       mediatedRequest.setShelvingOrder(item.getEffectiveShelvingOrder());
       ItemEffectiveCallNumberComponents components = item.getEffectiveCallNumberComponents();
       if (components != null) {
