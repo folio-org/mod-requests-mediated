@@ -1,5 +1,6 @@
 package org.folio.mr.client;
 
+import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.ConsortiumItems;
 import org.folio.mr.domain.dto.SearchInstancesResponse;
 import org.folio.spring.config.FeignClientConfiguration;
@@ -13,6 +14,9 @@ public interface SearchClient {
 
   @GetMapping("/consortium/items")
   ConsortiumItems searchItems(@RequestParam String instanceId, @RequestParam String tenantId);
+
+  @GetMapping("/consortium/item/{itemId}")
+  ConsortiumItem searchItem(@PathVariable("itemId") String itemId);
 
   @GetMapping("/instances?query=id=={instanceId}&expandAll=true")
   SearchInstancesResponse searchInstance(@PathVariable("instanceId") String instanceId);

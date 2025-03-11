@@ -2,14 +2,10 @@ package org.folio.mr.service;
 
 import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
-import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.CLOSED_CANCELLED;
-import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.CLOSED_FILLED;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CONFIRMATION;
-import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
-import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequestEntity;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -24,7 +20,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -88,22 +83,6 @@ class MediatedRequestActionsServiceTest {
 
   @Captor
   ArgumentCaptor<MediatedRequestEntity> mediatedRequestEntityCaptor;
-
-  @Test
-  void changeStatusToInTransitForApprovalSuccess() {
-    UUID mediatedRequestId = UUID.randomUUID();
-    MediatedRequestEntity initialRequest = buildMediatedRequestEntity(OPEN_NOT_YET_FILLED)
-      .withId(mediatedRequestId);
-    when(mediatedRequestsRepository.save(mediatedRequestEntityCaptor.capture())).thenReturn(null);
-
-    mediatedRequestActionsService.changeStatusToInTransitForApproval(initialRequest);
-
-    MediatedRequestEntity updatedRequest = mediatedRequestEntityCaptor.getValue();
-    assertNotNull(updatedRequest);
-    assertEquals(MediatedRequestStatus.OPEN, updatedRequest.getMediatedRequestStatus());
-    assertEquals(OPEN_IN_TRANSIT_FOR_APPROVAL.getValue(), updatedRequest.getStatus());
-    assertEquals(MediatedRequestStep.IN_TRANSIT_FOR_APPROVAL.getValue(), updatedRequest.getMediatedRequestStep());
-  }
 
   @Test
   void successfulItemArrivalConfirmation() {
@@ -179,22 +158,6 @@ class MediatedRequestActionsServiceTest {
       () -> mediatedRequestActionsService.sendItemInTransit("item-barcode"));
     assertThat(exception.getMessage(),
       is("Send item in transit: mediated request for item 'item-barcode' was not found"));
-  }
-
-  @Test
-  void changeStatusToAwaitingPickupSuccess() {
-    UUID mediatedRequestId = UUID.randomUUID();
-    MediatedRequestEntity initialRequest = buildMediatedRequestEntity(OPEN_NOT_YET_FILLED)
-      .withId(mediatedRequestId);
-    when(mediatedRequestsRepository.save(mediatedRequestEntityCaptor.capture())).thenReturn(null);
-
-    mediatedRequestActionsService.changeStatusToAwaitingPickup(initialRequest);
-
-    MediatedRequestEntity updatedRequest = mediatedRequestEntityCaptor.getValue();
-    assertNotNull(updatedRequest);
-    assertEquals(MediatedRequestStatus.OPEN, updatedRequest.getMediatedRequestStatus());
-    assertEquals(OPEN_AWAITING_PICKUP.getValue(), updatedRequest.getStatus());
-    assertEquals(MediatedRequestStep.AWAITING_PICKUP.getValue(), updatedRequest.getMediatedRequestStep());
   }
 
   @Test
@@ -337,45 +300,6 @@ class MediatedRequestActionsServiceTest {
         .withMediatedRequestStep(MediatedRequestStep.DECLINED.getValue())
         .withMediatedWorkflow(MediatedRequestWorkflow.PRIVATE_REQUEST.getValue())
     );
-  }
-
-  @Test
-  void changeStatusToClosedFilled() {
-    UUID mediatedRequestId = UUID.randomUUID();
-    MediatedRequestEntity initialRequest = buildMediatedRequestEntity(OPEN_NOT_YET_FILLED)
-      .withId(mediatedRequestId);
-    when(mediatedRequestsRepository.save(mediatedRequestEntityCaptor.capture())).thenReturn(null);
-
-    mediatedRequestActionsService.changeStatusToClosedFilled(initialRequest);
-
-    MediatedRequestEntity updatedRequest = mediatedRequestEntityCaptor.getValue();
-    assertNotNull(updatedRequest);
-    assertEquals(MediatedRequestStatus.CLOSED, updatedRequest.getMediatedRequestStatus());
-    assertEquals(CLOSED_FILLED.getValue(), updatedRequest.getStatus());
-    assertEquals(MediatedRequestStep.FILLED.getValue(), updatedRequest.getMediatedRequestStep());
-  }
-
-  @Test
-  void changeStatusToClosedCanceled() {
-    UUID mediatedRequestId = UUID.randomUUID();
-    MediatedRequestEntity initialRequest = buildMediatedRequestEntity(OPEN_NOT_YET_FILLED)
-      .withId(mediatedRequestId);
-    when(mediatedRequestsRepository.save(mediatedRequestEntityCaptor.capture())).thenReturn(null);
-    Request request = new Request()
-      .cancellationReasonId(UUID.randomUUID().toString())
-      .cancelledDate(new Date())
-      .cancelledByUserId(UUID.randomUUID().toString());
-
-    mediatedRequestActionsService.changeStatusToClosedCanceled(initialRequest, request);
-
-    MediatedRequestEntity updatedRequest = mediatedRequestEntityCaptor.getValue();
-    assertNotNull(updatedRequest);
-    assertEquals(request.getCancellationReasonId(), updatedRequest.getCancellationReasonId().toString());
-    assertEquals(request.getCancelledDate(), updatedRequest.getCancelledDate());
-    assertEquals(request.getCancelledByUserId(), updatedRequest.getCancelledByUserId().toString());
-    assertEquals(MediatedRequestStatus.CLOSED, updatedRequest.getMediatedRequestStatus());
-    assertEquals(CLOSED_CANCELLED.getValue(), updatedRequest.getStatus());
-    assertEquals(MediatedRequestStep.CANCELLED.getValue(), updatedRequest.getMediatedRequestStep());
   }
 
   private void verifyDeliveryInfoUpdatedUponArrival(Request request,
