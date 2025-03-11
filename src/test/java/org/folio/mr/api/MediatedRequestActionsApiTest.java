@@ -65,7 +65,6 @@ import lombok.SneakyThrows;
 @IntegrationTest
 class MediatedRequestActionsApiTest extends BaseIT {
 
-  private static final String TENANT_ID_CENTRAL = "central";
   private static final String CONFIRM_ITEM_ARRIVAL_URL = "/requests-mediated/confirm-item-arrival";
   private static final String SEND_ITEM_IN_TRANSIT_URL = "/requests-mediated/send-item-in-transit";
   private static final String CONFIRM_MEDIATED_REQUEST_URL_TEMPLATE =

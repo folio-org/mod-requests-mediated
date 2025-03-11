@@ -1,5 +1,9 @@
 package org.folio.mr.controller;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.mr.domain.dto.Request.StatusEnum.CLOSED_CANCELLED;
@@ -10,10 +14,11 @@ import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_NOT_YET_FILLED;
 import static org.folio.mr.support.KafkaEvent.EventType.UPDATED;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
 import static org.folio.mr.util.TestUtils.buildEvent;
+import static org.folio.spring.integration.XOkapiHeaders.TENANT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
-import static org.mockito.Mockito.when;
 
 import java.util.Date;
 import java.util.List;
@@ -27,7 +32,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.awaitility.Awaitility;
 import org.folio.mr.api.BaseIT;
-import org.folio.mr.config.TenantConfig;
+import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.RequestInstance;
@@ -36,7 +41,6 @@ import org.folio.mr.domain.dto.RequestRequester;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.mapper.MediatedRequestMapperImpl;
 import org.folio.mr.repository.MediatedRequestsRepository;
-import org.folio.mr.service.MediatedRequestActionsService;
 import org.folio.mr.support.KafkaEvent;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.service.SystemUserScopedExecutionService;
@@ -47,20 +51,21 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import lombok.SneakyThrows;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
 class KafkaEventListenerTest extends BaseIT {
   private static final String CONSUMER_GROUP_ID = "folio-mod-requests-mediated-group";
   private static final UUID CONFIRMED_REQUEST_ID = randomUUID();
+  private static final String ITEM_ID = "9428231b-dd31-4f70-8406-fe22fbdeabc2";
+  private static final String HOLDINGS_RECORD_ID = randomId();
+  private static final String ITEM_BARCODE = "A14837334314";
+
+  private static final String ITEM_STORAGE_URL = "/item-storage/items";
+
   private final MediatedRequestMapperImpl mediatedRequestMapper = new MediatedRequestMapperImpl();
   @Autowired
   private MediatedRequestsRepository mediatedRequestsRepository;
   @Autowired
   private SystemUserScopedExecutionService executionService;
-  @Autowired
-  private MediatedRequestActionsService actionsService;
-  @MockBean
-  private TenantConfig tenantConfig;
 
   @BeforeEach
   void beforeEach() {
@@ -69,7 +74,6 @@ class KafkaEventListenerTest extends BaseIT {
 
   @Test
   void mediatedRequestInStatusOpenNotYetFilledIsUpdatedUponConfirmedRequestUpdate() {
-    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
     KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_NOT_YET_FILLED, OPEN_IN_TRANSIT);
     var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
@@ -90,7 +94,6 @@ class KafkaEventListenerTest extends BaseIT {
   void mediatedRequestInStatusOpenNotYetFilledIsNotUpdatedUponConfirmedRequestUpdate(
     Request.StatusEnum newRequestStatus) {
 
-    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
     KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_NOT_YET_FILLED, newRequestStatus);
     var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
@@ -110,7 +113,6 @@ class KafkaEventListenerTest extends BaseIT {
   void mediatedRequestInStatusOpenInTransitToBeCheckedOutIsUpdatedUponConfirmedRequestUpdate(
     Request.StatusEnum newRequestStatus) {
 
-    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
     KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_IN_TRANSIT, newRequestStatus);
     var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
@@ -131,7 +133,6 @@ class KafkaEventListenerTest extends BaseIT {
   void mediatedRequestInStatusOpenInTransitToBeCheckedOutIsNotUpdatedUponConfirmedRequestUpdate(
     Request.StatusEnum newRequestStatus) {
 
-    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
     KafkaEvent<Request> event = buildRequestUpdateEvent(newRequestStatus, OPEN_NOT_YET_FILLED );
     var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
@@ -152,7 +153,6 @@ class KafkaEventListenerTest extends BaseIT {
   void mediatedRequestInStatusOpenAwaitingPickupIsUpdatedUponConfirmedRequestUpdate(
     Request.StatusEnum oldRequestStatus) {
 
-    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
     KafkaEvent<Request> event = buildRequestUpdateEvent(oldRequestStatus, CLOSED_FILLED);
     var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
@@ -173,7 +173,6 @@ class KafkaEventListenerTest extends BaseIT {
   void mediatedRequestInStatusOpenAwaitingPickupIsNotUpdatedUponConfirmedRequestUpdate(
     Request.StatusEnum oldRequestStatus) {
 
-    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
     KafkaEvent<Request> event = buildRequestUpdateEvent(oldRequestStatus, CLOSED_FILLED);
     var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
@@ -190,7 +189,6 @@ class KafkaEventListenerTest extends BaseIT {
 
   @Test
   void shouldCancelMediatedRequestUponConfirmedRequestCancel() {
-    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
     KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_NOT_YET_FILLED, CLOSED_CANCELLED);
     var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
@@ -206,7 +204,6 @@ class KafkaEventListenerTest extends BaseIT {
 
   @Test
   void shouldUpdateMediatedRequestStatusOnItemCheckout() {
-    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
     KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_IN_TRANSIT, OPEN_AWAITING_PICKUP);
     var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
@@ -222,7 +219,6 @@ class KafkaEventListenerTest extends BaseIT {
 
   @Test
   void shouldCloseMediatedRequestUponConfirmedRequestFill() {
-    when(tenantConfig.getSecureTenantId()).thenReturn(TENANT_ID_CONSORTIUM);
     KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_AWAITING_PICKUP, CLOSED_FILLED);
     var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
@@ -234,6 +230,140 @@ class KafkaEventListenerTest extends BaseIT {
 
     MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
     assertEquals(MediatedRequest.StatusEnum.CLOSED_FILLED.getValue(), updatedMediatedRequest.getStatus());
+  }
+
+  @Test
+  void shouldUpdateItemInfoInMediatedRequestUponPrimaryRequestUpdate() {
+    MediatedRequest mediatedRequest = buildMediatedRequest(
+      MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED)
+      .confirmedRequestId(CONFIRMED_REQUEST_ID.toString())
+      .itemId(null)
+      .holdingsRecordId(null)
+      .item(null)
+      .searchIndex(null);
+
+    MediatedRequestEntity initialMediatedRequest =
+      createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
+
+    assertNull(initialMediatedRequest.getItemId());
+    assertNull(initialMediatedRequest.getHoldingsRecordId());
+    assertNull(initialMediatedRequest.getItemBarcode());
+    assertNull(initialMediatedRequest.getCallNumber());
+    assertNull(initialMediatedRequest.getCallNumberPrefix());
+    assertNull(initialMediatedRequest.getCallNumberSuffix());
+    assertNull(initialMediatedRequest.getShelvingOrder());
+
+    mockHelper.mockItemSearch(TENANT_ID_CENTRAL, ITEM_ID, new ConsortiumItem()
+      .id(ITEM_ID)
+      .tenantId(TENANT_ID_COLLEGE));
+
+    Request primaryRequest = buildRequest(OPEN_NOT_YET_FILLED, CONFIRMED_REQUEST_ID)
+      .holdingsRecordId(HOLDINGS_RECORD_ID)
+      .itemId(ITEM_ID)
+      .item(new RequestItem().barcode(ITEM_BARCODE));
+
+    publishEventAndWait(TENANT_ID_SECURE, REQUEST_KAFKA_TOPIC_NAME,
+      buildUpdateEvent(TENANT_ID_SECURE, primaryRequest, primaryRequest));
+
+    MediatedRequestEntity updatedRequest = getMediatedRequest(initialMediatedRequest.getId());
+    // actual values come from mocked item-storage (resources/mappings/items.json)
+    assertEquals(ITEM_ID, updatedRequest.getItemId().toString());
+    assertEquals(HOLDINGS_RECORD_ID, updatedRequest.getHoldingsRecordId().toString());
+    assertEquals(ITEM_BARCODE, updatedRequest.getItemBarcode());
+    assertEquals("CN", updatedRequest.getCallNumber());
+    assertEquals("PFX", updatedRequest.getCallNumberPrefix());
+    assertEquals("SFX", updatedRequest.getCallNumberSuffix());
+    assertEquals("CN vol.1 v.70:no.7-12 1984:July-Dec. cp.1 SFX", updatedRequest.getShelvingOrder());
+  }
+
+  @Test
+  void shouldUpdateItemInfoInMediatedRequestUponPrimaryRequestUpdateWhenItemIsNotFoundUsingSearch() {
+    MediatedRequest mediatedRequest = buildMediatedRequest(
+      MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED)
+      .confirmedRequestId(CONFIRMED_REQUEST_ID.toString())
+      .itemId(null)
+      .holdingsRecordId(null)
+      .item(null)
+      .searchIndex(null);
+
+    MediatedRequestEntity initialMediatedRequest =
+      createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
+
+    assertNull(initialMediatedRequest.getItemId());
+    assertNull(initialMediatedRequest.getHoldingsRecordId());
+    assertNull(initialMediatedRequest.getItemBarcode());
+    assertNull(initialMediatedRequest.getCallNumber());
+    assertNull(initialMediatedRequest.getCallNumberPrefix());
+    assertNull(initialMediatedRequest.getCallNumberSuffix());
+    assertNull(initialMediatedRequest.getShelvingOrder());
+
+    mockHelper.mockItemSearch(TENANT_ID_CENTRAL, ITEM_ID, new ConsortiumItem()); // empty response
+
+    Request primaryRequest = buildRequest(OPEN_NOT_YET_FILLED, CONFIRMED_REQUEST_ID)
+      .holdingsRecordId(HOLDINGS_RECORD_ID)
+      .itemId(ITEM_ID)
+      .item(new RequestItem().barcode(ITEM_BARCODE));
+
+    publishEventAndWait(TENANT_ID_SECURE, REQUEST_KAFKA_TOPIC_NAME,
+      buildUpdateEvent(TENANT_ID_SECURE, primaryRequest, primaryRequest));
+
+    MediatedRequestEntity updatedRequest = getMediatedRequest(initialMediatedRequest.getId());
+    assertEquals(ITEM_ID, updatedRequest.getItemId().toString());
+    assertEquals(HOLDINGS_RECORD_ID, updatedRequest.getHoldingsRecordId().toString());
+    assertEquals(ITEM_BARCODE, updatedRequest.getItemBarcode());
+    assertNull(initialMediatedRequest.getCallNumber());
+    assertNull(initialMediatedRequest.getCallNumberPrefix());
+    assertNull(initialMediatedRequest.getCallNumberSuffix());
+    assertNull(initialMediatedRequest.getShelvingOrder());
+  }
+
+  @Test
+  void shouldUpdateItemInfoInMediatedRequestUponPrimaryRequestUpdateWhenItemIsNotFoundInStorage() {
+    MediatedRequest mediatedRequest = buildMediatedRequest(
+      MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED)
+      .confirmedRequestId(CONFIRMED_REQUEST_ID.toString())
+      .itemId(null)
+      .holdingsRecordId(null)
+      .item(null)
+      .searchIndex(null);
+
+    MediatedRequestEntity initialMediatedRequest =
+      createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
+
+    assertNull(initialMediatedRequest.getItemId());
+    assertNull(initialMediatedRequest.getHoldingsRecordId());
+    assertNull(initialMediatedRequest.getItemBarcode());
+    assertNull(initialMediatedRequest.getCallNumber());
+    assertNull(initialMediatedRequest.getCallNumberPrefix());
+    assertNull(initialMediatedRequest.getCallNumberSuffix());
+    assertNull(initialMediatedRequest.getShelvingOrder());
+
+    String itemId = randomId();
+
+    mockHelper.mockItemSearch(TENANT_ID_CENTRAL, itemId, new ConsortiumItem()
+      .id(itemId)
+      .tenantId(TENANT_ID_COLLEGE));
+
+    wireMockServer.stubFor(get(urlPathEqualTo(ITEM_STORAGE_URL + "/" + itemId))
+      .withHeader(XOkapiHeaders.TENANT, equalTo(TENANT_ID_COLLEGE))
+      .willReturn(notFound()));
+
+    Request primaryRequest = buildRequest(OPEN_NOT_YET_FILLED, CONFIRMED_REQUEST_ID)
+      .holdingsRecordId(HOLDINGS_RECORD_ID)
+      .itemId(itemId)
+      .item(new RequestItem().barcode(ITEM_BARCODE));
+
+    publishEventAndWait(TENANT_ID_SECURE, REQUEST_KAFKA_TOPIC_NAME,
+      buildUpdateEvent(TENANT_ID_SECURE, primaryRequest, primaryRequest));
+
+    MediatedRequestEntity updatedRequest = getMediatedRequest(initialMediatedRequest.getId());
+    assertEquals(itemId, updatedRequest.getItemId().toString());
+    assertEquals(HOLDINGS_RECORD_ID, updatedRequest.getHoldingsRecordId().toString());
+    assertEquals(ITEM_BARCODE, updatedRequest.getItemBarcode());
+    assertNull(initialMediatedRequest.getCallNumber());
+    assertNull(initialMediatedRequest.getCallNumberPrefix());
+    assertNull(initialMediatedRequest.getCallNumberSuffix());
+    assertNull(initialMediatedRequest.getShelvingOrder());
   }
 
   private static KafkaEvent<Request> buildRequestUpdateEvent(Request.StatusEnum oldStatus,
@@ -261,7 +391,7 @@ class KafkaEventListenerTest extends BaseIT {
   private void publishEvent(String tenant, String topic, String payload) {
     kafkaTemplate.send(new ProducerRecord<>(topic, 0, randomId(), payload,
         List.of(
-          new RecordHeader(XOkapiHeaders.TENANT, tenant.getBytes()),
+          new RecordHeader(TENANT, tenant.getBytes()),
           new RecordHeader("folio.tenantId", randomId().getBytes())
         )))
       .get(10, SECONDS);
@@ -287,11 +417,13 @@ class KafkaEventListenerTest extends BaseIT {
   private static Request buildRequest(Request.StatusEnum status, UUID requestId) {
     return new Request()
       .id(requestId.toString())
+      .ecsRequestPhase(Request.EcsRequestPhaseEnum.PRIMARY)
       .requestLevel(Request.RequestLevelEnum.TITLE)
       .requestType(Request.RequestTypeEnum.HOLD)
       .requestDate(new Date())
       .status(status)
       .position(1)
+      .itemId(ITEM_ID)
       .instance(new RequestInstance().title("Test title"))
       .item(new RequestItem().barcode("test"))
       .cancellationReasonId(UUID.randomUUID().toString())
