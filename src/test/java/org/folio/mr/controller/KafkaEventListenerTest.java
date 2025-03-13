@@ -437,6 +437,7 @@ class KafkaEventListenerTest extends BaseIT {
   }
 
   private MediatedRequestEntity createMediatedRequest(MediatedRequestEntity ecsTlr) {
+    ecsTlr.setId(null);
     return executionService.executeSystemUserScoped(TENANT_ID_CONSORTIUM,
       () -> mediatedRequestsRepository.save(ecsTlr));
   }
