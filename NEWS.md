@@ -1,3 +1,6 @@
+## 1.2.0 2025-03-13
+* Upgrade to Java 21, folio-spring-support 9.0.0 (MODREQMED-97)
+
 ## 1.1.0 2025-03-13
 * Fetch items from all tenants for `Send item in transit` (MODREQMED-44)
 * Upgrade to folio-spring-support 8.2.1 and Spring Boot 3.3.4 (MODREQMED-8)
