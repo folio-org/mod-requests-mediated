@@ -11,8 +11,6 @@ import org.folio.mr.domain.dto.Library;
 import org.folio.mr.domain.dto.LoanType;
 import org.folio.mr.domain.dto.Location;
 import org.folio.mr.domain.dto.MaterialType;
-import org.folio.mr.domain.dto.SearchInstance;
-import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.dto.ServicePoint;
 import org.folio.mr.service.impl.StaffSlipContextService;
 import org.junit.jupiter.api.Test;
@@ -22,7 +20,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
