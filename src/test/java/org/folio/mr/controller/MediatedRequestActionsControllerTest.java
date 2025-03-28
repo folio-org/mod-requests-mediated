@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.folio.mr.domain.MediatedRequestContext;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.ConfirmItemArrivalResponse;
 import org.folio.mr.domain.dto.MediatedRequest;
@@ -87,7 +88,7 @@ class MediatedRequestActionsControllerTest {
     when(mediatedRequestActionsService.saveMediatedRequestWorkflowLog(any()))
       .thenReturn(log);
     when(mediatedRequestActionsService.sendItemInTransit(any()))
-      .thenReturn(mediatedRequest);
+      .thenReturn(new MediatedRequestContext(mediatedRequest, null));
 
     //when
     String barcode = mediatedRequest.getItem().getBarcode();
@@ -150,11 +151,12 @@ class MediatedRequestActionsControllerTest {
     MediatedRequestWorkflowLog log = buildMediatedRequestWorkflowLog(DATE_PATTERN, DATE);
     MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
     String itemBarcode = mediatedRequest.getItem().getBarcode();
+    MediatedRequestContext context = new MediatedRequestContext(mediatedRequest, null);
     when(mediatedRequestActionsService.sendItemInTransit(itemBarcode))
-      .thenReturn(mediatedRequest);
+      .thenReturn(context);
     when(mediatedRequestActionsService.saveMediatedRequestWorkflowLog(any()))
       .thenReturn(log);
-    when(staffSlipContextService.createStaffSlipContext(mediatedRequest))
+    when(staffSlipContextService.createStaffSlipContext(context))
       .thenReturn(new SendItemInTransitResponseStaffSlipContext());
 
     // when

@@ -1,5 +1,6 @@
 package org.folio.mr.service;
 
+import org.folio.mr.domain.MediatedRequestContext;
 import org.folio.mr.domain.dto.Campus;
 import org.folio.mr.domain.dto.HoldingsRecord;
 import org.folio.mr.domain.dto.Instance;
@@ -10,6 +11,8 @@ import org.folio.mr.domain.dto.Library;
 import org.folio.mr.domain.dto.LoanType;
 import org.folio.mr.domain.dto.Location;
 import org.folio.mr.domain.dto.MaterialType;
+import org.folio.mr.domain.dto.SearchInstance;
+import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.dto.ServicePoint;
 import org.folio.mr.service.impl.StaffSlipContextService;
 import org.junit.jupiter.api.Test;
@@ -19,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -35,6 +39,9 @@ class StaffSlipContextServiceTest {
 
   @Mock
   private InventoryService inventoryService;
+
+  @Mock
+  private SearchService searchService;
 
   @InjectMocks
   private StaffSlipContextService staffSlipContextService;
@@ -94,12 +101,11 @@ class StaffSlipContextServiceTest {
     var request = buildMediatedRequest(OPEN_IN_TRANSIT_FOR_APPROVAL).itemId(itemId);
 
     // when
-    var result = staffSlipContextService.createStaffSlipContext(request);
+    var result = staffSlipContextService.createStaffSlipContext(new MediatedRequestContext(request, item));
 
     // then
     assertEquals("Available", result.getItem().getStatus());
 
-    verify(inventoryService).fetchItem(itemId);
     verify(inventoryService).fetchHolding(holdingId);
     verify(inventoryService).fetchInstance(instanceId);
     verify(inventoryService).fetchServicePoint(inTransitServicePointId);
@@ -157,13 +163,12 @@ class StaffSlipContextServiceTest {
     var request = buildMediatedRequest(OPEN_IN_TRANSIT_FOR_APPROVAL).itemId(itemId);
 
     // when
-    var result = staffSlipContextService.createStaffSlipContext(request);
+    var result = staffSlipContextService.createStaffSlipContext(new MediatedRequestContext(request, item));
 
     // then
     assertEquals("Available", result.getItem().getStatus());
     assertNull(result.getItem().getTitle());
 
-    verify(inventoryService).fetchItem(itemId);
     verify(inventoryService).fetchHolding(holdingId);
     verify(inventoryService).fetchServicePoint(inTransitServicePointId);
 

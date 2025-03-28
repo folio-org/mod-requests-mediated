@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.folio.mr.domain.MediatedRequestContext;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.ConfirmItemArrivalResponse;
 import org.folio.mr.domain.dto.ConfirmItemArrivalResponseInstance;
@@ -104,10 +105,10 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     SendItemInTransitRequest request) {
 
     log.info("sendItemInTransit:: request={}", request);
-    MediatedRequest mediatedRequest = actionsService.sendItemInTransit(request.getItemBarcode());
+    MediatedRequestContext context = actionsService.sendItemInTransit(request.getItemBarcode());
 
-    return ResponseEntity.ok(buildSendItemInTransitResponse(mediatedRequest,
-      logActionAndGetActionDate(mediatedRequest)));
+    return ResponseEntity.ok(buildSendItemInTransitResponse(context,
+      logActionAndGetActionDate(context.request())));
   }
 
   private Date logActionAndGetActionDate(MediatedRequest request) {
@@ -117,9 +118,10 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     return actionsService.saveMediatedRequestWorkflowLog(request).getActionDate();
   }
 
-  private SendItemInTransitResponse buildSendItemInTransitResponse(MediatedRequest request,
+  private SendItemInTransitResponse buildSendItemInTransitResponse(MediatedRequestContext context,
     Date inTransitDate) {
 
+    MediatedRequest request = context.request();
     MediatedRequestItem item = request.getItem();
     MediatedRequestRequester requester = request.getRequester();
 
@@ -136,7 +138,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
         .chronology(item.getChronology())
         .displaySummary(item.getDisplaySummary())
         .copyNumber(item.getCopyNumber()))
-      .staffSlipContext(staffSlipContextService.createStaffSlipContext(request))
+      .staffSlipContext(staffSlipContextService.createStaffSlipContext(context))
       .mediatedRequest(new ConfirmItemArrivalResponseMediatedRequest()
         .id(UUID.fromString(request.getId()))
         .status(request.getStatus().getValue()))

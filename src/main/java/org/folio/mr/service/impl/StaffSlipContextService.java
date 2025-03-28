@@ -2,6 +2,8 @@ package org.folio.mr.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+
+import org.folio.mr.domain.MediatedRequestContext;
 import org.folio.mr.domain.dto.Instance;
 import org.folio.mr.domain.dto.InstanceContributorsInner;
 import org.folio.mr.domain.dto.Item;
@@ -21,12 +23,13 @@ public class StaffSlipContextService {
 
   private final InventoryService inventoryService;
 
-  public SendItemInTransitResponseStaffSlipContext createStaffSlipContext(MediatedRequest request) {
-    log.debug("createStaffSlipContext:: parameters request: {}", request);
+  public SendItemInTransitResponseStaffSlipContext createStaffSlipContext(MediatedRequestContext context) {
+
+    log.debug("createStaffSlipContext:: parameters context: {}", context);
 
     var staffSlipContextItem = new SendItemInTransitResponseStaffSlipContextItem();
+    Item item = context.item();
 
-    Item item = inventoryService.fetchItem(request.getItemId());
     if (item != null) {
       staffSlipContextItem
         .barcode(item.getBarcode())
