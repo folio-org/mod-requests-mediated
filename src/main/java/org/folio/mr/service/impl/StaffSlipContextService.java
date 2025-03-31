@@ -7,7 +7,6 @@ import org.folio.mr.domain.MediatedRequestContext;
 import org.folio.mr.domain.dto.Instance;
 import org.folio.mr.domain.dto.InstanceContributorsInner;
 import org.folio.mr.domain.dto.Item;
-import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.SendItemInTransitResponseStaffSlipContext;
 import org.folio.mr.domain.dto.SendItemInTransitResponseStaffSlipContextItem;
 import org.folio.mr.service.InventoryService;
@@ -28,7 +27,7 @@ public class StaffSlipContextService {
     log.debug("createStaffSlipContext:: parameters context: {}", context);
 
     var staffSlipContextItem = new SendItemInTransitResponseStaffSlipContextItem();
-    Item item = context.item();
+    Item item = context.getItem();
 
     if (item != null) {
       staffSlipContextItem

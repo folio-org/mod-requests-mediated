@@ -146,8 +146,8 @@ class MediatedRequestActionsServiceTest {
     MediatedRequestContext result = mediatedRequestActionsService.sendItemInTransit(itemBarcode);
 
     verify(mediatedRequestsRepository).save(any(MediatedRequestEntity.class));
-    assertThat(result.request().getStatus().getValue(), is("Open - In transit to be checked out"));
-    assertThat(result.request().getMediatedRequestStep(), is("In transit to be checked out"));
+    assertThat(result.getRequest().getStatus().getValue(), is("Open - In transit to be checked out"));
+    assertThat(result.getRequest().getMediatedRequestStep(), is("In transit to be checked out"));
   }
 
   @Test

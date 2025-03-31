@@ -12,7 +12,6 @@ import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_NOT_YET_FILLED;
 import static org.folio.mr.support.ConversionUtils.asString;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.folio.mr.domain.MediatedRequestContext;
@@ -145,7 +144,9 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     changeMediatedRequestStatus(entity, OPEN_ITEM_ARRIVED);
     mediatedRequestsRepository.save(entity);
     MediatedRequest dto = mediatedRequestMapper.mapEntityToDto(entity);
-    extendMediatedRequest(dto, findItem(dto));
+    MediatedRequestContext context = new MediatedRequestContext(dto);
+    findItem(context);
+    extendMediatedRequest(context);
     revertPrimaryRequestDeliveryInfo(dto);
 
     log.debug("confirmItemArrival:: result: {}", dto);
@@ -206,12 +207,13 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     changeMediatedRequestStatus(entity, OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
     mediatedRequestsRepository.save(entity);
     var dto = mediatedRequestMapper.mapEntityToDto(entity);
-    Item requestedItem = findItem(dto);
-    extendMediatedRequest(dto, requestedItem);
+    MediatedRequestContext context = new MediatedRequestContext(dto);
+    findItem(context);
+    extendMediatedRequest(context);
 
     log.debug("sendItemInTransit:: result: {}", dto);
 
-    return new MediatedRequestContext(dto, requestedItem);
+    return context;
   }
 
   private MediatedRequestEntity findMediatedRequestForSendingInTransit(String itemBarcode) {
@@ -227,30 +229,34 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     return entity;
   }
 
-  private Item findItem(MediatedRequest request) {
-    String itemId = request.getItemId();
-
-    return searchService.searchItem(itemId)
-      .map(this::fetchItem)
-      .orElse(null);
+  private void findItem(MediatedRequestContext context) {
+    searchService.searchItem(context.getRequest().getItemId())
+      .map(ConsortiumItem::getTenantId)
+      .map(context::setLendingTenantId)
+      .ifPresent(this::fetchItem);
   }
 
-  private Item fetchItem(ConsortiumItem consortiumItem) {
-    Item item = executionService.executeSystemUserScoped(consortiumItem.getTenantId(),
-      () -> inventoryService.fetchItem(consortiumItem.getId()));
+  private void fetchItem(MediatedRequestContext context) {
+    String itemId = context.getRequest().getItemId();
+    Item item = executionService.executeSystemUserScoped(context.getLendingTenantId(),
+      () -> inventoryService.fetchItem(itemId));
 
-    return Optional.ofNullable(item)
-      .orElseThrow(() -> ExceptionFactory.notFound(format("Item %s not found", consortiumItem.getId())));
+    if (item != null) {
+      context.setItem(item);
+    } else {
+      throw ExceptionFactory.notFound(format("Item %s not found", itemId));
+    }
   }
 
-  private void extendMediatedRequest(MediatedRequest request, Item item) {
+  private void extendMediatedRequest(MediatedRequestContext context) {
+    Item item = context.getItem();
     if (item == null) {
       log.warn("extendMediatedRequest:: item is null");
       return;
     }
 
     log.info("extendMediatedRequest:: extending mediated request with additional item details");
-    request.getItem()
+    context.getRequest().getItem()
       .enumeration(item.getEnumeration())
       .volume(item.getVolume())
       .chronology(item.getChronology())

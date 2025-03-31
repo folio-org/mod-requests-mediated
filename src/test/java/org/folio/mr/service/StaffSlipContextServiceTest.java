@@ -98,7 +98,11 @@ class StaffSlipContextServiceTest {
     var request = buildMediatedRequest(OPEN_IN_TRANSIT_FOR_APPROVAL).itemId(itemId);
 
     // when
-    var result = staffSlipContextService.createStaffSlipContext(new MediatedRequestContext(request, item));
+    MediatedRequestContext context = MediatedRequestContext.builder()
+      .request(request)
+      .item(item)
+      .build();
+    var result = staffSlipContextService.createStaffSlipContext(context);
 
     // then
     assertEquals("Available", result.getItem().getStatus());
@@ -160,7 +164,11 @@ class StaffSlipContextServiceTest {
     var request = buildMediatedRequest(OPEN_IN_TRANSIT_FOR_APPROVAL).itemId(itemId);
 
     // when
-    var result = staffSlipContextService.createStaffSlipContext(new MediatedRequestContext(request, item));
+    MediatedRequestContext context = MediatedRequestContext.builder()
+      .request(request)
+      .item(item)
+      .build();
+    var result = staffSlipContextService.createStaffSlipContext(context);
 
     // then
     assertEquals("Available", result.getItem().getStatus());

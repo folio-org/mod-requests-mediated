@@ -18,9 +18,11 @@ import org.folio.mr.domain.dto.MediatedRequestRequester;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.domain.dto.SendItemInTransitResponse;
+import org.folio.mr.domain.dto.SendItemInTransitResponseStaffSlipContext;
 import org.folio.mr.rest.resource.MediatedRequestsActionsApi;
 import org.folio.mr.service.MediatedRequestActionsService;
 import org.folio.mr.service.impl.StaffSlipContextService;
+import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,6 +36,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
 
   private final MediatedRequestActionsService actionsService;
   private final StaffSlipContextService staffSlipContextService;
+  private final SystemUserScopedExecutionService systemUserService;
 
   @Override
   public ResponseEntity<Void> confirmMediatedRequest(UUID mediatedRequestId) {
@@ -108,7 +111,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     MediatedRequestContext context = actionsService.sendItemInTransit(request.getItemBarcode());
 
     return ResponseEntity.ok(buildSendItemInTransitResponse(context,
-      logActionAndGetActionDate(context.request())));
+      logActionAndGetActionDate(context.getRequest())));
   }
 
   private Date logActionAndGetActionDate(MediatedRequest request) {
@@ -121,7 +124,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
   private SendItemInTransitResponse buildSendItemInTransitResponse(MediatedRequestContext context,
     Date inTransitDate) {
 
-    MediatedRequest request = context.request();
+    MediatedRequest request = context.getRequest();
     MediatedRequestItem item = request.getItem();
     MediatedRequestRequester requester = request.getRequester();
 
@@ -138,7 +141,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
         .chronology(item.getChronology())
         .displaySummary(item.getDisplaySummary())
         .copyNumber(item.getCopyNumber()))
-      .staffSlipContext(staffSlipContextService.createStaffSlipContext(context))
+      .staffSlipContext(createStaffSlipContext(context))
       .mediatedRequest(new ConfirmItemArrivalResponseMediatedRequest()
         .id(UUID.fromString(request.getId()))
         .status(request.getStatus().getValue()))
@@ -158,6 +161,19 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
           .suffix(components.getSuffix())));
 
     return response;
+  }
+
+  private SendItemInTransitResponseStaffSlipContext createStaffSlipContext(
+    MediatedRequestContext context) {
+
+    String lendingTenantId = context.getLendingTenantId();
+    if (lendingTenantId == null) {
+      log.warn("createStaffSlipContext:: lending tenant ID is null");
+      return new SendItemInTransitResponseStaffSlipContext();
+    }
+
+    return systemUserService.executeSystemUserScoped(lendingTenantId,
+      () -> staffSlipContextService.createStaffSlipContext(context));
   }
 
 }

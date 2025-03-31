@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
+import static com.github.tomakehurst.wiremock.client.WireMock.moreThanOrExactly;
 import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
@@ -81,6 +82,14 @@ class MediatedRequestActionsApiTest extends BaseIT {
   private static final String NOT_FOUND_ITEM_UUID = "f13ef24f-d0fe-4aa8-901a-bfad3f0e6cae";
   private static final String SEARCH_INSTANCES_URL = "/search/instances";
   private static final String SEARCH_ITEM_URL = "/search/consortium/item";
+  private static final String HOLDINGS_URL = "/holdings-storage/holdings";
+  private static final String MATERIAL_TYPES_URL = "/material-types";
+  private static final String LOAN_TYPES_URL = "/loan-types";
+  private static final String SERVICE_POINTS_URL = "/service-points";
+  private static final String LOCATIONS_URL = "/locations";
+  private static final String LIBRARIES_URL = "/location-units/libraries";
+  private static final String CAMPUSES_URL = "/location-units/campuses";
+  private static final String INSTITUTIONS_URL = "/location-units/institutions";
 
   @Autowired
   private MediatedRequestsRepository mediatedRequestsRepository;
@@ -474,6 +483,39 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .andExpect(jsonPath("requester.firstName", is("Requester")))
       .andExpect(jsonPath("requester.middleName", is("X")))
       .andExpect(jsonPath("requester.lastName", is("Mediated")));
+
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(SEARCH_ITEM_URL + "/" + request.getItemId()))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
+
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(ITEMS_URL + "/" + request.getItemId()))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(INSTANCES_URL + "/" + request.getInstanceId()))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(HOLDINGS_URL + "/" + request.getHoldingsRecordId()))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlPathMatching(MATERIAL_TYPES_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlPathMatching(LOAN_TYPES_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(moreThanOrExactly(1), getRequestedFor(urlPathMatching(SERVICE_POINTS_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlPathMatching(LOCATIONS_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlPathMatching(LIBRARIES_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlPathMatching(CAMPUSES_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlPathMatching(INSTITUTIONS_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
 
     expectStaffSlipContext(resultActions);
 
