@@ -16,6 +16,7 @@ import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.folio.mr.util.DbInitializer;
+import org.folio.mr.util.MockHelper;
 import org.folio.mr.util.TestUtils;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
@@ -72,6 +73,8 @@ public class BaseIT {
   protected static final String TOKEN = "test_token";
   protected static final String TENANT_ID_CONSORTIUM = "consortium";
   protected static final String TENANT_ID_COLLEGE = "college";
+  protected static final String TENANT_ID_SECURE = "secure";
+  protected static final String TENANT_ID_CENTRAL = "central";
   protected static final String USER_ID = randomId();
   protected static final String HEADER_TENANT = "x-okapi-tenant";
   private static final String FOLIO_ENVIRONMENT = "folio";
@@ -80,6 +83,7 @@ public class BaseIT {
   protected static final String REQUEST_KAFKA_TOPIC_NAME = buildTopicName("circulation", "request");
   private static final String[] KAFKA_TOPICS = {REQUEST_KAFKA_TOPIC_NAME};
   private FolioExecutionContextSetter contextSetter;
+  protected static MockHelper mockHelper;
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
@@ -126,6 +130,7 @@ public class BaseIT {
   static void setUp() {
     wireMockServer = new WireMockServer(WIRE_MOCK_PORT);
     wireMockServer.start();
+    mockHelper = new MockHelper(wireMockServer);
 
     kafkaAdminClient = KafkaAdminClient.create(Map.of(
       ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers()));

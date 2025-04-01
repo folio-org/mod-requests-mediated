@@ -16,18 +16,18 @@ import lombok.extern.log4j.Log4j2;
 @Primary
 public class CustomTenantService extends TenantService {
 
-  private final PrepareSystemUserService systemUserService;
+  private final PrepareSystemUserService prepareSystemUserService;
 
   public CustomTenantService(JdbcTemplate jdbcTemplate, FolioExecutionContext context,
-    FolioSpringLiquibase folioSpringLiquibase, PrepareSystemUserService systemUserService) {
+    FolioSpringLiquibase folioSpringLiquibase, PrepareSystemUserService prepareSystemUserService) {
 
     super(jdbcTemplate, context, folioSpringLiquibase);
-    this.systemUserService = systemUserService;
+    this.prepareSystemUserService = prepareSystemUserService;
   }
 
   @Override
   protected void afterTenantUpdate(TenantAttributes tenantAttributes) {
     log.info("afterTenantUpdate:: tenantAttributes={}", tenantAttributes);
-    systemUserService.setupSystemUser();
+    prepareSystemUserService.setupSystemUser();
   }
 }

@@ -143,8 +143,9 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   public MediatedRequest confirmItemArrival(String itemBarcode) {
     log.info("confirmItemArrival:: item barcode: {}", itemBarcode);
     MediatedRequestEntity entity = findMediatedRequestForItemArrival(itemBarcode);
-    MediatedRequestEntity updatedEntity = changeMediatedRequestStatus(entity, OPEN_ITEM_ARRIVED);
-    MediatedRequest dto = mediatedRequestMapper.mapEntityToDto(updatedEntity);
+    changeMediatedRequestStatus(entity, OPEN_ITEM_ARRIVED);
+    mediatedRequestsRepository.save(entity);
+    MediatedRequest dto = mediatedRequestMapper.mapEntityToDto(entity);
     extendMediatedRequest(dto);
     revertPrimaryRequestDeliveryInfo(dto);
 
@@ -203,8 +204,9 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   public MediatedRequest sendItemInTransit(String itemBarcode) {
     log.info("sendItemInTransit:: item barcode: {}", itemBarcode);
     var entity = findMediatedRequestForSendingInTransit(itemBarcode);
-    var updatedEntity = changeMediatedRequestStatus(entity, OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
-    var dto = mediatedRequestMapper.mapEntityToDto(updatedEntity);
+    changeMediatedRequestStatus(entity, OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
+    mediatedRequestsRepository.save(entity);
+    var dto = mediatedRequestMapper.mapEntityToDto(entity);
     extendMediatedRequest(dto);
 
     log.debug("sendItemInTransit:: result: {}", dto);
@@ -286,6 +288,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     }
     request.setMediatedWorkflow(MediatedRequestWorkflow.PRIVATE_REQUEST.getValue());
     changeMediatedRequestStatus(request, CLOSED_DECLINED);
+    mediatedRequestsRepository.save(request);
   }
 
   @Override
@@ -315,7 +318,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     changeMediatedRequestStatus(request, CLOSED_CANCELLED);
   }
 
-  private MediatedRequestEntity changeMediatedRequestStatus(MediatedRequestEntity request,
+  private void changeMediatedRequestStatus(MediatedRequestEntity request,
     MediatedRequest.StatusEnum newStatus) {
 
     log.info("updateMediatedRequestStatus:: changing mediated request status from '{}' to '{}'",
@@ -323,8 +326,6 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     request.setStatus(newStatus.getValue());
     request.setMediatedRequestStatus(MediatedRequestStatus.from(newStatus));
     request.setMediatedRequestStep(MediatedRequestStep.from(newStatus).getValue());
-
-    return mediatedRequestsRepository.save(request);
   }
 
   private MediatedRequestEntity findMediatedRequest(UUID id) {
