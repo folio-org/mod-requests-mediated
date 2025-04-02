@@ -112,8 +112,20 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
         MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
       changeMediatedRequestStatus(mediatedRequest, MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
     }
+    updateMediatedRequestItem(mediatedRequest, request);
     mediatedRequestsRepository.save(mediatedRequest);
     log.info("updateMediatedRequest:: mediated request {} updated", mediatedRequest::getId);
+  }
+
+  private static void updateMediatedRequestItem(MediatedRequestEntity mediatedRequest,
+    Request request) {
+
+    var requestItem = request.getItem();
+    if (requestItem != null) {
+      log.info("updateMediatedRequest:: requestItem is present, itemId: {}", request.getItemId());
+      mediatedRequest.setItemId(UUID.fromString(request.getItemId()));
+      mediatedRequest.setItemBarcode(requestItem.getBarcode());
+    }
   }
 
   private boolean localInstanceExists(MediatedRequestEntity mediatedRequest) {
