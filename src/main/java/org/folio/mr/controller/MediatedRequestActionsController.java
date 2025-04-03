@@ -110,8 +110,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     log.info("sendItemInTransit:: request={}", request);
     MediatedRequestContext context = actionsService.sendItemInTransit(request.getItemBarcode());
 
-    return ResponseEntity.ok(buildSendItemInTransitResponse(context,
-      logActionAndGetActionDate(context.getRequest())));
+    return ResponseEntity.ok(buildSendItemInTransitResponse(context));
   }
 
   private Date logActionAndGetActionDate(MediatedRequest request) {
@@ -121,12 +120,11 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     return actionsService.saveMediatedRequestWorkflowLog(request).getActionDate();
   }
 
-  private SendItemInTransitResponse buildSendItemInTransitResponse(MediatedRequestContext context,
-    Date inTransitDate) {
-
+  private SendItemInTransitResponse buildSendItemInTransitResponse(MediatedRequestContext context) {
     MediatedRequest request = context.getRequest();
     MediatedRequestItem item = request.getItem();
     MediatedRequestRequester requester = request.getRequester();
+    Date inTransitDate = logActionAndGetActionDate(context.getRequest());
 
     SendItemInTransitResponse response = new SendItemInTransitResponse()
       .inTransitDate(inTransitDate)
