@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.folio.mr.client.SearchClient;
+import org.folio.mr.domain.MediatedRequestContext;
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
@@ -142,11 +143,11 @@ class MediatedRequestActionsServiceTest {
     when(mediatedRequestMapper.mapEntityToDto(any(MediatedRequestEntity.class)))
       .thenReturn(mappedRequest);
 
-    MediatedRequest result = mediatedRequestActionsService.sendItemInTransit(itemBarcode);
+    MediatedRequestContext result = mediatedRequestActionsService.sendItemInTransit(itemBarcode);
 
     verify(mediatedRequestsRepository).save(any(MediatedRequestEntity.class));
-    assertThat(result.getStatus().getValue(), is("Open - In transit to be checked out"));
-    assertThat(result.getMediatedRequestStep(), is("In transit to be checked out"));
+    assertThat(result.getRequest().getStatus().getValue(), is("Open - In transit to be checked out"));
+    assertThat(result.getRequest().getMediatedRequestStep(), is("In transit to be checked out"));
   }
 
   @Test
