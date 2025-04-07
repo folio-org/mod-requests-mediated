@@ -64,7 +64,6 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     MediatedRequestEntity mediatedRequest = findMediatedRequest(id);
     log.info("confirm:: found mediated request: {}", id);
     Request request = createRequest(mediatedRequest);
-    log.info("confirm:: request: {}", request);
     updateMediatedRequest(mediatedRequest, request);
     log.info("confirm:: mediated request {} was successfully confirmed", id);
   }
@@ -89,9 +88,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
   private Request createEcsTlr(MediatedRequestEntity mediatedRequest) {
     EcsTlr ecsTlr = ecsRequestService.create(mediatedRequest);
-    log.info("createEcsTlr:: ecsTlr: {}", ecsTlr);
     Request primaryRequest = circulationRequestService.get(ecsTlr.getPrimaryRequestId());
-    log.info("createEcsTlr:: primaryRequest: {}", primaryRequest);
     revertPrimaryRequestDeliveryInfo(mediatedRequest, primaryRequest);
     return primaryRequest;
   }
@@ -105,7 +102,6 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
   private void updateMediatedRequest(MediatedRequestEntity mediatedRequest, Request request) {
     log.info("updateMediatedRequest:: updating mediated request {}", mediatedRequest::getId);
-    log.info("updateMediatedRequest:: mediatedRequest: {}, request: {}", mediatedRequest, request);
     mediatedRequest.setConfirmedRequestId(UUID.fromString(request.getId()));
     if (request.getStatus() == OPEN_NOT_YET_FILLED) {
       log.info("updateMediatedRequest:: changing mediated request status to {}",
@@ -117,7 +113,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     log.info("updateMediatedRequest:: mediated request {} updated", mediatedRequest::getId);
   }
 
-  private static void updateMediatedRequestItem(MediatedRequestEntity mediatedRequest,
+  private void updateMediatedRequestItem(MediatedRequestEntity mediatedRequest,
     Request request) {
 
     var requestItemId = request.getItemId();
