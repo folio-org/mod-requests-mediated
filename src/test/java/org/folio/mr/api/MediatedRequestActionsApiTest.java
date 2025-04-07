@@ -40,6 +40,7 @@ import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Items;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
+import org.folio.mr.domain.dto.RequestItem;
 import org.folio.mr.domain.dto.SearchInstance;
 import org.folio.mr.domain.dto.SearchInstancesResponse;
 import org.folio.mr.domain.dto.SearchItem;
@@ -212,6 +213,8 @@ class MediatedRequestActionsApiTest extends BaseIT {
   void mediatedRequestConfirmationForRemoteInstanceAndItem() {
     // given
     UUID instanceId = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    String itemBarcode = "111";
     String primaryRequestId = UUID.randomUUID().toString();
     MediatedRequestEntity initialRequest = mediatedRequestsRepository.save(
       buildMediatedRequestEntity(NEW_AWAITING_CONFIRMATION).withInstanceId(instanceId));
@@ -233,7 +236,10 @@ class MediatedRequestActionsApiTest extends BaseIT {
 
     wireMockServer.stubFor(WireMock.get(urlMatching(CIRCULATION_REQUESTS_URL + "/" + primaryRequestId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
-      .willReturn(jsonResponse(new Request().id(primaryRequestId), HttpStatus.SC_OK)));
+      .willReturn(jsonResponse(new Request()
+        .id(primaryRequestId)
+        .itemId(itemId.toString())
+        .item(new RequestItem().barcode(itemBarcode)), HttpStatus.SC_OK)));
 
     wireMockServer.stubFor(WireMock.put(urlMatching(CIRCULATION_REQUESTS_URL + "/" + primaryRequestId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
@@ -247,6 +253,8 @@ class MediatedRequestActionsApiTest extends BaseIT {
     MediatedRequestEntity updatedRequest = mediatedRequestsRepository.findById(initialRequest.getId())
       .orElseThrow();
     assertEquals(primaryRequestId, updatedRequest.getConfirmedRequestId().toString());
+    assertEquals(itemId, updatedRequest.getItemId());
+    assertEquals(itemBarcode, updatedRequest.getItemBarcode());
 
     wireMockServer.verify(getRequestedFor(urlMatching(INSTANCES_URL + "/" + instanceId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));

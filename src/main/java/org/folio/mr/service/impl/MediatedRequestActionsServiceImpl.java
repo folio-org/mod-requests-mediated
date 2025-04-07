@@ -120,10 +120,16 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   private static void updateMediatedRequestItem(MediatedRequestEntity mediatedRequest,
     Request request) {
 
+    var requestItemId = request.getItemId();
+    if (requestItemId != null) {
+      log.info("updateMediatedRequestItem:: set itemId: {} to mediated request", requestItemId);
+      mediatedRequest.setItemId(UUID.fromString(requestItemId));
+    }
+
     var requestItem = request.getItem();
     if (requestItem != null) {
-      log.info("updateMediatedRequest:: requestItem is present, itemId: {}", request.getItemId());
-      mediatedRequest.setItemId(UUID.fromString(request.getItemId()));
+      log.info("updateMediatedRequestItem:: requestItem is present, set barcode: {}",
+        requestItem.getBarcode());
       mediatedRequest.setItemBarcode(requestItem.getBarcode());
     }
   }
