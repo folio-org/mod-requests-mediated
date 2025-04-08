@@ -14,7 +14,6 @@ import org.folio.mr.domain.converter.RequestLevelJdbcType;
 import org.folio.mr.domain.converter.RequestTypeJdbcType;
 import org.folio.spring.cql.Cql2JpaCriteria;
 import org.folio.spring.cql.IgnoreCase;
-import org.folio.spring.cql.RespectAccents;
 import org.hibernate.annotations.JdbcType;
 
 import jakarta.persistence.CascadeType;
