@@ -36,6 +36,7 @@ public class TestEntityBuilder {
       .withFulfillmentPreference(FulfillmentPreference.DELIVERY)
       .withInstanceId(UUID.fromString("69640328-788e-43fc-9c3c-af39e243f3b7"))
       .withInstanceTitle("ABA Journal")
+      .withHoldingsRecordId(UUID.fromString("0c45bb50-7c9b-48b0-86eb-178a494e25fe"))
       .withItemId(UUID.fromString("9428231b-dd31-4f70-8406-fe22fbdeabc2"))
       .withItemBarcode("A14837334314")
       .withConfirmedRequestId(UUID.randomUUID())

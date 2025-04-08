@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.folio.mr.domain.MediatedRequestContext;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.ConfirmItemArrivalResponse;
 import org.folio.mr.domain.dto.ConfirmItemArrivalResponseInstance;
@@ -17,9 +18,11 @@ import org.folio.mr.domain.dto.MediatedRequestRequester;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.domain.dto.SendItemInTransitResponse;
+import org.folio.mr.domain.dto.SendItemInTransitResponseStaffSlipContext;
 import org.folio.mr.rest.resource.MediatedRequestsActionsApi;
 import org.folio.mr.service.MediatedRequestActionsService;
 import org.folio.mr.service.impl.StaffSlipContextService;
+import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,6 +36,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
 
   private final MediatedRequestActionsService actionsService;
   private final StaffSlipContextService staffSlipContextService;
+  private final SystemUserScopedExecutionService systemUserService;
 
   @Override
   public ResponseEntity<Void> confirmMediatedRequest(UUID mediatedRequestId) {
@@ -104,10 +108,9 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     SendItemInTransitRequest request) {
 
     log.info("sendItemInTransit:: request={}", request);
-    MediatedRequest mediatedRequest = actionsService.sendItemInTransit(request.getItemBarcode());
+    MediatedRequestContext context = actionsService.sendItemInTransit(request.getItemBarcode());
 
-    return ResponseEntity.ok(buildSendItemInTransitResponse(mediatedRequest,
-      logActionAndGetActionDate(mediatedRequest)));
+    return ResponseEntity.ok(buildSendItemInTransitResponse(context));
   }
 
   private Date logActionAndGetActionDate(MediatedRequest request) {
@@ -117,11 +120,11 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     return actionsService.saveMediatedRequestWorkflowLog(request).getActionDate();
   }
 
-  private SendItemInTransitResponse buildSendItemInTransitResponse(MediatedRequest request,
-    Date inTransitDate) {
-
+  private SendItemInTransitResponse buildSendItemInTransitResponse(MediatedRequestContext context) {
+    MediatedRequest request = context.getRequest();
     MediatedRequestItem item = request.getItem();
     MediatedRequestRequester requester = request.getRequester();
+    Date inTransitDate = logActionAndGetActionDate(context.getRequest());
 
     SendItemInTransitResponse response = new SendItemInTransitResponse()
       .inTransitDate(inTransitDate)
@@ -136,7 +139,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
         .chronology(item.getChronology())
         .displaySummary(item.getDisplaySummary())
         .copyNumber(item.getCopyNumber()))
-      .staffSlipContext(staffSlipContextService.createStaffSlipContext(request))
+      .staffSlipContext(createStaffSlipContext(context))
       .mediatedRequest(new ConfirmItemArrivalResponseMediatedRequest()
         .id(UUID.fromString(request.getId()))
         .status(request.getStatus().getValue()))
@@ -156,6 +159,19 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
           .suffix(components.getSuffix())));
 
     return response;
+  }
+
+  private SendItemInTransitResponseStaffSlipContext createStaffSlipContext(
+    MediatedRequestContext context) {
+
+    String lendingTenantId = context.getLendingTenantId();
+    if (lendingTenantId == null) {
+      log.warn("createStaffSlipContext:: lending tenant ID is null");
+      return new SendItemInTransitResponseStaffSlipContext();
+    }
+
+    return systemUserService.executeSystemUserScoped(lendingTenantId,
+      () -> staffSlipContextService.createStaffSlipContext(context));
   }
 
 }
