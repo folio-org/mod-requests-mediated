@@ -1,3 +1,6 @@
+## 1.0.10 2025-04-08
+* Add item/title information to In transit slips (MODREQMED-105)
+
 ## 1.0.9 2025-03-17
 * Update item info in title-level mediated request (MODREQMED-93)
 
