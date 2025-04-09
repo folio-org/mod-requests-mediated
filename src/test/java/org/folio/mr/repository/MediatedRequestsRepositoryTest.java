@@ -27,6 +27,5 @@ public class MediatedRequestsRepositoryTest extends BaseIT {
       .findFirst()
       .orElse("default");
     assertEquals("Java", actual);
-
   }
 }
