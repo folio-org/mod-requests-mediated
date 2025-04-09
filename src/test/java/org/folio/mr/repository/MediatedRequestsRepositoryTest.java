@@ -22,10 +22,11 @@ public class MediatedRequestsRepositoryTest extends BaseIT {
     var request = buildMediatedRequestEntity(OPEN_NOT_YET_FILLED);
     request.setItemBarcode("Java");
     repository.save(request);
-    var actual = repository.findByCql("itemBarcode==java", PageRequest.of(0, 1)).stream()
+    var actual = repository.findByCql("itemBarcode==java", PageRequest.of(0, 1))
+      .stream()
       .map(MediatedRequestEntity::getItemBarcode)
       .findFirst()
-      .orElse("default");
+      .orElseThrow();
     assertEquals("Java", actual);
   }
 }
