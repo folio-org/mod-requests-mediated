@@ -12,6 +12,8 @@ import org.folio.mr.domain.converter.FulfillmentPreferenceJdbcType;
 import org.folio.mr.domain.converter.MediatedRequestStatusJdbcType;
 import org.folio.mr.domain.converter.RequestLevelJdbcType;
 import org.folio.mr.domain.converter.RequestTypeJdbcType;
+import org.folio.spring.cql.Cql2JpaCriteria;
+import org.folio.spring.cql.IgnoreCase;
 import org.hibernate.annotations.JdbcType;
 
 import jakarta.persistence.CascadeType;
@@ -32,11 +34,15 @@ import lombok.With;
 @Data
 @Table(name = "mediated_request")
 @Entity
+@IgnoreCase
 @With
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 public class MediatedRequestEntity {
+  static {  // delete for Trillium, this is only needed for Ramsons and Sunflower
+    Cql2JpaCriteria.setCaseAccentsHandlingEnabled(true);
+  }
 
   @Id
   @GeneratedValue
