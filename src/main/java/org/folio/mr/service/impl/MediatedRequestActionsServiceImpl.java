@@ -14,6 +14,7 @@ import static org.folio.mr.support.ConversionUtils.asString;
 import java.util.List;
 import java.util.UUID;
 
+import org.folio.mr.domain.MediatedRequestContext;
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
@@ -23,8 +24,6 @@ import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.RequestDeliveryAddress;
 import org.folio.mr.domain.dto.RequestPickupServicePoint;
-import org.folio.mr.domain.dto.SearchInstance;
-import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.entity.MediatedRequestStep;
 import org.folio.mr.domain.entity.MediatedRequestWorkflow;
@@ -165,7 +164,9 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     changeMediatedRequestStatus(entity, OPEN_ITEM_ARRIVED);
     mediatedRequestsRepository.save(entity);
     MediatedRequest dto = mediatedRequestMapper.mapEntityToDto(entity);
-    extendMediatedRequest(dto);
+    MediatedRequestContext context = new MediatedRequestContext(dto);
+    findItem(context);
+    extendMediatedRequest(context);
     revertPrimaryRequestDeliveryInfo(dto);
 
     log.debug("confirmItemArrival:: result: {}", dto);
@@ -220,17 +221,19 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   @Override
-  public MediatedRequest sendItemInTransit(String itemBarcode) {
+  public MediatedRequestContext sendItemInTransit(String itemBarcode) {
     log.info("sendItemInTransit:: item barcode: {}", itemBarcode);
     var entity = findMediatedRequestForSendingInTransit(itemBarcode);
     changeMediatedRequestStatus(entity, OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
     mediatedRequestsRepository.save(entity);
     var dto = mediatedRequestMapper.mapEntityToDto(entity);
-    extendMediatedRequest(dto);
+    MediatedRequestContext context = new MediatedRequestContext(dto);
+    findItem(context);
+    extendMediatedRequest(context);
 
     log.debug("sendItemInTransit:: result: {}", dto);
 
-    return dto;
+    return context;
   }
 
   private MediatedRequestEntity findMediatedRequestForSendingInTransit(String itemBarcode) {
@@ -246,18 +249,39 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     return entity;
   }
 
-  private void extendMediatedRequest(MediatedRequest request) {
-    log.info("extendMediatedRequest:: extending mediated request with additional item details");
-
-    searchService.searchInstance(request.getInstanceId())
-      .map(SearchInstance::getItems)
-      .stream()
-      .flatMap(List::stream)
-      .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
-      .findFirst()
-      .ifPresent(searchItem -> fillItemDetailsFromInventoryItem(request, searchItem));
+  private void findItem(MediatedRequestContext context) {
+    searchService.searchItem(context.getRequest().getItemId())
+      .map(ConsortiumItem::getTenantId)
+      .map(context::setLendingTenantId)
+      .ifPresent(this::fetchItem);
   }
 
+  private void fetchItem(MediatedRequestContext context) {
+    String itemId = context.getRequest().getItemId();
+    Item item = executionService.executeSystemUserScoped(context.getLendingTenantId(),
+      () -> inventoryService.fetchItem(itemId));
+
+    if (item != null) {
+      context.setItem(item);
+    } else {
+      throw ExceptionFactory.notFound(format("Item %s not found", itemId));
+    }
+  }
+
+  private void extendMediatedRequest(MediatedRequestContext context) {
+    Item item = context.getItem();
+    if (item == null) {
+      log.warn("extendMediatedRequest:: item is null");
+      return;
+    }
+
+    log.info("extendMediatedRequest:: extending mediated request with additional item details");
+    context.getRequest().getItem()
+      .enumeration(item.getEnumeration())
+      .volume(item.getVolume())
+      .chronology(item.getChronology())
+      .displaySummary(item.getDisplaySummary())
+      .copyNumber(item.getCopyNumber());
   private void extendMediatedRequestWithInventoryItemDetails(MediatedRequestEntity mediatedRequestEntity) {
     log.info("extendMediatedRequestWithInventoryItemDetails:: enhancing mediated request " +
       "with additional item details");
