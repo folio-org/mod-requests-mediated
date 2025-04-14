@@ -24,6 +24,8 @@ import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.RequestDeliveryAddress;
 import org.folio.mr.domain.dto.RequestPickupServicePoint;
+import org.folio.mr.domain.dto.SearchItem;
+import org.folio.mr.domain.dto.SearchInstance;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.entity.MediatedRequestStep;
 import org.folio.mr.domain.entity.MediatedRequestWorkflow;
@@ -282,6 +284,8 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       .chronology(item.getChronology())
       .displaySummary(item.getDisplaySummary())
       .copyNumber(item.getCopyNumber());
+  }
+
   private void extendMediatedRequestWithInventoryItemDetails(MediatedRequestEntity mediatedRequestEntity) {
     log.info("extendMediatedRequestWithInventoryItemDetails:: enhancing mediated request " +
       "with additional item details");
