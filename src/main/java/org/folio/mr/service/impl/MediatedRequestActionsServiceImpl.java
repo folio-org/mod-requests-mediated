@@ -9,7 +9,6 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_NOT_YET_FILLED;
-import static org.folio.mr.support.Constants.INTERIM_SERVICE_POINT_ID;
 import static org.folio.mr.support.ConversionUtils.asString;
 
 import java.util.List;
@@ -19,6 +18,7 @@ import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Item;
+import org.folio.mr.domain.dto.ItemEffectiveCallNumberComponents;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.RequestDeliveryAddress;
@@ -127,6 +127,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       log.info("updateMediatedRequestItem:: requestItem is present, set barcode: {}",
         requestItem.getBarcode());
       mediatedRequest.setItemBarcode(requestItem.getBarcode());
+      extendMediatedRequestWithInventoryItemDetails(mediatedRequest);
     }
   }
 
@@ -255,6 +256,37 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
       .findFirst()
       .ifPresent(searchItem -> fillItemDetailsFromInventoryItem(request, searchItem));
+  }
+
+  private void extendMediatedRequestWithInventoryItemDetails(MediatedRequestEntity mediatedRequestEntity) {
+    log.info("extendMediatedRequestWithInventoryItemDetails:: enhancing mediated request " +
+      "with additional item details");
+
+    searchService.searchInstance(mediatedRequestEntity.getInstanceId().toString())
+      .map(SearchInstance::getItems)
+      .stream()
+      .flatMap(List::stream)
+      .filter(searchItem -> searchItem.getId().equals(mediatedRequestEntity.getItemId().toString()))
+      .findFirst()
+      .ifPresent(searchItem -> {
+        String tenantId = searchItem.getTenantId();
+        executionService.executeAsyncSystemUserScoped(tenantId, () -> {
+          Item item = inventoryService.fetchItem(mediatedRequestEntity.getItemId().toString());
+          if (item == null) {
+            throw ExceptionFactory.notFound(format("Item %s not found",
+              mediatedRequestEntity.getItemId()));
+          } else {
+            log.info("extendMediatedRequestWithInventoryItemDetails:: item found, " +
+              "updating mediated request");
+            mediatedRequestEntity.setShelvingOrder(item.getEffectiveShelvingOrder());
+            ItemEffectiveCallNumberComponents components = item.getEffectiveCallNumberComponents();
+            mediatedRequestEntity.setCallNumber(components.getCallNumber());
+            mediatedRequestEntity.setCallNumberPrefix(components.getPrefix());
+            mediatedRequestEntity.setCallNumberSuffix(components.getSuffix());
+            mediatedRequestEntity.setHoldingsRecordId(UUID.fromString(item.getHoldingsRecordId()));
+          }
+        });
+      });
   }
 
   private void fillItemDetailsFromInventoryItem(MediatedRequest request, SearchItem searchItem) {
