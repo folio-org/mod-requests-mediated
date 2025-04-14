@@ -255,6 +255,20 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(jsonResponse(new Request(), HttpStatus.SC_OK)));
 
+    wireMockServer.stubFor(WireMock.get(urlPathMatching(SEARCH_INSTANCES_URL))
+      .withQueryParam("query", equalTo("id==" + instanceId))
+      .withQueryParam("expandAll", equalTo("true"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new SearchInstancesResponse().addInstancesItem(
+          new SearchInstance()
+            .id(instanceId.toString())
+            .tenantId(TENANT_ID_CONSORTIUM)
+            .addItemsItem(new SearchItem()
+              .id(initialRequest.getItemId().toString())
+              .tenantId(TENANT_ID_COLLEGE))),
+        HttpStatus.SC_OK)));
+
+
     // when
     confirmMediatedRequest(initialRequest.getId())
       .andExpect(status().isNoContent());
