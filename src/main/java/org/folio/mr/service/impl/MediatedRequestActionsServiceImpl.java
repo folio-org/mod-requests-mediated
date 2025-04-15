@@ -307,10 +307,15 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
               "updating mediated request");
             mediatedRequestEntity.setShelvingOrder(item.getEffectiveShelvingOrder());
             ItemEffectiveCallNumberComponents components = item.getEffectiveCallNumberComponents();
-            mediatedRequestEntity.setCallNumber(components.getCallNumber());
-            mediatedRequestEntity.setCallNumberPrefix(components.getPrefix());
-            mediatedRequestEntity.setCallNumberSuffix(components.getSuffix());
-            mediatedRequestEntity.setHoldingsRecordId(UUID.fromString(item.getHoldingsRecordId()));
+            if (components != null) {
+              mediatedRequestEntity.setCallNumber(components.getCallNumber());
+              mediatedRequestEntity.setCallNumberPrefix(components.getPrefix());
+              mediatedRequestEntity.setCallNumberSuffix(components.getSuffix());
+            }
+            String holdingsRecordId = item.getHoldingsRecordId();
+            if (holdingsRecordId != null) {
+              mediatedRequestEntity.setHoldingsRecordId(UUID.fromString(holdingsRecordId));
+            }
           }
         });
       });
