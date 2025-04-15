@@ -24,7 +24,6 @@ import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.RequestDeliveryAddress;
 import org.folio.mr.domain.dto.RequestPickupServicePoint;
-import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.dto.SearchInstance;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.entity.MediatedRequestStep;
@@ -315,24 +314,6 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
           }
         });
       });
-  }
-
-  private void fillItemDetailsFromInventoryItem(MediatedRequest request, SearchItem searchItem) {
-    String tenantId = searchItem.getTenantId();
-    log.info("fillItemDetailsFromInventoryItem:: fetching item from tenant: {}", tenantId);
-    executionService.executeAsyncSystemUserScoped(tenantId, () -> {
-      Item item = inventoryService.fetchItem(request.getItemId());
-      if (item == null) {
-        throw ExceptionFactory.notFound(format("Item %s not found", request.getItemId()));
-      } else {
-        request.getItem()
-          .enumeration(item.getEnumeration())
-          .volume(item.getVolume())
-          .chronology(item.getChronology())
-          .displaySummary(item.getDisplaySummary())
-          .copyNumber(item.getCopyNumber());
-      }
-    });
   }
 
   private static MediatedRequestWorkflowLog buildMediatedRequestWorkflowLog(
