@@ -1,5 +1,6 @@
 package org.folio.mr.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,4 +31,6 @@ public interface MediatedRequestsRepository extends JpaCqlRepository<MediatedReq
   Optional<MediatedRequestEntity> findRequestForSendingInTransit(String itemBarcode);
 
   Optional<MediatedRequestEntity> findByConfirmedRequestId(UUID confirmedRequestId);
+
+  Optional<List<MediatedRequestEntity>> findByItemId(UUID itemId);
 }
