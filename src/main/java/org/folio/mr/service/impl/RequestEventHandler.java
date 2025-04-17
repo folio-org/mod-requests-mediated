@@ -12,7 +12,7 @@ import static org.folio.mr.domain.entity.MediatedRequestStep.AWAITING_DELIVERY;
 import static org.folio.mr.domain.entity.MediatedRequestStep.AWAITING_PICKUP;
 import static org.folio.mr.domain.entity.MediatedRequestStep.IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.entity.MediatedRequestStep.NOT_YET_FILLED;
-import static org.folio.mr.support.KafkaEvent.EventType.UPDATED;
+import static org.folio.mr.support.kafka.EventType.UPDATE;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -28,7 +28,7 @@ import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.KafkaEventHandler;
 import org.folio.mr.service.MediatedRequestActionsService;
 import org.folio.mr.service.SearchService;
-import org.folio.mr.support.KafkaEvent;
+import org.folio.mr.support.kafka.KafkaEvent;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
@@ -49,10 +49,11 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
   @Override
   public void handle(KafkaEvent<Request> event) {
     log.info("handle:: processing request event: {}", event.getId());
-    if (event.getType() == UPDATED) {
+    if (event.getGenericType() == UPDATE) {
       handleRequestUpdateEvent(event);
     } else {
-      log.info("handle:: ignoring event {} of unsupported type: {}", event.getId(), event.getType());
+      log.info("handle:: ignoring event {} of unsupported type: {}", event.getId(),
+        event.getGenericType());
     }
     log.info("handle:: request event processed: {}", event.getId());
   }
@@ -60,7 +61,7 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
   private void handleRequestUpdateEvent(KafkaEvent<Request> event) {
     log.info("handleRequestUpdateEvent:: handling request update event: {}", event.getId());
 
-    Request newRequest = event.getData().getNewVersion();
+    Request newRequest = event.getNewVersion();
     if (newRequest == null) {
       log.warn("handleRequestUpdateEvent:: event does not contain new version of request");
       return;
@@ -73,7 +74,7 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
       return;
     }
 
-    Request oldRequest = event.getData().getOldVersion();
+    Request oldRequest = event.getOldVersion();
     if (oldRequest == null) {
       log.warn("handleRequestUpdateEvent:: event does not contain old version of request");
       return;
