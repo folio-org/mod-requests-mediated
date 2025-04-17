@@ -24,7 +24,6 @@ import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.RequestDeliveryAddress;
 import org.folio.mr.domain.dto.RequestPickupServicePoint;
-import org.folio.mr.domain.dto.SearchInstance;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.entity.MediatedRequestStep;
 import org.folio.mr.domain.entity.MediatedRequestWorkflow;
@@ -286,39 +285,31 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private void extendMediatedRequestWithInventoryItemDetails(MediatedRequestEntity mediatedRequestEntity) {
-    log.info("extendMediatedRequestWithInventoryItemDetails:: enhancing mediated request " +
+    log.info("extendMediatedRequestWithInventoryItemDetails:: extending mediated request " +
       "with additional item details");
 
-    searchService.searchInstance(mediatedRequestEntity.getInstanceId().toString())
-      .map(SearchInstance::getItems)
-      .stream()
-      .flatMap(List::stream)
-      .filter(searchItem -> searchItem.getId().equals(mediatedRequestEntity.getItemId().toString()))
-      .findFirst()
-      .ifPresent(searchItem -> {
-        String tenantId = searchItem.getTenantId();
-        executionService.executeAsyncSystemUserScoped(tenantId, () -> {
-          Item item = inventoryService.fetchItem(mediatedRequestEntity.getItemId().toString());
-          if (item == null) {
-            throw ExceptionFactory.notFound(format("Item %s not found",
-              mediatedRequestEntity.getItemId()));
-          } else {
-            log.info("extendMediatedRequestWithInventoryItemDetails:: item found, " +
-              "updating mediated request");
-            mediatedRequestEntity.setShelvingOrder(item.getEffectiveShelvingOrder());
-            ItemEffectiveCallNumberComponents components = item.getEffectiveCallNumberComponents();
-            if (components != null) {
-              mediatedRequestEntity.setCallNumber(components.getCallNumber());
-              mediatedRequestEntity.setCallNumberPrefix(components.getPrefix());
-              mediatedRequestEntity.setCallNumberSuffix(components.getSuffix());
-            }
-            String holdingsRecordId = item.getHoldingsRecordId();
-            if (holdingsRecordId != null) {
-              mediatedRequestEntity.setHoldingsRecordId(UUID.fromString(holdingsRecordId));
-            }
-          }
-        });
-      });
+    searchService.searchItem(mediatedRequestEntity.getItemId().toString())
+      .ifPresent(searchItem -> executionService.executeAsyncSystemUserScoped(searchItem.getTenantId(),
+        () -> populateMediatedRequestWithItemDetails(mediatedRequestEntity)));
+  }
+
+  private void populateMediatedRequestWithItemDetails(MediatedRequestEntity mediatedRequestEntity) {
+    Item item = inventoryService.fetchItem(mediatedRequestEntity.getItemId().toString());
+    if (item == null) {
+      throw ExceptionFactory.notFound(format("Item %s not found", mediatedRequestEntity.getItemId()));
+    }
+    log.info("populateMediatedRequestWithItemDetails:: item found, updating mediated request");
+    mediatedRequestEntity.setShelvingOrder(item.getEffectiveShelvingOrder());
+    ItemEffectiveCallNumberComponents components = item.getEffectiveCallNumberComponents();
+    if (components != null) {
+      mediatedRequestEntity.setCallNumber(components.getCallNumber());
+      mediatedRequestEntity.setCallNumberPrefix(components.getPrefix());
+      mediatedRequestEntity.setCallNumberSuffix(components.getSuffix());
+    }
+    String holdingsRecordId = item.getHoldingsRecordId();
+    if (holdingsRecordId != null) {
+      mediatedRequestEntity.setHoldingsRecordId(UUID.fromString(holdingsRecordId));
+    }
   }
 
   private static MediatedRequestWorkflowLog buildMediatedRequestWorkflowLog(

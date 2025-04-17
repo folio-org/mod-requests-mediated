@@ -262,19 +262,13 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(jsonResponse(new Request(), HttpStatus.SC_OK)));
 
-    wireMockServer.stubFor(WireMock.get(urlPathMatching(SEARCH_INSTANCES_URL))
-      .withQueryParam("query", equalTo("id==" + instanceId))
-      .withQueryParam("expandAll", equalTo("true"))
-      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
-      .willReturn(jsonResponse(new SearchInstancesResponse().addInstancesItem(
-          new SearchInstance()
-            .id(instanceId.toString())
-            .tenantId(TENANT_ID_CONSORTIUM)
-            .addItemsItem(new SearchItem()
-              .id(itemId)
-              .tenantId(TENANT_ID_COLLEGE))), HttpStatus.SC_OK)));
+    wireMockServer.stubFor(WireMock.get(urlMatching(SEARCH_ITEM_URL + "/" + itemId))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
+      .willReturn(jsonResponse(new ConsortiumItem()
+        .id(itemId)
+        .tenantId(TENANT_ID_COLLEGE), HttpStatus.SC_OK)));
 
-    wireMockServer.stubFor(WireMock.get(urlMatching(ITEMS_URL + ".*"))
+    wireMockServer.stubFor(WireMock.get(urlMatching(ITEMS_URL + "/" + itemId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE))
       .willReturn(jsonResponse(new Item()
         .id(itemId)
