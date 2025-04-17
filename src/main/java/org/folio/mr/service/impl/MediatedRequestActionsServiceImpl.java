@@ -289,11 +289,13 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       "with additional item details");
 
     searchService.searchItem(mediatedRequestEntity.getItemId().toString())
-      .ifPresent(searchItem -> executionService.executeAsyncSystemUserScoped(searchItem.getTenantId(),
+      .ifPresent(searchItem -> executionService.executeSystemUserScoped(searchItem.getTenantId(),
         () -> populateMediatedRequestWithItemDetails(mediatedRequestEntity)));
   }
 
-  private void populateMediatedRequestWithItemDetails(MediatedRequestEntity mediatedRequestEntity) {
+  private MediatedRequestEntity populateMediatedRequestWithItemDetails(
+    MediatedRequestEntity mediatedRequestEntity) {
+
     Item item = inventoryService.fetchItem(mediatedRequestEntity.getItemId().toString());
     if (item == null) {
       throw ExceptionFactory.notFound(format("Item %s not found", mediatedRequestEntity.getItemId()));
@@ -310,6 +312,8 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     if (holdingsRecordId != null) {
       mediatedRequestEntity.setHoldingsRecordId(UUID.fromString(holdingsRecordId));
     }
+
+    return mediatedRequestEntity;
   }
 
   private static MediatedRequestWorkflowLog buildMediatedRequestWorkflowLog(
