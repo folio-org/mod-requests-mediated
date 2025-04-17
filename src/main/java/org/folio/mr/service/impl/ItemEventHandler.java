@@ -62,6 +62,8 @@ public class ItemEventHandler implements KafkaEventHandler<Item> {
     }
 
     mediatedRequests.ifPresent(list -> {
+      log.info("handleAddedBarcodeEvent:: {} mediated requests found, updating with barcode {}",
+        list.size(), item.getBarcode());
       list.forEach(mr -> mr.setItemBarcode(item.getBarcode()));
       mediatedRequestsRepository.saveAll(list);
     });
