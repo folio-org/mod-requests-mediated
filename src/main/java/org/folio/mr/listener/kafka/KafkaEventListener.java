@@ -36,7 +36,8 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @RequiredArgsConstructor
 public class KafkaEventListener {
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+  private static final ObjectMapper objectMapper = new ObjectMapper()
+    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   private final RequestEventHandler requestEventHandler;
   private final ItemEventHandler itemEventHandler;
   private final SystemUserScopedExecutionService systemUserScopedExecutionService;
@@ -83,7 +84,6 @@ public class KafkaEventListener {
 
     try {
       JavaType eventType = objectMapper
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         .getTypeFactory()
         .constructParametricType(kafkaEventClass, dataType);
       return objectMapper.<KafkaEvent<T>>readValue(eventString, eventType)
