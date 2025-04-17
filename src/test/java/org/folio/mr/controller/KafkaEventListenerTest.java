@@ -11,17 +11,15 @@ import static org.folio.mr.domain.dto.Request.StatusEnum.CLOSED_FILLED;
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_AWAITING_PICKUP;
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_IN_TRANSIT;
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_NOT_YET_FILLED;
-import static org.folio.mr.support.KafkaEvent.EventType.UPDATED;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
 import static org.folio.mr.util.TestUtils.buildEvent;
-import static org.folio.spring.integration.XOkapiHeaders.TENANT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
 
+import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.header.internals.RecordHeader;
+import org.apache.kafka.common.header.Header;
 import org.awaitility.Awaitility;
 import org.folio.mr.api.BaseIT;
 import org.folio.mr.domain.dto.ConsortiumItem;
@@ -41,7 +39,8 @@ import org.folio.mr.domain.dto.RequestRequester;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.mapper.MediatedRequestMapperImpl;
 import org.folio.mr.repository.MediatedRequestsRepository;
-import org.folio.mr.support.KafkaEvent;
+import org.folio.mr.support.kafka.DefaultKafkaEvent;
+import org.folio.mr.support.kafka.KafkaEvent;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -374,7 +373,8 @@ class KafkaEventListenerTest extends BaseIT {
   }
 
   private static <T> KafkaEvent<T> buildUpdateEvent(String tenant, T oldVersion, T newVersion) {
-    return buildEvent(tenant, UPDATED, oldVersion, newVersion);
+    return buildEvent(tenant, DefaultKafkaEvent.DefaultKafkaEventType.UPDATED,
+      oldVersion, newVersion);
   }
 
   private <T> void publishEventAndWait(String tenant, String topic, KafkaEvent<T> event) {
@@ -389,11 +389,8 @@ class KafkaEventListenerTest extends BaseIT {
 
   @SneakyThrows
   private void publishEvent(String tenant, String topic, String payload) {
-    kafkaTemplate.send(new ProducerRecord<>(topic, 0, randomId(), payload,
-        List.of(
-          new RecordHeader(TENANT, tenant.getBytes()),
-          new RecordHeader("folio.tenantId", randomId().getBytes())
-        )))
+    Collection<Header> headers = buildHeadersForKafkaProducer(tenant);
+    kafkaTemplate.send(new ProducerRecord<>(topic, 0, randomId(), payload, headers))
       .get(10, SECONDS);
   }
 

@@ -1,5 +1,6 @@
 package org.folio.mr.api;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
@@ -15,6 +16,8 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.folio.mr.util.DbInitializer;
 import org.folio.mr.util.MockHelper;
 import org.folio.mr.util.TestUtils;
@@ -211,6 +214,33 @@ public class BaseIT {
 
   private static String buildTopicName(String env, String tenant, String module, String objectType) {
     return String.format("%s.%s.%s.%s", env, tenant, module, objectType);
+  }
+
+  protected static Collection<Header> buildHeadersForKafkaProducer(String tenant) {
+    return buildKafkaHeaders(tenant)
+      .entrySet()
+      .stream()
+      .map(entry -> new RecordHeader(entry.getKey(), (byte[]) entry.getValue()))
+      .collect(toList());
+  }
+
+  protected static Map<String, Object> buildKafkaHeaders(String tenantId) {
+    Map<String, String> headers = buildHeaders(tenantId);
+    headers.put("folio.tenantId", tenantId);
+
+    return headers.entrySet()
+      .stream()
+      .collect(toMap(Map.Entry::getKey, entry -> entry.getValue().getBytes()));
+  }
+
+  protected static Map<String, String> buildHeaders(String tenantId) {
+    Map<String, String> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenantId);
+    headers.put(XOkapiHeaders.URL, wireMockServer.baseUrl());
+    headers.put(XOkapiHeaders.TOKEN, TOKEN);
+    headers.put(XOkapiHeaders.USER_ID, USER_ID);
+    headers.put(XOkapiHeaders.REQUEST_ID, randomId());
+    return headers;
   }
 
   protected static String randomId() {
