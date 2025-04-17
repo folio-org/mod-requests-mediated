@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import org.folio.mr.support.kafka.DefaultKafkaEvent;
+import org.folio.mr.support.kafka.InventoryKafkaEvent;
 import org.folio.mr.support.kafka.KafkaEvent;
 import org.json.JSONObject;
 
@@ -59,6 +60,20 @@ public class TestUtils {
       .tenant(tenant)
       .type(type)
       .data(data)
+      .build()
+      .withTenantIdHeaderValue(tenant)
+      .withUserIdHeaderValue("test_user");
+  }
+
+  public static <T> KafkaEvent<T> buildInventoryEvent(String tenant,
+    InventoryKafkaEvent.InventoryKafkaEventType type, T oldVersion, T newVersion) {
+
+    return InventoryKafkaEvent.<T>builder()
+      .eventId(randomId())
+      .tenant(tenant)
+      .type(type)
+      .oldVersion(oldVersion)
+      .newVersion(newVersion)
       .build()
       .withTenantIdHeaderValue(tenant)
       .withUserIdHeaderValue("test_user");

@@ -84,7 +84,8 @@ public class BaseIT {
   private static final int WIRE_MOCK_PORT = TestSocketUtils.findAvailableTcpPort();
   protected static WireMockServer wireMockServer = new WireMockServer(WIRE_MOCK_PORT);
   protected static final String REQUEST_KAFKA_TOPIC_NAME = buildTopicName("circulation", "request");
-  private static final String[] KAFKA_TOPICS = {REQUEST_KAFKA_TOPIC_NAME};
+  protected static final String ITEM_KAFKA_TOPIC_NAME = buildTopicName("inventory", "item");
+  private static final String[] KAFKA_TOPICS = {REQUEST_KAFKA_TOPIC_NAME, ITEM_KAFKA_TOPIC_NAME};
   private FolioExecutionContextSetter contextSetter;
   protected static MockHelper mockHelper;
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
