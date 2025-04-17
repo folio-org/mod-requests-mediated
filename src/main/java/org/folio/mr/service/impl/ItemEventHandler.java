@@ -4,6 +4,7 @@ import static org.folio.mr.support.kafka.EventType.UPDATE;
 
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.folio.mr.domain.dto.Item;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.KafkaEventHandler;
@@ -41,17 +42,13 @@ public class ItemEventHandler implements KafkaEventHandler<Item> {
       return;
     }
 
-    if (isBlank(oldItem.getBarcode()) && !isBlank(newItem.getBarcode())) {
+    if (StringUtils.isBlank(oldItem.getBarcode()) && !StringUtils.isBlank(newItem.getBarcode())) {
       log.info("handleUpdateEvent:: item without a barcode updated, new barcode: {}", newItem.getBarcode());
       handleAddedBarcodeEvent(event.getNewVersion());
     }
 
     log.info("handleUpdateEvent:: ignoring item update - barcode info hasn't changed. " +
       "Item ID: {}", newItem::getId);
-  }
-
-  private boolean isBlank(String str) {
-    return str == null || str.isBlank();
   }
 
   private void handleAddedBarcodeEvent(Item item) {
