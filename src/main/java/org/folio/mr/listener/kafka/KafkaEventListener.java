@@ -4,11 +4,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.folio.mr.config.TenantConfig;
+import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.exception.KafkaEventDeserializationException;
 import org.folio.mr.service.KafkaEventHandler;
+import org.folio.mr.service.impl.ItemEventHandler;
 import org.folio.mr.service.impl.RequestEventHandler;
 import org.folio.mr.support.kafka.DefaultKafkaEvent;
+import org.folio.mr.support.kafka.InventoryKafkaEvent;
 import org.folio.mr.support.kafka.KafkaEvent;
 import org.folio.spring.DefaultFolioExecutionContext;
 import org.folio.spring.FolioExecutionContext;
@@ -18,6 +21,7 @@ import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -34,6 +38,7 @@ import lombok.extern.log4j.Log4j2;
 public class KafkaEventListener {
   private static final ObjectMapper objectMapper = new ObjectMapper();
   private final RequestEventHandler requestEventHandler;
+  private final ItemEventHandler itemEventHandler;
   private final SystemUserScopedExecutionService systemUserScopedExecutionService;
   private final TenantConfig secureTenantConfig;
   private final FolioModuleMetadata folioModuleMetadata;
@@ -44,6 +49,14 @@ public class KafkaEventListener {
   )
   public void handleRequestEvent(String eventString, MessageHeaders messageHeaders) {
     handleEvent(eventString, requestEventHandler, messageHeaders, DefaultKafkaEvent.class, Request.class);
+  }
+
+  @KafkaListener(
+    topicPattern = "${folio.environment}\\.\\w+\\.inventory\\.item",
+    groupId = "${spring.kafka.consumer.group-id}"
+  )
+  public void handleItemEvent(String eventString, @Headers Map<String, Object> messageHeaders) {
+    handleEvent(eventString, itemEventHandler, messageHeaders, InventoryKafkaEvent.class, Item.class);
   }
 
   private <E, T> void handleEvent(String eventString, KafkaEventHandler<T> handler,
