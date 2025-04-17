@@ -370,6 +370,38 @@ class KafkaEventListenerTest extends BaseIT {
   }
 
   @Test
+  void itemUpdateEventShouldBeIgnoredIfNewOrOldFieldISMissing() {
+    var itemId = randomId();
+
+    var mediatedRequestItemBarcode1 = "old_barcode_1";
+    var mediatedRequest1 = createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(
+      buildMediatedRequest(
+        MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED)
+        .itemId(itemId)
+        .item(new MediatedRequestItem().barcode(mediatedRequestItemBarcode1))));
+
+    var mediatedRequestItemBarcode2 = "old_barcode_2";
+    var mediatedRequest2 = createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(
+      buildMediatedRequest(
+        MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED)
+        .itemId(itemId)
+        .item(new MediatedRequestItem().barcode(mediatedRequestItemBarcode2))));
+
+    var oldNonEmptyBarcode = "old_barcode";
+    var newBarcode = "new_barcode";
+    publishEventAndWait(TENANT_ID_SECURE, ITEM_KAFKA_TOPIC_NAME,
+      buildInventoryUpdateEvent(TENANT_ID_SECURE, null, buildItem(itemId, newBarcode)));
+    publishEventAndWait(TENANT_ID_SECURE, ITEM_KAFKA_TOPIC_NAME,
+      buildInventoryUpdateEvent(TENANT_ID_SECURE, buildItem(itemId, oldNonEmptyBarcode), null));
+
+    MediatedRequestEntity updatedRequest1 = getMediatedRequest(mediatedRequest1.getId());
+    assertEquals(mediatedRequestItemBarcode1, updatedRequest1.getItemBarcode());
+
+    MediatedRequestEntity updatedRequest2 = getMediatedRequest(mediatedRequest2.getId());
+    assertEquals(mediatedRequestItemBarcode2, updatedRequest2.getItemBarcode());
+  }
+
+  @Test
   void itemUpdateEventShouldBeIgnoredIfBarcodeWasAlreadyNotEmpty() {
     var itemId = randomId();
 
