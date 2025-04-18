@@ -38,9 +38,12 @@ import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.ConsortiumItems;
 import org.folio.mr.domain.dto.EcsTlr;
+import org.folio.mr.domain.dto.Item;
+import org.folio.mr.domain.dto.ItemEffectiveCallNumberComponents;
 import org.folio.mr.domain.dto.Items;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
+import org.folio.mr.domain.dto.RequestItem;
 import org.folio.mr.domain.dto.SearchInstance;
 import org.folio.mr.domain.dto.SearchInstancesResponse;
 import org.folio.mr.domain.dto.SearchItem;
@@ -222,7 +225,14 @@ class MediatedRequestActionsApiTest extends BaseIT {
   void mediatedRequestConfirmationForRemoteInstanceAndItem() {
     // given
     UUID instanceId = UUID.randomUUID();
-    String primaryRequestId = UUID.randomUUID().toString();
+    String itemId = randomId();
+    String itemBarcode = "111";
+    String holdingRecordId = randomId();
+    String primaryRequestId = randomId();
+    String callNumber = "callNumber";
+    String prefix = "callNumber prefix";
+    String suffix = "callNumber suffix";
+    String shelvingOrder = "shelving order";
     MediatedRequestEntity initialRequest = mediatedRequestsRepository.save(
       buildMediatedRequestEntity(NEW_AWAITING_CONFIRMATION).withInstanceId(instanceId));
 
@@ -243,11 +253,32 @@ class MediatedRequestActionsApiTest extends BaseIT {
 
     wireMockServer.stubFor(WireMock.get(urlMatching(CIRCULATION_REQUESTS_URL + "/" + primaryRequestId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
-      .willReturn(jsonResponse(new Request().id(primaryRequestId), HttpStatus.SC_OK)));
+      .willReturn(jsonResponse(new Request()
+        .id(primaryRequestId)
+        .itemId(itemId)
+        .item(new RequestItem().barcode(itemBarcode)), HttpStatus.SC_OK)));
 
     wireMockServer.stubFor(WireMock.put(urlMatching(CIRCULATION_REQUESTS_URL + "/" + primaryRequestId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(jsonResponse(new Request(), HttpStatus.SC_OK)));
+
+    wireMockServer.stubFor(WireMock.get(urlMatching(SEARCH_ITEM_URL + "/" + itemId))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
+      .willReturn(jsonResponse(new ConsortiumItem()
+        .id(itemId)
+        .tenantId(TENANT_ID_COLLEGE), HttpStatus.SC_OK)));
+
+    wireMockServer.stubFor(WireMock.get(urlMatching(ITEMS_URL + "/" + itemId))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE))
+      .willReturn(jsonResponse(new Item()
+        .id(itemId)
+        .barcode(itemBarcode)
+        .holdingsRecordId(holdingRecordId)
+        .effectiveCallNumberComponents(new ItemEffectiveCallNumberComponents()
+          .callNumber(callNumber)
+          .prefix(prefix)
+          .suffix(suffix))
+        .effectiveShelvingOrder(shelvingOrder), HttpStatus.SC_OK)));
 
     // when
     confirmMediatedRequest(initialRequest.getId())
@@ -257,6 +288,12 @@ class MediatedRequestActionsApiTest extends BaseIT {
     MediatedRequestEntity updatedRequest = mediatedRequestsRepository.findById(initialRequest.getId())
       .orElseThrow();
     assertEquals(primaryRequestId, updatedRequest.getConfirmedRequestId().toString());
+    assertEquals(itemId, updatedRequest.getItemId().toString());
+    assertEquals(itemBarcode, updatedRequest.getItemBarcode());
+    assertEquals(callNumber, updatedRequest.getCallNumber());
+    assertEquals(prefix, updatedRequest.getCallNumberPrefix());
+    assertEquals(suffix, updatedRequest.getCallNumberSuffix());
+    assertEquals(holdingRecordId, updatedRequest.getHoldingsRecordId().toString());
 
     wireMockServer.verify(getRequestedFor(urlMatching(INSTANCES_URL + "/" + instanceId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));

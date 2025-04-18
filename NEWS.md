@@ -1,3 +1,7 @@
+## 1.0.11 2025-04-18
+* Support mediated requests for items without barcodes (MODREQMED-109)
+* New mediated TLRs - populate Item information accordion (MODREQMED-98)
+
 ## 1.0.10 2025-04-08
 * Add item/title information to In transit slips (MODREQMED-105)
 
