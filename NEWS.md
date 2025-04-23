@@ -1,3 +1,10 @@
+## 1.2.1 2025-04-23
+* Support items without barcodes (MODREQMED-109)
+* Increase memory allocation to 1gb (MODREQMED-103)
+* Fetch item for in-transit slips from the lending tenant (MODREQMED-105)
+* Made mediated requests search case-insensitive (MODREQMED-17)
+* Populate item details for mediated requests (MODREQMED-98)
+
 ## 1.2.0 2025-03-13
 * Upgrade to Java 21, folio-spring-support 9.0.0 (MODREQMED-97)
 
