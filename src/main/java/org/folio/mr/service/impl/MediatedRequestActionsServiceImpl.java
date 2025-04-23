@@ -9,22 +9,21 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_NOT_YET_FILLED;
-import static org.folio.mr.support.Constants.INTERIM_SERVICE_POINT_ID;
 import static org.folio.mr.support.ConversionUtils.asString;
 
 import java.util.List;
 import java.util.UUID;
 
+import org.folio.mr.domain.MediatedRequestContext;
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Item;
+import org.folio.mr.domain.dto.ItemEffectiveCallNumberComponents;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.RequestDeliveryAddress;
 import org.folio.mr.domain.dto.RequestPickupServicePoint;
-import org.folio.mr.domain.dto.SearchInstance;
-import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.entity.MediatedRequestStep;
 import org.folio.mr.domain.entity.MediatedRequestWorkflow;
@@ -108,8 +107,27 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
         MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
       changeMediatedRequestStatus(mediatedRequest, MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
     }
+    updateMediatedRequestItem(mediatedRequest, request);
     mediatedRequestsRepository.save(mediatedRequest);
     log.info("updateMediatedRequest:: mediated request {} updated", mediatedRequest::getId);
+  }
+
+  private void updateMediatedRequestItem(MediatedRequestEntity mediatedRequest,
+    Request request) {
+
+    var requestItemId = request.getItemId();
+    if (requestItemId != null) {
+      log.info("updateMediatedRequestItem:: set itemId: {} to mediated request", requestItemId);
+      mediatedRequest.setItemId(UUID.fromString(requestItemId));
+    }
+
+    var requestItem = request.getItem();
+    if (requestItem != null) {
+      log.info("updateMediatedRequestItem:: requestItem is present, set barcode: {}",
+        requestItem.getBarcode());
+      mediatedRequest.setItemBarcode(requestItem.getBarcode());
+      extendMediatedRequestWithInventoryItemDetails(mediatedRequest);
+    }
   }
 
   private boolean localInstanceExists(MediatedRequestEntity mediatedRequest) {
@@ -146,7 +164,9 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     changeMediatedRequestStatus(entity, OPEN_ITEM_ARRIVED);
     mediatedRequestsRepository.save(entity);
     MediatedRequest dto = mediatedRequestMapper.mapEntityToDto(entity);
-    extendMediatedRequest(dto);
+    MediatedRequestContext context = new MediatedRequestContext(dto);
+    findItem(context);
+    extendMediatedRequest(context);
     revertPrimaryRequestDeliveryInfo(dto);
 
     log.debug("confirmItemArrival:: result: {}", dto);
@@ -201,17 +221,19 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   @Override
-  public MediatedRequest sendItemInTransit(String itemBarcode) {
+  public MediatedRequestContext sendItemInTransit(String itemBarcode) {
     log.info("sendItemInTransit:: item barcode: {}", itemBarcode);
     var entity = findMediatedRequestForSendingInTransit(itemBarcode);
     changeMediatedRequestStatus(entity, OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
     mediatedRequestsRepository.save(entity);
     var dto = mediatedRequestMapper.mapEntityToDto(entity);
-    extendMediatedRequest(dto);
+    MediatedRequestContext context = new MediatedRequestContext(dto);
+    findItem(context);
+    extendMediatedRequest(context);
 
     log.debug("sendItemInTransit:: result: {}", dto);
 
-    return dto;
+    return context;
   }
 
   private MediatedRequestEntity findMediatedRequestForSendingInTransit(String itemBarcode) {
@@ -227,34 +249,71 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     return entity;
   }
 
-  private void extendMediatedRequest(MediatedRequest request) {
-    log.info("extendMediatedRequest:: extending mediated request with additional item details");
-
-    searchService.searchInstance(request.getInstanceId())
-      .map(SearchInstance::getItems)
-      .stream()
-      .flatMap(List::stream)
-      .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
-      .findFirst()
-      .ifPresent(searchItem -> fillItemDetailsFromInventoryItem(request, searchItem));
+  private void findItem(MediatedRequestContext context) {
+    searchService.searchItem(context.getRequest().getItemId())
+      .map(ConsortiumItem::getTenantId)
+      .map(context::setLendingTenantId)
+      .ifPresent(this::fetchItem);
   }
 
-  private void fillItemDetailsFromInventoryItem(MediatedRequest request, SearchItem searchItem) {
-    String tenantId = searchItem.getTenantId();
-    log.info("fillItemDetailsFromInventoryItem:: fetching item from tenant: {}", tenantId);
-    executionService.executeAsyncSystemUserScoped(tenantId, () -> {
-      Item item = inventoryService.fetchItem(request.getItemId());
-      if (item == null) {
-        throw ExceptionFactory.notFound(format("Item %s not found", request.getItemId()));
-      } else {
-        request.getItem()
-          .enumeration(item.getEnumeration())
-          .volume(item.getVolume())
-          .chronology(item.getChronology())
-          .displaySummary(item.getDisplaySummary())
-          .copyNumber(item.getCopyNumber());
-      }
-    });
+  private void fetchItem(MediatedRequestContext context) {
+    String itemId = context.getRequest().getItemId();
+    Item item = executionService.executeSystemUserScoped(context.getLendingTenantId(),
+      () -> inventoryService.fetchItem(itemId));
+
+    if (item != null) {
+      context.setItem(item);
+    } else {
+      throw ExceptionFactory.notFound(format("Item %s not found", itemId));
+    }
+  }
+
+  private void extendMediatedRequest(MediatedRequestContext context) {
+    Item item = context.getItem();
+    if (item == null) {
+      log.warn("extendMediatedRequest:: item is null");
+      return;
+    }
+
+    log.info("extendMediatedRequest:: extending mediated request with additional item details");
+    context.getRequest().getItem()
+      .enumeration(item.getEnumeration())
+      .volume(item.getVolume())
+      .chronology(item.getChronology())
+      .displaySummary(item.getDisplaySummary())
+      .copyNumber(item.getCopyNumber());
+  }
+
+  private void extendMediatedRequestWithInventoryItemDetails(MediatedRequestEntity mediatedRequestEntity) {
+    log.info("extendMediatedRequestWithInventoryItemDetails:: extending mediated request " +
+      "with additional item details");
+
+    searchService.searchItem(mediatedRequestEntity.getItemId().toString())
+      .ifPresent(searchItem -> executionService.executeSystemUserScoped(searchItem.getTenantId(),
+        () -> populateMediatedRequestWithItemDetails(mediatedRequestEntity)));
+  }
+
+  private MediatedRequestEntity populateMediatedRequestWithItemDetails(
+    MediatedRequestEntity mediatedRequestEntity) {
+
+    Item item = inventoryService.fetchItem(mediatedRequestEntity.getItemId().toString());
+    if (item == null) {
+      throw ExceptionFactory.notFound(format("Item %s not found", mediatedRequestEntity.getItemId()));
+    }
+    log.info("populateMediatedRequestWithItemDetails:: item found, updating mediated request");
+    mediatedRequestEntity.setShelvingOrder(item.getEffectiveShelvingOrder());
+    ItemEffectiveCallNumberComponents components = item.getEffectiveCallNumberComponents();
+    if (components != null) {
+      mediatedRequestEntity.setCallNumber(components.getCallNumber());
+      mediatedRequestEntity.setCallNumberPrefix(components.getPrefix());
+      mediatedRequestEntity.setCallNumberSuffix(components.getSuffix());
+    }
+    String holdingsRecordId = item.getHoldingsRecordId();
+    if (holdingsRecordId != null) {
+      mediatedRequestEntity.setHoldingsRecordId(UUID.fromString(holdingsRecordId));
+    }
+
+    return mediatedRequestEntity;
   }
 
   private static MediatedRequestWorkflowLog buildMediatedRequestWorkflowLog(

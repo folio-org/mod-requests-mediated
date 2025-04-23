@@ -1,5 +1,6 @@
 package org.folio.mr.service;
 
+import org.folio.mr.domain.MediatedRequestContext;
 import org.folio.mr.domain.dto.Campus;
 import org.folio.mr.domain.dto.HoldingsRecord;
 import org.folio.mr.domain.dto.Instance;
@@ -36,6 +37,9 @@ class StaffSlipContextServiceTest {
   @Mock
   private InventoryService inventoryService;
 
+  @Mock
+  private SearchService searchService;
+
   @InjectMocks
   private StaffSlipContextService staffSlipContextService;
 
@@ -63,7 +67,7 @@ class StaffSlipContextServiceTest {
       .effectiveLocationId(locationId)
       .status(new ItemStatus().name(ItemStatus.NameEnum.AVAILABLE))
       .yearCaption(Set.of());
-    when(inventoryService.fetchItem(itemId)).thenReturn(item);
+
     when(inventoryService.fetchHolding(holdingId))
       .thenReturn(new HoldingsRecord().instanceId(instanceId));
     when(inventoryService.fetchInstance(instanceId))
@@ -94,12 +98,15 @@ class StaffSlipContextServiceTest {
     var request = buildMediatedRequest(OPEN_IN_TRANSIT_FOR_APPROVAL).itemId(itemId);
 
     // when
-    var result = staffSlipContextService.createStaffSlipContext(request);
+    MediatedRequestContext context = MediatedRequestContext.builder()
+      .request(request)
+      .item(item)
+      .build();
+    var result = staffSlipContextService.createStaffSlipContext(context);
 
     // then
     assertEquals("Available", result.getItem().getStatus());
 
-    verify(inventoryService).fetchItem(itemId);
     verify(inventoryService).fetchHolding(holdingId);
     verify(inventoryService).fetchInstance(instanceId);
     verify(inventoryService).fetchServicePoint(inTransitServicePointId);
@@ -136,7 +143,7 @@ class StaffSlipContextServiceTest {
       .effectiveLocationId(locationId)
       .status(new ItemStatus().name(ItemStatus.NameEnum.AVAILABLE))
       .yearCaption(Set.of());
-    when(inventoryService.fetchItem(itemId)).thenReturn(item);
+
     when(inventoryService.fetchHolding(holdingId)).thenReturn(null);
     when(inventoryService.fetchMaterialType(materialTypeId)).thenReturn(null);
     when(inventoryService.fetchLoanType(loanTypeId)).thenReturn(null);
@@ -157,13 +164,16 @@ class StaffSlipContextServiceTest {
     var request = buildMediatedRequest(OPEN_IN_TRANSIT_FOR_APPROVAL).itemId(itemId);
 
     // when
-    var result = staffSlipContextService.createStaffSlipContext(request);
+    MediatedRequestContext context = MediatedRequestContext.builder()
+      .request(request)
+      .item(item)
+      .build();
+    var result = staffSlipContextService.createStaffSlipContext(context);
 
     // then
     assertEquals("Available", result.getItem().getStatus());
     assertNull(result.getItem().getTitle());
 
-    verify(inventoryService).fetchItem(itemId);
     verify(inventoryService).fetchHolding(holdingId);
     verify(inventoryService).fetchServicePoint(inTransitServicePointId);
 
