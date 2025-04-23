@@ -91,6 +91,22 @@ class KafkaEventListenerTest extends BaseIT {
       updatedMediatedRequest.getStatus());
   }
 
+  @Test
+  void localMediatedRequestInStatusOpenNotYetFilledIsUpdatedUponConfirmedRequestUpdate() {
+    KafkaEvent<Request> event = buildLocalRequestUpdateEvent(OPEN_NOT_YET_FILLED, OPEN_IN_TRANSIT);
+    var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
+    mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
+    var initialMediatedRequest =
+      createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
+    assertNotNull(initialMediatedRequest.getId());
+
+    publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
+
+    MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
+    assertEquals(MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL.getValue(),
+      updatedMediatedRequest.getStatus());
+  }
+
   @ParameterizedTest
   @EnumSource(value = Request.StatusEnum.class, mode = EXCLUDE,
     names = {"OPEN_IN_TRANSIT", "CLOSED_CANCELLED"})
@@ -467,6 +483,13 @@ class KafkaEventListenerTest extends BaseIT {
       buildRequest(newStatus, CONFIRMED_REQUEST_ID));
   }
 
+  private static KafkaEvent<Request> buildLocalRequestUpdateEvent(Request.StatusEnum oldStatus,
+    Request.StatusEnum newStatus) {
+    return buildUpdateEvent(TENANT_ID_CONSORTIUM,
+      buildRequest(oldStatus, CONFIRMED_REQUEST_ID, null),
+      buildRequest(newStatus, CONFIRMED_REQUEST_ID, null));
+  }
+
   private static <T> KafkaEvent<T> buildUpdateEvent(String tenant, T oldVersion, T newVersion) {
     return buildEvent(tenant, DefaultKafkaEvent.DefaultKafkaEventType.UPDATED,
       oldVersion, newVersion);
@@ -514,9 +537,14 @@ class KafkaEventListenerTest extends BaseIT {
   }
 
   private static Request buildRequest(Request.StatusEnum status, UUID requestId) {
+    return buildRequest(status, requestId, Request.EcsRequestPhaseEnum.PRIMARY);
+  }
+
+  private static Request buildRequest(Request.StatusEnum status,
+    UUID requestId, Request.EcsRequestPhaseEnum ecsPhase) {
     return new Request()
       .id(requestId.toString())
-      .ecsRequestPhase(Request.EcsRequestPhaseEnum.PRIMARY)
+      .ecsRequestPhase(ecsPhase)
       .requestLevel(Request.RequestLevelEnum.TITLE)
       .requestType(Request.RequestTypeEnum.HOLD)
       .requestDate(new Date())
