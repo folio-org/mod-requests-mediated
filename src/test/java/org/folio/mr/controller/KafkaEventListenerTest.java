@@ -96,8 +96,8 @@ class KafkaEventListenerTest extends BaseIT {
     KafkaEvent<Request> event = buildLocalRequestUpdateEvent(OPEN_NOT_YET_FILLED, OPEN_IN_TRANSIT);
     var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
-    var initialMediatedRequest =
-      createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
+    var initialMediatedRequest = createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(
+      mediatedRequest));
     assertNotNull(initialMediatedRequest.getId());
 
     publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
