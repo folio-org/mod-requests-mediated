@@ -7,7 +7,9 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 
-import org.folio.mr.support.KafkaEvent;
+import org.folio.mr.support.kafka.DefaultKafkaEvent;
+import org.folio.mr.support.kafka.InventoryKafkaEvent;
+import org.folio.mr.support.kafka.KafkaEvent;
 import org.json.JSONObject;
 
 import lombok.SneakyThrows;
@@ -37,31 +39,52 @@ public class TestUtils {
       signature);
   }
 
-  public static <T> KafkaEvent<T> buildEvent(String tenant, KafkaEvent.EventType type,
-    T oldVersion, T newVersion) {
+  public static <T> KafkaEvent<T> buildEvent(String tenant,
+    DefaultKafkaEvent.DefaultKafkaEventType type, T oldVersion, T newVersion) {
 
-    KafkaEvent.EventData<T> data = KafkaEvent.EventData.<T>builder()
-      .oldVersion(oldVersion)
-      .newVersion(newVersion)
-      .build();
+    DefaultKafkaEvent.DefaultKafkaEventData<T> data =
+      DefaultKafkaEvent.DefaultKafkaEventData.<T>builder()
+        .oldVersion(oldVersion)
+        .newVersion(newVersion)
+        .build();
 
     return buildEvent(tenant, type, data);
   }
 
-  private static <T> KafkaEvent<T> buildEvent(String tenant, KafkaEvent.EventType type,
-    KafkaEvent.EventData<T> data) {
+  private static <T> KafkaEvent<T> buildEvent(String tenant,
+    DefaultKafkaEvent.DefaultKafkaEventType type, DefaultKafkaEvent.DefaultKafkaEventData<T> data) {
 
-    return KafkaEvent.<T>builder()
-      .id(UUID.randomUUID().toString())
-      .type(type)
+    return DefaultKafkaEvent.<T>builder()
+      .id(randomId())
       .timestamp(new Date().getTime())
       .tenant(tenant)
+      .type(type)
       .data(data)
-      .build();
+      .build()
+      .withTenantIdHeaderValue(tenant)
+      .withUserIdHeaderValue("test_user");
+  }
+
+  public static <T> KafkaEvent<T> buildInventoryEvent(String tenant,
+    InventoryKafkaEvent.InventoryKafkaEventType type, T oldVersion, T newVersion) {
+
+    return InventoryKafkaEvent.<T>builder()
+      .eventId(randomId())
+      .tenant(tenant)
+      .type(type)
+      .oldVersion(oldVersion)
+      .newVersion(newVersion)
+      .build()
+      .withTenantIdHeaderValue(tenant)
+      .withUserIdHeaderValue("test_user");
   }
 
   public static String dateToString(Date date) {
     return ZonedDateTime.ofInstant(date.toInstant(), ZoneId.of("UTC"))
       .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx"));
+  }
+
+  public static String randomId() {
+    return UUID.randomUUID().toString();
   }
 }

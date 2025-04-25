@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
+import static com.github.tomakehurst.wiremock.client.WireMock.moreThanOrExactly;
 import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
@@ -37,9 +38,12 @@ import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.ConsortiumItems;
 import org.folio.mr.domain.dto.EcsTlr;
+import org.folio.mr.domain.dto.Item;
+import org.folio.mr.domain.dto.ItemEffectiveCallNumberComponents;
 import org.folio.mr.domain.dto.Items;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
+import org.folio.mr.domain.dto.RequestItem;
 import org.folio.mr.domain.dto.SearchInstance;
 import org.folio.mr.domain.dto.SearchInstancesResponse;
 import org.folio.mr.domain.dto.SearchItem;
@@ -80,6 +84,15 @@ class MediatedRequestActionsApiTest extends BaseIT {
   private static final String SEARCH_ITEMS_URL = "/search/consortium/items";
   private static final String NOT_FOUND_ITEM_UUID = "f13ef24f-d0fe-4aa8-901a-bfad3f0e6cae";
   private static final String SEARCH_INSTANCES_URL = "/search/instances";
+  private static final String SEARCH_ITEM_URL = "/search/consortium/item";
+  private static final String HOLDINGS_URL = "/holdings-storage/holdings";
+  private static final String MATERIAL_TYPES_URL = "/material-types";
+  private static final String LOAN_TYPES_URL = "/loan-types";
+  private static final String SERVICE_POINTS_URL = "/service-points";
+  private static final String LOCATIONS_URL = "/locations";
+  private static final String LIBRARIES_URL = "/location-units/libraries";
+  private static final String CAMPUSES_URL = "/location-units/campuses";
+  private static final String INSTITUTIONS_URL = "/location-units/institutions";
 
   @Autowired
   private MediatedRequestsRepository mediatedRequestsRepository;
@@ -212,7 +225,14 @@ class MediatedRequestActionsApiTest extends BaseIT {
   void mediatedRequestConfirmationForRemoteInstanceAndItem() {
     // given
     UUID instanceId = UUID.randomUUID();
-    String primaryRequestId = UUID.randomUUID().toString();
+    String itemId = randomId();
+    String itemBarcode = "111";
+    String holdingRecordId = randomId();
+    String primaryRequestId = randomId();
+    String callNumber = "callNumber";
+    String prefix = "callNumber prefix";
+    String suffix = "callNumber suffix";
+    String shelvingOrder = "shelving order";
     MediatedRequestEntity initialRequest = mediatedRequestsRepository.save(
       buildMediatedRequestEntity(NEW_AWAITING_CONFIRMATION).withInstanceId(instanceId));
 
@@ -233,11 +253,32 @@ class MediatedRequestActionsApiTest extends BaseIT {
 
     wireMockServer.stubFor(WireMock.get(urlMatching(CIRCULATION_REQUESTS_URL + "/" + primaryRequestId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
-      .willReturn(jsonResponse(new Request().id(primaryRequestId), HttpStatus.SC_OK)));
+      .willReturn(jsonResponse(new Request()
+        .id(primaryRequestId)
+        .itemId(itemId)
+        .item(new RequestItem().barcode(itemBarcode)), HttpStatus.SC_OK)));
 
     wireMockServer.stubFor(WireMock.put(urlMatching(CIRCULATION_REQUESTS_URL + "/" + primaryRequestId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(jsonResponse(new Request(), HttpStatus.SC_OK)));
+
+    wireMockServer.stubFor(WireMock.get(urlMatching(SEARCH_ITEM_URL + "/" + itemId))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
+      .willReturn(jsonResponse(new ConsortiumItem()
+        .id(itemId)
+        .tenantId(TENANT_ID_COLLEGE), HttpStatus.SC_OK)));
+
+    wireMockServer.stubFor(WireMock.get(urlMatching(ITEMS_URL + "/" + itemId))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE))
+      .willReturn(jsonResponse(new Item()
+        .id(itemId)
+        .barcode(itemBarcode)
+        .holdingsRecordId(holdingRecordId)
+        .effectiveCallNumberComponents(new ItemEffectiveCallNumberComponents()
+          .callNumber(callNumber)
+          .prefix(prefix)
+          .suffix(suffix))
+        .effectiveShelvingOrder(shelvingOrder), HttpStatus.SC_OK)));
 
     // when
     confirmMediatedRequest(initialRequest.getId())
@@ -247,6 +288,12 @@ class MediatedRequestActionsApiTest extends BaseIT {
     MediatedRequestEntity updatedRequest = mediatedRequestsRepository.findById(initialRequest.getId())
       .orElseThrow();
     assertEquals(primaryRequestId, updatedRequest.getConfirmedRequestId().toString());
+    assertEquals(itemId, updatedRequest.getItemId().toString());
+    assertEquals(itemBarcode, updatedRequest.getItemBarcode());
+    assertEquals(callNumber, updatedRequest.getCallNumber());
+    assertEquals(prefix, updatedRequest.getCallNumberPrefix());
+    assertEquals(suffix, updatedRequest.getCallNumberSuffix());
+    assertEquals(holdingRecordId, updatedRequest.getHoldingsRecordId().toString());
 
     wireMockServer.verify(getRequestedFor(urlMatching(INSTANCES_URL + "/" + instanceId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
@@ -327,6 +374,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @SneakyThrows
   void successfulItemArrivalConfirmation() {
     MediatedRequestEntity request = createMediatedRequestEntity();
+    String itemId = request.getItemId().toString();
     String primaryRequestId = request.getConfirmedRequestId().toString();
     wireMockServer.stubFor(WireMock.get(urlMatching(CIRCULATION_REQUESTS_URL + "/" + primaryRequestId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
@@ -336,6 +384,14 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(jsonResponse(new Request().id(primaryRequestId),
         HttpStatus.SC_OK)));
+
+    ConsortiumItem mockConsortiumItem = new ConsortiumItem()
+      .id(itemId)
+      .tenantId(TENANT_ID_COLLEGE);
+
+    wireMockServer.stubFor(WireMock.get(urlMatching(SEARCH_ITEM_URL + "/" + itemId))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
+      .willReturn(jsonResponse(mockConsortiumItem, HttpStatus.SC_OK)));
 
     confirmItemArrival("A14837334314", request)
       .andExpect(status().isOk())
@@ -360,10 +416,9 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .andExpect(jsonPath("requester.middleName", is("X")))
       .andExpect(jsonPath("requester.lastName", is("Mediated")));
 
-    wireMockServer.verify(1, getRequestedFor(urlPathMatching(SEARCH_INSTANCES_URL))
-      .withQueryParam("query", equalTo("id==" + request.getInstanceId()))
-      .withQueryParam("expandAll", equalTo("true"))
-      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(SEARCH_ITEM_URL + "/" + request.getItemId()))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
+
     wireMockServer.verify(1, getRequestedFor(urlEqualTo(ITEMS_URL + "/" + request.getItemId()))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
 
@@ -434,6 +489,15 @@ class MediatedRequestActionsApiTest extends BaseIT {
       buildMediatedRequestEntity(OPEN_ITEM_ARRIVED)
     );
 
+    String itemId = request.getItemId().toString();
+    ConsortiumItem mockConsortiumItem = new ConsortiumItem()
+      .id(itemId)
+      .tenantId(TENANT_ID_COLLEGE);
+
+    wireMockServer.stubFor(WireMock.get(urlMatching(SEARCH_ITEM_URL + "/" + itemId))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
+      .willReturn(jsonResponse(mockConsortiumItem, HttpStatus.SC_OK)));
+
     ResultActions resultActions = sendItemInTransit("A14837334314", request)
       .andExpect(status().isOk())
       .andExpect(jsonPath("inTransitDate", notNullValue()))
@@ -456,6 +520,39 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .andExpect(jsonPath("requester.firstName", is("Requester")))
       .andExpect(jsonPath("requester.middleName", is("X")))
       .andExpect(jsonPath("requester.lastName", is("Mediated")));
+
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(SEARCH_ITEM_URL + "/" + request.getItemId()))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
+
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(ITEMS_URL + "/" + request.getItemId()))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(INSTANCES_URL + "/" + request.getInstanceId()))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(HOLDINGS_URL + "/" + request.getHoldingsRecordId()))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlPathMatching(MATERIAL_TYPES_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlPathMatching(LOAN_TYPES_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(moreThanOrExactly(1), getRequestedFor(urlPathMatching(SERVICE_POINTS_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlPathMatching(LOCATIONS_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlPathMatching(LIBRARIES_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlPathMatching(CAMPUSES_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
+
+    wireMockServer.verify(1, getRequestedFor(urlPathMatching(INSTITUTIONS_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_COLLEGE)));
 
     expectStaffSlipContext(resultActions);
 

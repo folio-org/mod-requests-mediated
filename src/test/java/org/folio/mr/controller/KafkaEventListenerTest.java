@@ -11,17 +11,16 @@ import static org.folio.mr.domain.dto.Request.StatusEnum.CLOSED_FILLED;
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_AWAITING_PICKUP;
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_IN_TRANSIT;
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_NOT_YET_FILLED;
-import static org.folio.mr.support.KafkaEvent.EventType.UPDATED;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
 import static org.folio.mr.util.TestUtils.buildEvent;
-import static org.folio.spring.integration.XOkapiHeaders.TENANT;
+import static org.folio.mr.util.TestUtils.buildInventoryEvent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
 
+import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -29,11 +28,13 @@ import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.header.internals.RecordHeader;
+import org.apache.kafka.common.header.Header;
 import org.awaitility.Awaitility;
 import org.folio.mr.api.BaseIT;
 import org.folio.mr.domain.dto.ConsortiumItem;
+import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
+import org.folio.mr.domain.dto.MediatedRequestItem;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.RequestInstance;
 import org.folio.mr.domain.dto.RequestItem;
@@ -41,7 +42,9 @@ import org.folio.mr.domain.dto.RequestRequester;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.mapper.MediatedRequestMapperImpl;
 import org.folio.mr.repository.MediatedRequestsRepository;
-import org.folio.mr.support.KafkaEvent;
+import org.folio.mr.support.kafka.DefaultKafkaEvent;
+import org.folio.mr.support.kafka.InventoryKafkaEvent;
+import org.folio.mr.support.kafka.KafkaEvent;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,6 +82,22 @@ class KafkaEventListenerTest extends BaseIT {
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
     var initialMediatedRequest =
       createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(mediatedRequest));
+    assertNotNull(initialMediatedRequest.getId());
+
+    publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
+
+    MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
+    assertEquals(MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL.getValue(),
+      updatedMediatedRequest.getStatus());
+  }
+
+  @Test
+  void localMediatedRequestInStatusOpenNotYetFilledIsUpdatedUponConfirmedRequestUpdate() {
+    KafkaEvent<Request> event = buildLocalRequestUpdateEvent(OPEN_NOT_YET_FILLED, OPEN_IN_TRANSIT);
+    var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED);
+    mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
+    var initialMediatedRequest = createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(
+      mediatedRequest));
     assertNotNull(initialMediatedRequest.getId());
 
     publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
@@ -366,6 +385,97 @@ class KafkaEventListenerTest extends BaseIT {
     assertNull(initialMediatedRequest.getShelvingOrder());
   }
 
+  @Test
+  void itemUpdateEventShouldBeIgnoredIfNewOrOldFieldISMissing() {
+    var itemId = randomId();
+
+    var mediatedRequestItemBarcode1 = "old_barcode_1";
+    var mediatedRequest1 = createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(
+      buildMediatedRequest(
+        MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED)
+        .itemId(itemId)
+        .item(new MediatedRequestItem().barcode(mediatedRequestItemBarcode1))));
+
+    var mediatedRequestItemBarcode2 = "old_barcode_2";
+    var mediatedRequest2 = createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(
+      buildMediatedRequest(
+        MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED)
+        .itemId(itemId)
+        .item(new MediatedRequestItem().barcode(mediatedRequestItemBarcode2))));
+
+    var oldNonEmptyBarcode = "old_barcode";
+    var newBarcode = "new_barcode";
+    publishEventAndWait(TENANT_ID_SECURE, ITEM_KAFKA_TOPIC_NAME,
+      buildInventoryUpdateEvent(TENANT_ID_SECURE, null, buildItem(itemId, newBarcode)));
+    publishEventAndWait(TENANT_ID_SECURE, ITEM_KAFKA_TOPIC_NAME,
+      buildInventoryUpdateEvent(TENANT_ID_SECURE, buildItem(itemId, oldNonEmptyBarcode), null));
+
+    MediatedRequestEntity updatedRequest1 = getMediatedRequest(mediatedRequest1.getId());
+    assertEquals(mediatedRequestItemBarcode1, updatedRequest1.getItemBarcode());
+
+    MediatedRequestEntity updatedRequest2 = getMediatedRequest(mediatedRequest2.getId());
+    assertEquals(mediatedRequestItemBarcode2, updatedRequest2.getItemBarcode());
+  }
+
+  @Test
+  void itemUpdateEventShouldBeIgnoredIfBarcodeWasAlreadyNotEmpty() {
+    var itemId = randomId();
+
+    var mediatedRequestItemBarcode1 = "old_barcode_1";
+    var mediatedRequest1 = createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(
+      buildMediatedRequest(
+        MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED)
+        .itemId(itemId)
+        .item(new MediatedRequestItem().barcode(mediatedRequestItemBarcode1))));
+
+    var mediatedRequestItemBarcode2 = "old_barcode_2";
+    var mediatedRequest2 = createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(
+      buildMediatedRequest(
+        MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED)
+        .itemId(itemId)
+        .item(new MediatedRequestItem().barcode(mediatedRequestItemBarcode2))));
+
+    var oldNonEmptyBarcode = "old_barcode";
+    var newBarcode = "new_barcode";
+    publishEventAndWait(TENANT_ID_SECURE, ITEM_KAFKA_TOPIC_NAME,
+      buildInventoryUpdateEvent(TENANT_ID_SECURE, buildItem(itemId, oldNonEmptyBarcode),
+        buildItem(itemId, newBarcode)));
+
+    MediatedRequestEntity updatedRequest1 = getMediatedRequest(mediatedRequest1.getId());
+    assertEquals(mediatedRequestItemBarcode1, updatedRequest1.getItemBarcode());
+
+    MediatedRequestEntity updatedRequest2 = getMediatedRequest(mediatedRequest2.getId());
+    assertEquals(mediatedRequestItemBarcode2, updatedRequest2.getItemBarcode());
+  }
+
+  @Test
+  void mediatedRequestItemBarcodeShouldBeUpdatedWhenItemUpdated() {
+    var itemId = randomId();
+
+    var mediatedRequest1 = createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(
+      buildMediatedRequest(
+        MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED)
+        .itemId(itemId)
+        .item(new MediatedRequestItem().barcode("old_barcode_1"))));
+
+    var mediatedRequest2 = createMediatedRequest(mediatedRequestMapper.mapDtoToEntity(
+      buildMediatedRequest(
+        MediatedRequest.StatusEnum.OPEN_NOT_YET_FILLED)
+        .itemId(itemId)
+        .item(new MediatedRequestItem().barcode("old_barcode_2"))));
+
+    var newBarcode = "new_barcode";
+    publishEventAndWait(TENANT_ID_SECURE, ITEM_KAFKA_TOPIC_NAME,
+      buildInventoryUpdateEvent(TENANT_ID_SECURE, buildItem(itemId, null),
+        buildItem(itemId, newBarcode)));
+
+    MediatedRequestEntity updatedRequest1 = getMediatedRequest(mediatedRequest1.getId());
+    assertEquals(newBarcode, updatedRequest1.getItemBarcode());
+
+    MediatedRequestEntity updatedRequest2 = getMediatedRequest(mediatedRequest2.getId());
+    assertEquals(newBarcode, updatedRequest2.getItemBarcode());
+  }
+
   private static KafkaEvent<Request> buildRequestUpdateEvent(Request.StatusEnum oldStatus,
     Request.StatusEnum newStatus) {
     return buildUpdateEvent(TENANT_ID_CONSORTIUM,
@@ -373,8 +483,23 @@ class KafkaEventListenerTest extends BaseIT {
       buildRequest(newStatus, CONFIRMED_REQUEST_ID));
   }
 
+  private static KafkaEvent<Request> buildLocalRequestUpdateEvent(Request.StatusEnum oldStatus,
+    Request.StatusEnum newStatus) {
+    return buildUpdateEvent(TENANT_ID_CONSORTIUM,
+      buildRequest(oldStatus, CONFIRMED_REQUEST_ID, null),
+      buildRequest(newStatus, CONFIRMED_REQUEST_ID, null));
+  }
+
   private static <T> KafkaEvent<T> buildUpdateEvent(String tenant, T oldVersion, T newVersion) {
-    return buildEvent(tenant, UPDATED, oldVersion, newVersion);
+    return buildEvent(tenant, DefaultKafkaEvent.DefaultKafkaEventType.UPDATED,
+      oldVersion, newVersion);
+  }
+
+  private static <T> KafkaEvent<T> buildInventoryUpdateEvent(String tenant, T oldVersion,
+    T newVersion) {
+
+    return buildInventoryEvent(tenant, InventoryKafkaEvent.InventoryKafkaEventType.UPDATE,
+      oldVersion, newVersion);
   }
 
   private <T> void publishEventAndWait(String tenant, String topic, KafkaEvent<T> event) {
@@ -389,11 +514,8 @@ class KafkaEventListenerTest extends BaseIT {
 
   @SneakyThrows
   private void publishEvent(String tenant, String topic, String payload) {
-    kafkaTemplate.send(new ProducerRecord<>(topic, 0, randomId(), payload,
-        List.of(
-          new RecordHeader(TENANT, tenant.getBytes()),
-          new RecordHeader("folio.tenantId", randomId().getBytes())
-        )))
+    Collection<Header> headers = buildHeadersForKafkaProducer(tenant);
+    kafkaTemplate.send(new ProducerRecord<>(topic, 0, randomId(), payload, headers))
       .get(10, SECONDS);
   }
 
@@ -415,9 +537,14 @@ class KafkaEventListenerTest extends BaseIT {
   }
 
   private static Request buildRequest(Request.StatusEnum status, UUID requestId) {
+    return buildRequest(status, requestId, Request.EcsRequestPhaseEnum.PRIMARY);
+  }
+
+  private static Request buildRequest(Request.StatusEnum status,
+    UUID requestId, Request.EcsRequestPhaseEnum ecsPhase) {
     return new Request()
       .id(requestId.toString())
-      .ecsRequestPhase(Request.EcsRequestPhaseEnum.PRIMARY)
+      .ecsRequestPhase(ecsPhase)
       .requestLevel(Request.RequestLevelEnum.TITLE)
       .requestType(Request.RequestTypeEnum.HOLD)
       .requestDate(new Date())
@@ -434,6 +561,12 @@ class KafkaEventListenerTest extends BaseIT {
         .lastName("Last")
         .barcode("test"))
       .fulfillmentPreference(Request.FulfillmentPreferenceEnum.HOLD_SHELF);
+  }
+
+  private static Item buildItem(String id, String barcode) {
+    return new Item()
+      .id(id)
+      .barcode(barcode);
   }
 
   private MediatedRequestEntity createMediatedRequest(MediatedRequestEntity ecsTlr) {
