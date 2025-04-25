@@ -175,12 +175,16 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
   private void revertPrimaryRequestDeliveryInfo(MediatedRequest medRequest) {
     log.info("revertPrimaryRequestDeliveryInfo:: medRequest: {}", medRequest.getId());
+    log.info("revertPrimaryRequestDeliveryInfo:: medRequest: {}", medRequest);
     var primaryRequest = circulationRequestService.get(medRequest.getConfirmedRequestId());
+    log.info("revertPrimaryRequestDeliveryInfo:: primaryRequest: {}", primaryRequest);
     primaryRequest.setFulfillmentPreference(Request.FulfillmentPreferenceEnum.fromValue(
       medRequest.getFulfillmentPreference().getValue()));
     var deliveryAddress = medRequest.getDeliveryAddress();
+    log.info("revertPrimaryRequestDeliveryInfo:: deliveryAddress: {}", deliveryAddress);
     if (deliveryAddress != null) {
-      log.info("revertPrimaryRequestDeliveryInfo:: updating deliveryAddress for request: {}", medRequest.getId());
+      log.info("revertPrimaryRequestDeliveryInfo:: updating deliveryAddress for request: {}",
+        medRequest.getId());
       primaryRequest.setDeliveryAddress(new RequestDeliveryAddress()
         .region(deliveryAddress.getRegion())
         .city(deliveryAddress.getCity())
