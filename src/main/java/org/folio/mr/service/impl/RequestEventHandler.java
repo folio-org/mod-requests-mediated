@@ -69,7 +69,7 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
 
     Request.EcsRequestPhaseEnum ecsRequestPhase = newRequest.getEcsRequestPhase();
     log.info("handleRequestUpdateEvent:: updated request ECS phase: {}", ecsRequestPhase);
-    if (ecsRequestPhase != PRIMARY) {
+    if (ecsRequestPhase != null && ecsRequestPhase != PRIMARY) {
       log.info("handleRequestUpdateEvent:: ignoring non-primary request");
       return;
     }
