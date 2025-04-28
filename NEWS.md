@@ -1,3 +1,6 @@
+## 1.0.12 2025-04-28
+* Fix synchronization of mediated request and circulation request for oLOAN collection items (MODREQMED-111)
+
 ## 1.0.11 2025-04-18
 * Support mediated requests for items without barcodes (MODREQMED-109)
 * New mediated TLRs - populate Item information accordion (MODREQMED-98)
