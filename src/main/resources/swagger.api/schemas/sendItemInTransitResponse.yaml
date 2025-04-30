@@ -186,8 +186,8 @@ properties:
       city:
         description: City name
         type: string
-      country:
-        description: Country name
+      countryId:
+        description: Country ID
         type: string
       region:
         description: Region

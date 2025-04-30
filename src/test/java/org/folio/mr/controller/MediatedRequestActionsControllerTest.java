@@ -167,7 +167,7 @@ class MediatedRequestActionsControllerTest {
           .city("city")
           .postalCode("test postal code")
           .region("test region")
-          .countryId("test country"))));
+          .countryId("US"))));
     when(mediatedRequestActionsService.sendItemInTransit(itemBarcode))
       .thenReturn(context);
     when(mediatedRequestActionsService.saveMediatedRequestWorkflowLog(any()))
@@ -202,7 +202,7 @@ class MediatedRequestActionsControllerTest {
     assertThat(response.getRequester().getCity(), is("city"));
     assertThat(response.getRequester().getPostalCode(), is("test postal code"));
     assertThat(response.getRequester().getRegion(), is("test region"));
-    assertThat(response.getRequester().getCountry(), is("test country"));
+    assertThat(response.getRequester().getCountryId(), is("US"));
   }
 
   @Test
