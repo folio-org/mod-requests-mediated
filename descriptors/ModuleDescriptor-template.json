@@ -44,7 +44,7 @@
     },
     {
       "id": "requests-mediated-actions",
-      "version": "1.1",
+      "version": "1.2",
       "handlers": [
         {
           "methods": [
@@ -84,7 +84,9 @@
             "inventory-storage.material-types.collection.get",
             "inventory-storage.service-points.item.get",
             "inventory-storage.service-points.collection.get",
-            "search.instances.collection.get"
+            "search.instances.collection.get",
+            "users.collection.get",
+            "users.item.get"
           ]
         },
         {
