@@ -1,7 +1,8 @@
 package org.folio.mr.controller;
 
+import static java.util.Optional.ofNullable;
+
 import java.util.Date;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.folio.mr.domain.MediatedRequestContext;
@@ -94,7 +95,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
         .middleName(requester.getMiddleName())
         .lastName(requester.getLastName()));
 
-    Optional.ofNullable(request.getSearchIndex())
+    ofNullable(request.getSearchIndex())
       .map(MediatedRequestSearchIndex::getCallNumberComponents)
       .ifPresent(components -> response.getItem().callNumberComponents(
         new MediatedRequestItemCallNumberComponents()
@@ -153,9 +154,10 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
         .middleName(requester.getMiddleName())
         .lastName(requester.getLastName()));
 
-    if (user != null) {
-      var address = user.getPersonal().getAddresses().getFirst();
-      if (address != null) {
+    ofNullable(user)
+      .map(User::getPersonal)
+      .map(personal -> personal.getAddresses().getFirst())
+      .ifPresent(address -> {
         response.getRequester()
           .addressLine1(address.getAddressLine1())
           .addressLine2(address.getAddressLine2())
@@ -163,11 +165,10 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
           .postalCode(address.getPostalCode())
           .region(address.getRegion())
           .countryId(address.getCountryId());
-      }
-    }
+      });
 
 
-    Optional.ofNullable(request.getSearchIndex())
+    ofNullable(request.getSearchIndex())
       .map(MediatedRequestSearchIndex::getCallNumberComponents)
       .ifPresent(components -> response.getItem().callNumberComponents(
         new MediatedRequestItemCallNumberComponents()
