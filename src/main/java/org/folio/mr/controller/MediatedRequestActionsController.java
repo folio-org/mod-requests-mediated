@@ -157,16 +157,14 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     ofNullable(user)
       .map(User::getPersonal)
       .map(personal -> personal.getAddresses().getFirst())
-      .ifPresent(address -> {
+      .ifPresent(address ->
         response.getRequester()
           .addressLine1(address.getAddressLine1())
           .addressLine2(address.getAddressLine2())
           .city(address.getCity())
           .postalCode(address.getPostalCode())
           .region(address.getRegion())
-          .countryId(address.getCountryId());
-      });
-
+          .countryId(address.getCountryId()));
 
     ofNullable(request.getSearchIndex())
       .map(MediatedRequestSearchIndex::getCallNumberComponents)
