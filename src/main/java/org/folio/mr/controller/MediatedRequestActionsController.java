@@ -92,7 +92,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
         .barcode(requester.getBarcode())
         .firstName(requester.getFirstName())
         .middleName(requester.getMiddleName())
-        .lastName(requester.getLastName())); //TODO
+        .lastName(requester.getLastName()));
 
     Optional.ofNullable(request.getSearchIndex())
       .map(MediatedRequestSearchIndex::getCallNumberComponents)
@@ -162,7 +162,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
           .city(address.getCity())
           .postalCode(address.getPostalCode())
           .region(address.getRegion())
-          .country(address.getCountryId());
+          .countryId(address.getCountryId());
       }
     }
 
