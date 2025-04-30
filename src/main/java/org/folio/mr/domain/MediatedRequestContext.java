@@ -2,6 +2,7 @@ package org.folio.mr.domain;
 
 import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
+import org.folio.mr.domain.dto.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,4 +21,5 @@ public final class MediatedRequestContext {
   private final MediatedRequest request;
   private Item item;
   private String lendingTenantId;
+  private User requester;
 }
