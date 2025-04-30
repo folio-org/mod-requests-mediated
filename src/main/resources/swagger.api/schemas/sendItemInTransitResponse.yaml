@@ -177,3 +177,21 @@ properties:
       middleName:
         description: Middle name of the requester
         type: string
+      addressLine1:
+        description: Address, Line 1
+        type: string
+      addressLine2:
+        description: Address, Line 2
+        type: string
+      city:
+        description: City name
+        type: string
+      countryId:
+        description: Country ID
+        type: string
+      region:
+        description: Region
+        type: string
+      postalCode:
+        description: Postal Code
+        type: string

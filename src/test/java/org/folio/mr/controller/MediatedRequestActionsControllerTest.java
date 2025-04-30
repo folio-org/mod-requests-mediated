@@ -24,9 +24,13 @@ import org.folio.mr.domain.dto.ConfirmItemArrivalResponse;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.domain.dto.SendItemInTransitResponse;
+import org.folio.mr.domain.dto.User;
+import org.folio.mr.domain.dto.UserPersonal;
+import org.folio.mr.domain.dto.UserPersonalAddressesInner;
 import org.folio.mr.domain.entity.MediatedRequestWorkflowLog;
 import org.folio.mr.service.MediatedRequestActionsService;
 import org.folio.mr.service.impl.StaffSlipContextService;
+import org.folio.mr.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -48,6 +52,9 @@ class MediatedRequestActionsControllerTest {
 
   @Mock
   private StaffSlipContextService staffSlipContextService;
+
+  @Mock
+  private UserServiceImpl userService;
 
   @InjectMocks
   private MediatedRequestActionsController requestsController;
@@ -151,6 +158,16 @@ class MediatedRequestActionsControllerTest {
     MediatedRequest mediatedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
     String itemBarcode = mediatedRequest.getItem().getBarcode();
     MediatedRequestContext context = new MediatedRequestContext(mediatedRequest);
+    context.setRequester(new User()
+      .id(mediatedRequest.getRequesterId())
+      .personal(new UserPersonal()
+        .addAddressesItem(new UserPersonalAddressesInner()
+          .addressLine1("test addressLine 1")
+          .addressLine2("test addressLine 2")
+          .city("city")
+          .postalCode("test postal code")
+          .region("test region")
+          .countryId("US"))));
     when(mediatedRequestActionsService.sendItemInTransit(itemBarcode))
       .thenReturn(context);
     when(mediatedRequestActionsService.saveMediatedRequestWorkflowLog(any()))
@@ -180,6 +197,12 @@ class MediatedRequestActionsControllerTest {
     assertThat(response.getRequester().getFirstName(), is("Requester"));
     assertThat(response.getRequester().getMiddleName(), is("X"));
     assertThat(response.getRequester().getLastName(), is("Mediated"));
+    assertThat(response.getRequester().getAddressLine1(), is("test addressLine 1"));
+    assertThat(response.getRequester().getAddressLine2(), is("test addressLine 2"));
+    assertThat(response.getRequester().getCity(), is("city"));
+    assertThat(response.getRequester().getPostalCode(), is("test postal code"));
+    assertThat(response.getRequester().getRegion(), is("test region"));
+    assertThat(response.getRequester().getCountryId(), is("US"));
   }
 
   @Test
