@@ -38,6 +38,7 @@ import org.folio.mr.domain.entity.MediatedRequestWorkflow;
 import org.folio.mr.domain.mapper.MediatedRequestMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.impl.MediatedRequestActionsServiceImpl;
+import org.folio.mr.service.impl.UserServiceImpl;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.junit.jupiter.api.Test;
@@ -78,6 +79,9 @@ class MediatedRequestActionsServiceTest {
 
   @Mock
   private SystemUserScopedExecutionService executionService;
+
+  @Mock
+  private UserServiceImpl userService;
 
   @InjectMocks
   private MediatedRequestActionsServiceImpl mediatedRequestActionsService;
@@ -146,6 +150,7 @@ class MediatedRequestActionsServiceTest {
     MediatedRequestContext result = mediatedRequestActionsService.sendItemInTransit(itemBarcode);
 
     verify(mediatedRequestsRepository).save(any(MediatedRequestEntity.class));
+    verify(userService).fetchUser(initialRequest.getRequesterId().toString());
     assertThat(result.getRequest().getStatus().getValue(), is("Open - In transit to be checked out"));
     assertThat(result.getRequest().getMediatedRequestStep(), is("In transit to be checked out"));
   }

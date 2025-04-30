@@ -37,6 +37,7 @@ import org.folio.mr.service.EcsRequestService;
 import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestActionsService;
 import org.folio.mr.service.SearchService;
+import org.folio.mr.service.UserService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,7 @@ import lombok.extern.log4j.Log4j2;
 public class MediatedRequestActionsServiceImpl implements MediatedRequestActionsService {
   private final MediatedRequestsRepository mediatedRequestsRepository;
   private final InventoryService inventoryService;
+  private final UserService userService;
   private final MediatedRequestMapper mediatedRequestMapper;
   private final MediatedRequestWorkflowLogRepository workflowLogRepository;
   private final CirculationRequestService circulationRequestService;
@@ -229,6 +231,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     var dto = mediatedRequestMapper.mapEntityToDto(entity);
     MediatedRequestContext context = new MediatedRequestContext(dto);
     findItem(context);
+    findRequester(context);
     extendMediatedRequest(context);
 
     log.debug("sendItemInTransit:: result: {}", dto);
@@ -254,6 +257,10 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
       .map(ConsortiumItem::getTenantId)
       .map(context::setLendingTenantId)
       .ifPresent(this::fetchItem);
+  }
+
+  private void findRequester(MediatedRequestContext context) {
+    context.setRequester(userService.fetchUser(context.getRequest().getRequesterId()));
   }
 
   private void fetchItem(MediatedRequestContext context) {
