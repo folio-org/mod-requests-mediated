@@ -1,8 +1,10 @@
 package org.folio.mr.controller;
 
 import static java.util.Optional.ofNullable;
+import static java.util.function.Predicate.not;
 
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import org.folio.mr.domain.MediatedRequestContext;
@@ -22,6 +24,7 @@ import org.folio.mr.domain.dto.SendItemInTransitResponse;
 import org.folio.mr.domain.dto.SendItemInTransitResponseRequester;
 import org.folio.mr.domain.dto.SendItemInTransitResponseStaffSlipContext;
 import org.folio.mr.domain.dto.User;
+import org.folio.mr.domain.dto.UserPersonal;
 import org.folio.mr.rest.resource.MediatedRequestsActionsApi;
 import org.folio.mr.service.MediatedRequestActionsService;
 import org.folio.mr.service.impl.StaffSlipContextService;
@@ -156,7 +159,9 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
 
     ofNullable(user)
       .map(User::getPersonal)
-      .map(personal -> personal.getAddresses().getFirst())
+      .map(UserPersonal::getAddresses)
+      .filter(not(List::isEmpty))
+      .map(List::getFirst)
       .ifPresent(address ->
         response.getRequester()
           .addressLine1(address.getAddressLine1())
