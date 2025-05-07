@@ -1,11 +1,11 @@
 package org.folio.mr.controller;
 
 import static java.util.Optional.ofNullable;
-import static java.util.function.Predicate.not;
 
+import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.folio.mr.domain.MediatedRequestContext;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
@@ -160,8 +160,8 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     ofNullable(user)
       .map(User::getPersonal)
       .map(UserPersonal::getAddresses)
-      .filter(not(List::isEmpty))
-      .map(List::getFirst)
+      .map(Collection::stream)
+      .flatMap(Stream::findFirst)
       .ifPresent(address ->
         response.getRequester()
           .addressLine1(address.getAddressLine1())
