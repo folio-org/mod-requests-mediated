@@ -1,5 +1,6 @@
 package org.folio.mr.service.impl;
 
+import static org.folio.mr.support.Constants.INTERIM_SERVICE_POINT_ID;
 import static org.folio.mr.support.ConversionUtils.asString;
 
 import org.folio.mr.client.CirculationClient;
@@ -37,11 +38,9 @@ public class CirculationRequestServiceImpl implements CirculationRequestService 
       .holdingsRecordId(asString(mediatedRequest.getHoldingsRecordId()))
       .itemId(asString(mediatedRequest.getItemId()))
       .requesterId(asString(mediatedRequest.getRequesterId()))
-      .fulfillmentPreference(Request.FulfillmentPreferenceEnum.fromValue(
-        mediatedRequest.getFulfillmentPreference().getValue()))
-      .pickupServicePointId(asString(mediatedRequest.getPickupServicePointId()))
+      .fulfillmentPreference(Request.FulfillmentPreferenceEnum.HOLD_SHELF)
+      .pickupServicePointId(INTERIM_SERVICE_POINT_ID)
       .requestDate(mediatedRequest.getRequestDate())
-      .deliveryAddressTypeId(asString(mediatedRequest.getDeliveryAddressTypeId()))
       .patronComments(mediatedRequest.getPatronComments());
   }
 

@@ -90,12 +90,14 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   private Request createEcsTlr(MediatedRequestEntity mediatedRequest) {
     EcsTlr ecsTlr = ecsRequestService.create(mediatedRequest);
     Request primaryRequest = circulationRequestService.get(ecsTlr.getPrimaryRequestId());
-    revertPrimaryRequestDeliveryInfo(mediatedRequest, primaryRequest);
+    revertPrimaryRequestRequesterInfo(mediatedRequest, primaryRequest);
     return primaryRequest;
   }
 
-  private void revertPrimaryRequestDeliveryInfo(MediatedRequestEntity mediatedRequest, Request primaryRequest) {
-    log.info("updatePrimaryRequest:: updating primary request {}", primaryRequest::getId);
+  private void revertPrimaryRequestRequesterInfo(MediatedRequestEntity mediatedRequest,
+    Request primaryRequest) {
+
+    log.info("revertPrimaryRequestRequesterInfo:: primary request ID {}", primaryRequest::getId);
     // Changing requesterId from fake proxy ID back to the real ID of the secure patron
     primaryRequest.setRequesterId(mediatedRequest.getRequesterId().toString());
     circulationRequestService.update(primaryRequest);
@@ -162,28 +164,29 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   @Override
   public MediatedRequest confirmItemArrival(String itemBarcode) {
     log.info("confirmItemArrival:: item barcode: {}", itemBarcode);
-    MediatedRequestEntity entity = findMediatedRequestForItemArrival(itemBarcode);
-    changeMediatedRequestStatus(entity, OPEN_ITEM_ARRIVED);
-    mediatedRequestsRepository.save(entity);
-    MediatedRequest dto = mediatedRequestMapper.mapEntityToDto(entity);
-    MediatedRequestContext context = new MediatedRequestContext(dto);
+    MediatedRequestEntity MediatedRequestEntity = findMediatedRequestForItemArrival(itemBarcode);
+    changeMediatedRequestStatus(MediatedRequestEntity, OPEN_ITEM_ARRIVED);
+    mediatedRequestsRepository.save(MediatedRequestEntity);
+    MediatedRequest mediatedRequestDto = mediatedRequestMapper.mapEntityToDto(MediatedRequestEntity);
+    MediatedRequestContext context = new MediatedRequestContext(mediatedRequestDto);
     findItem(context);
     extendMediatedRequest(context);
-    revertPrimaryRequestDeliveryInfo(dto);
+    revertConfirmedRequestDeliveryInfo(mediatedRequestDto);
 
-    log.debug("confirmItemArrival:: result: {}", dto);
-    return dto;
+    log.debug("confirmItemArrival:: result: {}", mediatedRequestDto);
+    return mediatedRequestDto;
   }
 
-  private void revertPrimaryRequestDeliveryInfo(MediatedRequest medRequest) {
-    log.info("revertPrimaryRequestDeliveryInfo:: medRequest: {}", medRequest.getId());
-    var primaryRequest = circulationRequestService.get(medRequest.getConfirmedRequestId());
-    primaryRequest.setFulfillmentPreference(Request.FulfillmentPreferenceEnum.fromValue(
-      medRequest.getFulfillmentPreference().getValue()));
-    var deliveryAddress = medRequest.getDeliveryAddress();
+  private void revertConfirmedRequestDeliveryInfo(MediatedRequest mediatedRequest) {
+    log.info("revertConfirmedRequestDeliveryInfo:: mediatedRequest: {}", mediatedRequest.getId());
+    var confirmedRequest = circulationRequestService.get(mediatedRequest.getConfirmedRequestId());
+    confirmedRequest.setFulfillmentPreference(Request.FulfillmentPreferenceEnum.fromValue(
+      mediatedRequest.getFulfillmentPreference().getValue()));
+    var deliveryAddress = mediatedRequest.getDeliveryAddress();
     if (deliveryAddress != null) {
-      log.info("revertPrimaryRequestDeliveryInfo:: updating deliveryAddress for request: {}", medRequest.getId());
-      primaryRequest.setDeliveryAddress(new RequestDeliveryAddress()
+      log.info("revertConfirmedRequestDeliveryInfo:: updating deliveryAddress for request: {}",
+        mediatedRequest.getId());
+      confirmedRequest.setDeliveryAddress(new RequestDeliveryAddress()
         .region(deliveryAddress.getRegion())
         .city(deliveryAddress.getCity())
         .countryId(deliveryAddress.getCountryId())
@@ -192,17 +195,18 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
         .addressLine2(deliveryAddress.getAddressLine2())
         .postalCode(deliveryAddress.getPostalCode()));
     }
-    primaryRequest.setPickupServicePointId(medRequest.getPickupServicePointId());
-    var medRequestPickupServicePoint = medRequest.getPickupServicePoint();
+    confirmedRequest.setPickupServicePointId(mediatedRequest.getPickupServicePointId());
+    var medRequestPickupServicePoint = mediatedRequest.getPickupServicePoint();
     if (medRequestPickupServicePoint != null) {
-      log.info("revertPrimaryRequestDeliveryInfo:: updating pickupServicePoint for primary request: {}", medRequest.getId());
-      primaryRequest.setPickupServicePoint(new RequestPickupServicePoint()
+      log.info("revertConfirmedRequestDeliveryInfo:: updating pickupServicePoint for request: {}",
+        mediatedRequest.getId());
+      confirmedRequest.setPickupServicePoint(new RequestPickupServicePoint()
         .name(medRequestPickupServicePoint.getName())
         .code(medRequestPickupServicePoint.getCode())
         .discoveryDisplayName(medRequestPickupServicePoint.getDiscoveryDisplayName())
         .pickupLocation(medRequestPickupServicePoint.getPickupLocation()));
     }
-    circulationRequestService.update(primaryRequest);
+    circulationRequestService.update(confirmedRequest);
   }
 
   @Override
