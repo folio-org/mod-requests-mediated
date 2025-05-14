@@ -1,6 +1,7 @@
 package org.folio.mr.service.impl;
 
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.CLOSED_CANCELLED;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.CLOSED_DECLINED;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.CLOSED_FILLED;
@@ -11,6 +12,7 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIV
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_NOT_YET_FILLED;
 import static org.folio.mr.support.ConversionUtils.asString;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +26,8 @@ import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.RequestDeliveryAddress;
 import org.folio.mr.domain.dto.RequestPickupServicePoint;
+import org.folio.mr.domain.dto.User;
+import org.folio.mr.domain.dto.UserPersonal;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.entity.MediatedRequestStep;
 import org.folio.mr.domain.entity.MediatedRequestWorkflow;
@@ -82,6 +86,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     return localRequest;
   }
 
+  // TODO: Do we need this update?
   private void updateLocalRequest(Request request) {
     log.info("updateLocalRequest:: updating local request {}", request::getId);
     circulationRequestService.update(request);
@@ -170,36 +175,61 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     MediatedRequest mediatedRequestDto = mediatedRequestMapper.mapEntityToDto(MediatedRequestEntity);
     MediatedRequestContext context = new MediatedRequestContext(mediatedRequestDto);
     findItem(context);
+    findRequester(context);
     extendMediatedRequest(context);
-    revertConfirmedRequestDeliveryInfo(mediatedRequestDto);
+    revertConfirmedRequestDeliveryInfo(context);
 
     log.debug("confirmItemArrival:: result: {}", mediatedRequestDto);
     return mediatedRequestDto;
   }
 
-  private void revertConfirmedRequestDeliveryInfo(MediatedRequest mediatedRequest) {
+  private void revertConfirmedRequestDeliveryInfo(MediatedRequestContext context) {
+    var mediatedRequest = context.getRequest();
     log.info("revertConfirmedRequestDeliveryInfo:: mediatedRequest: {}", mediatedRequest.getId());
+
+    // Reverting fulfillment preference
     var confirmedRequest = circulationRequestService.get(mediatedRequest.getConfirmedRequestId());
     confirmedRequest.setFulfillmentPreference(Request.FulfillmentPreferenceEnum.fromValue(
       mediatedRequest.getFulfillmentPreference().getValue()));
-    var deliveryAddress = mediatedRequest.getDeliveryAddress();
-    if (deliveryAddress != null) {
-      log.info("revertConfirmedRequestDeliveryInfo:: updating deliveryAddress for request: {}",
-        mediatedRequest.getId());
-      confirmedRequest.setDeliveryAddress(new RequestDeliveryAddress()
-        .region(deliveryAddress.getRegion())
-        .city(deliveryAddress.getCity())
-        .countryId(deliveryAddress.getCountryId())
-        .addressTypeId(deliveryAddress.getAddressTypeId())
-        .addressLine1(deliveryAddress.getAddressLine1())
-        .addressLine2(deliveryAddress.getAddressLine2())
-        .postalCode(deliveryAddress.getPostalCode()));
+
+    // Reverting delivery address info
+    var deliveryAddressTypeId = mediatedRequest.getDeliveryAddressTypeId();
+    if (deliveryAddressTypeId != null) {
+      log.info("revertConfirmedRequestDeliveryInfo:: updating deliveryAddressTypeId; " +
+          "confirmed request: {}, mediated request: {}", confirmedRequest::getId,
+        mediatedRequest::getId);
+      confirmedRequest.setDeliveryAddressTypeId(deliveryAddressTypeId);
+
+      var deliveryAddress = ofNullable(context.getRequester())
+        .map(User::getPersonal)
+        .map(UserPersonal::getAddresses)
+        .map(Collection::stream)
+        .flatMap(addresses -> addresses
+          .filter(address -> deliveryAddressTypeId.equals(address.getAddressTypeId()))
+          .findFirst())
+        .map(address -> new RequestDeliveryAddress()
+          .addressLine1(address.getAddressLine1())
+          .addressLine2(address.getAddressLine2())
+          .city(address.getCity())
+          .postalCode(address.getPostalCode())
+          .region(address.getRegion())
+          .countryId(address.getCountryId()));
+
+      if (deliveryAddress.isPresent()) {
+        log.info("revertConfirmedRequestDeliveryInfo:: updating deliveryAddress; " +
+            "confirmed request: {}, mediated request: {}", confirmedRequest::getId,
+          mediatedRequest::getId);
+        confirmedRequest.setDeliveryAddress(deliveryAddress.get());
+      }
     }
+
+    // Reverting pickup service point
     confirmedRequest.setPickupServicePointId(mediatedRequest.getPickupServicePointId());
     var medRequestPickupServicePoint = mediatedRequest.getPickupServicePoint();
     if (medRequestPickupServicePoint != null) {
-      log.info("revertConfirmedRequestDeliveryInfo:: updating pickupServicePoint for request: {}",
-        mediatedRequest.getId());
+      log.info("revertConfirmedRequestDeliveryInfo:: updating pickupServicePoint; " +
+          "confirmed request: {}, mediated request: {}", confirmedRequest::getId,
+        mediatedRequest::getId);
       confirmedRequest.setPickupServicePoint(new RequestPickupServicePoint()
         .name(medRequestPickupServicePoint.getName())
         .code(medRequestPickupServicePoint.getCode())

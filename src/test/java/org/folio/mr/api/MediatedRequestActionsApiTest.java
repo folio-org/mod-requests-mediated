@@ -149,7 +149,8 @@ class MediatedRequestActionsApiTest extends BaseIT {
         .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
     wireMockServer.verify(postRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
-      .withRequestBody(matchingJsonPath("fulfillmentPreference", equalTo("Delivery"))));
+      .withRequestBody(matchingJsonPath("fulfillmentPreference", equalTo("Hold Shelf")))
+      .withRequestBody(matchingJsonPath("pickupServicePointId", equalTo(INTERIM_SERVICE_POINT_ID))));
     wireMockServer.verify(putRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL + "/" + circulationRequestId))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
     wireMockServer.verify(0, postRequestedFor(urlMatching(ECS_TLR_URL)));
