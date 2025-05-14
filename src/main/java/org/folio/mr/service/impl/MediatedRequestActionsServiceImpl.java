@@ -225,16 +225,16 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
     // Reverting pickup service point
     confirmedRequest.setPickupServicePointId(mediatedRequest.getPickupServicePointId());
-    var medRequestPickupServicePoint = mediatedRequest.getPickupServicePoint();
-    if (medRequestPickupServicePoint != null) {
+    var mediatedRequestPickupServicePoint = mediatedRequest.getPickupServicePoint();
+    if (mediatedRequestPickupServicePoint != null) {
       log.info("revertConfirmedRequestDeliveryInfo:: updating pickupServicePoint; " +
           "confirmed request: {}, mediated request: {}", confirmedRequest::getId,
         mediatedRequest::getId);
       confirmedRequest.setPickupServicePoint(new RequestPickupServicePoint()
-        .name(medRequestPickupServicePoint.getName())
-        .code(medRequestPickupServicePoint.getCode())
-        .discoveryDisplayName(medRequestPickupServicePoint.getDiscoveryDisplayName())
-        .pickupLocation(medRequestPickupServicePoint.getPickupLocation()));
+        .name(mediatedRequestPickupServicePoint.getName())
+        .code(mediatedRequestPickupServicePoint.getCode())
+        .discoveryDisplayName(mediatedRequestPickupServicePoint.getDiscoveryDisplayName())
+        .pickupLocation(mediatedRequestPickupServicePoint.getPickupLocation()));
     }
     circulationRequestService.update(confirmedRequest);
   }

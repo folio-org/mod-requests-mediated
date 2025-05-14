@@ -17,6 +17,9 @@ import org.folio.mr.domain.dto.MediatedRequestPickupServicePoint;
 import org.folio.mr.domain.dto.MediatedRequestRequester;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndexCallNumberComponents;
+import org.folio.mr.domain.dto.User;
+import org.folio.mr.domain.dto.UserPersonal;
+import org.folio.mr.domain.dto.UserPersonalAddressesInner;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.entity.MediatedRequestWorkflowLog;
 
@@ -25,6 +28,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class TestEntityBuilder {
+  public static final UUID DELIVERY_ADDRESS_TYPE_ID = UUID.randomUUID();
 
   public static MediatedRequestEntity buildMediatedRequestEntity(MediatedRequest.StatusEnum status) {
     String[] statusAndStep = status.getValue().split(" - ");
@@ -51,7 +55,8 @@ public class TestEntityBuilder {
       .withRequesterLastName("Mediated")
       .withCallNumberPrefix("PFX")
       .withCallNumber("CN")
-      .withCallNumberSuffix("SFX");
+      .withCallNumberSuffix("SFX")
+      .withDeliveryAddressTypeId(DELIVERY_ADDRESS_TYPE_ID);
   }
 
   public static MediatedRequest buildMediatedRequest(MediatedRequest.StatusEnum status) {
@@ -90,12 +95,13 @@ public class TestEntityBuilder {
         .prefix("PFX")
         .callNumber("CN")
         .suffix("SFX")))
+      .deliveryAddressTypeId(DELIVERY_ADDRESS_TYPE_ID.toString())
       .deliveryAddress(new MediatedRequestDeliveryAddress()
-        .region("test reqion")
-        .countryId("test countryId")
+        .region("test region")
+        .countryId("test country")
         .city("test city")
-        .addressLine1("address line 1")
-        .addressLine2("address line 2")
+        .addressLine1("test address line 1")
+        .addressLine2("test address line 2")
         .postalCode("test postal code"));
   }
 
@@ -108,5 +114,19 @@ public class TestEntityBuilder {
     MediatedRequestWorkflowLog mediatedRequestWorkflowLog = new MediatedRequestWorkflowLog();
     mediatedRequestWorkflowLog.setActionDate(actionDate);
     return mediatedRequestWorkflowLog;
+  }
+
+  public static User buildUser(String userId) {
+    return new User()
+      .id(userId)
+      .personal(new UserPersonal()
+        .addAddressesItem(new UserPersonalAddressesInner()
+          .addressTypeId(DELIVERY_ADDRESS_TYPE_ID.toString())
+          .addressLine1("test address line 1")
+          .addressLine2("test address line 2")
+          .city("test city")
+          .postalCode("test postal code")
+          .region("test region")
+          .countryId("test country")));
   }
 }
