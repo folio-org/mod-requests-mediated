@@ -81,15 +81,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private Request createLocalRequest(MediatedRequestEntity mediatedRequest) {
-    Request localRequest = circulationRequestService.create(mediatedRequest);
-    updateLocalRequest(localRequest);
-    return localRequest;
-  }
-
-  // TODO: Do we need this update?
-  private void updateLocalRequest(Request request) {
-    log.info("updateLocalRequest:: updating local request {}", request::getId);
-    circulationRequestService.update(request);
+    return circulationRequestService.create(mediatedRequest);
   }
 
   private Request createEcsTlr(MediatedRequestEntity mediatedRequest) {
@@ -169,10 +161,10 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   @Override
   public MediatedRequest confirmItemArrival(String itemBarcode) {
     log.info("confirmItemArrival:: item barcode: {}", itemBarcode);
-    MediatedRequestEntity MediatedRequestEntity = findMediatedRequestForItemArrival(itemBarcode);
-    changeMediatedRequestStatus(MediatedRequestEntity, OPEN_ITEM_ARRIVED);
-    mediatedRequestsRepository.save(MediatedRequestEntity);
-    MediatedRequest mediatedRequestDto = mediatedRequestMapper.mapEntityToDto(MediatedRequestEntity);
+    MediatedRequestEntity mediatedRequestEntity = findMediatedRequestForItemArrival(itemBarcode);
+    changeMediatedRequestStatus(mediatedRequestEntity, OPEN_ITEM_ARRIVED);
+    mediatedRequestsRepository.save(mediatedRequestEntity);
+    MediatedRequest mediatedRequestDto = mediatedRequestMapper.mapEntityToDto(mediatedRequestEntity);
     MediatedRequestContext context = new MediatedRequestContext(mediatedRequestDto);
     findItem(context);
     findRequester(context);
@@ -195,9 +187,9 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     // Reverting delivery address info
     var deliveryAddressTypeId = mediatedRequest.getDeliveryAddressTypeId();
     if (deliveryAddressTypeId != null) {
-      log.info("revertConfirmedRequestDeliveryInfo:: updating deliveryAddressTypeId; " +
-          "confirmed request: {}, mediated request: {}", confirmedRequest::getId,
-        mediatedRequest::getId);
+      log.info("revertConfirmedRequestDeliveryInfo:: " +
+          "updating deliveryAddressTypeId; confirmed request: {}, mediated request: {}",
+        confirmedRequest::getId, mediatedRequest::getId);
       confirmedRequest.setDeliveryAddressTypeId(deliveryAddressTypeId);
 
       var deliveryAddress = ofNullable(context.getRequester())
@@ -216,9 +208,9 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
           .countryId(address.getCountryId()));
 
       if (deliveryAddress.isPresent()) {
-        log.info("revertConfirmedRequestDeliveryInfo:: updating deliveryAddress; " +
-            "confirmed request: {}, mediated request: {}", confirmedRequest::getId,
-          mediatedRequest::getId);
+        log.info("revertConfirmedRequestDeliveryInfo:: " +
+            "updating deliveryAddress; confirmed request: {}, mediated request: {}",
+          confirmedRequest::getId, mediatedRequest::getId);
         confirmedRequest.setDeliveryAddress(deliveryAddress.get());
       }
     }
@@ -227,9 +219,9 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     confirmedRequest.setPickupServicePointId(mediatedRequest.getPickupServicePointId());
     var mediatedRequestPickupServicePoint = mediatedRequest.getPickupServicePoint();
     if (mediatedRequestPickupServicePoint != null) {
-      log.info("revertConfirmedRequestDeliveryInfo:: updating pickupServicePoint; " +
-          "confirmed request: {}, mediated request: {}", confirmedRequest::getId,
-        mediatedRequest::getId);
+      log.info("revertConfirmedRequestDeliveryInfo:: " +
+          "updating pickupServicePoint; confirmed request: {}, mediated request: {}",
+        confirmedRequest::getId, mediatedRequest::getId);
       confirmedRequest.setPickupServicePoint(new RequestPickupServicePoint()
         .name(mediatedRequestPickupServicePoint.getName())
         .code(mediatedRequestPickupServicePoint.getCode())
