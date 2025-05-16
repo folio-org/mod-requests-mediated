@@ -1,10 +1,15 @@
 package org.folio.mr.service.impl;
 
+import static org.folio.mr.domain.dto.BatchIds.IdentifierTypeEnum.BARCODE;
+
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.folio.mr.client.SearchClient;
+import org.folio.mr.domain.dto.BatchIds;
 import org.folio.mr.domain.dto.ConsortiumItem;
+import org.folio.mr.domain.dto.ConsortiumItems;
 import org.folio.mr.domain.dto.SearchInstance;
 import org.folio.mr.service.ConsortiumService;
 import org.folio.mr.service.SearchService;
@@ -57,5 +62,26 @@ public class SearchServiceImpl implements SearchService {
       .stream()
       .flatMap(Collection::stream)
       .findFirst();
+  }
+
+  @Override
+  public Optional<ConsortiumItem> searchItemByBarcode(String itemBarcode) {
+    log.info("searchItem:: searching item by barcode: {}", itemBarcode);
+
+    Optional<ConsortiumItem> consortiumItem = searchItems(new BatchIds(BARCODE, List.of(itemBarcode)))
+      .getItems()
+      .stream()
+      .findFirst();
+
+    consortiumItem.ifPresentOrElse(
+      item -> log.info("searchItem:: item found: id={}, tenantId={}", item.getId(), item.getTenantId()),
+      () -> log.warn("searchItem:: item with barcode {} was not found", itemBarcode));
+
+    return consortiumItem;
+  }
+
+  @Override
+  public ConsortiumItems searchItems(BatchIds batchIds) {
+    return searchClient.searchItems(batchIds);
   }
 }

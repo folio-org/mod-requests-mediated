@@ -119,6 +119,27 @@
       ]
     },
     {
+      "id": "requests-mediated-loans",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/requests-mediated/loans/check-out-by-barcode",
+          "permissionsRequired": ["requests-mediated.loans.check-out-by-barcode.execute"],
+          "modulePermissions": [
+            "users.collection.get",
+            "users.item.get",
+            "circulation-storage.loan-policies.collection.get",
+            "circulation-storage.loan-policies.item.get",
+            "circulation-storage.loan-policies.item.post",
+            "circulation.check-out-by-barcode.post"
+          ]
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "2.0",
       "interfaceType": "system",
@@ -195,6 +216,11 @@
       "displayName": "requests-mediated - decline mediated request",
       "description": "Decline mediated request",
       "replaces": ["requests-mediated.decline-mediated-request.execute"]
+    },
+    {
+      "permissionName": "requests-mediated.loans.check-out-by-barcode.execute",
+      "displayName": "requests-mediated - check out an item by barcode",
+      "description": "Check out an item by barcode"
     },
     {
       "permissionName": "requests-mediated.internal.fetch-request-details.all",
@@ -287,6 +313,7 @@
         "user-tenants.collection.get",
         "consortium-search.items.collection.get",
         "consortium-search.items.item.get",
+        "consortium-search.items.batch.collection.get",
         "inventory-storage.items.item.get",
         "inventory-storage.items.collection.get",
         "inventory-storage.instances.item.get",
@@ -297,7 +324,10 @@
         "inventory-storage.location-units.libraries.collection.get",
         "mod-settings.entries.item.get",
         "mod-settings.entries.collection.get",
-        "mod-settings.global.read.circulation"
+        "mod-settings.global.read.circulation",
+        "circulation.check-out-by-barcode-dry-run.post",
+        "circulation-storage.loan-policies.collection.get",
+        "circulation-storage.loan-policies.item.get"
       ]
     }
   },

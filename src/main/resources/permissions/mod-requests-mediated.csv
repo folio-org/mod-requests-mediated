@@ -5,6 +5,7 @@ users.item.post
 user-tenants.collection.get
 consortium-search.items.collection.get
 consortium-search.items.item.get
+consortium-search.items.batch.collection.get
 inventory-storage.items.item.get
 inventory-storage.items.collection.get
 inventory-storage.instances.item.get
@@ -13,3 +14,6 @@ inventory-storage.locations.item.get
 inventory-storage.locations.collection.get
 inventory-storage.location-units.libraries.item.get
 inventory-storage.location-units.libraries.collection.get
+circulation.check-out-by-barcode-dry-run.post
+circulation-storage.loan-policies.collection.get
+circulation-storage.loan-policies.item.get
