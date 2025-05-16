@@ -65,6 +65,14 @@ public class CheckOutServiceImpl implements CheckOutService {
       .orElseThrow(() -> notFound("Failed to find item with barcode " + itemBarcode));
   }
 
+  private Optional<MediatedRequestEntity> findMediatedRequest(CheckOutRequest request) {
+    log.info("findMediatedRequest:: looking for mediated request awaiting pickup/delivery");
+    Optional<MediatedRequestEntity> result = mediatedRequestsRepository.findRequestForCheckOut(
+      request.getItemBarcode(), request.getUserBarcode());
+    log.info("findMediatedRequest:: mediated request found: {}", result.isPresent());
+    return result;
+  }
+
   private String resolveLoanPolicyId(CheckOutRequest request, String lendingTenantId,
     MediatedRequestEntity mediatedRequest) {
 
@@ -102,14 +110,6 @@ public class CheckOutServiceImpl implements CheckOutService {
     return fakePatronBarcode;
   }
 
-  private Optional<MediatedRequestEntity> findMediatedRequest(CheckOutRequest request) {
-    log.info("findMediatedRequest:: looking for mediated request awaiting pickup/delivery");
-    Optional<MediatedRequestEntity> result = mediatedRequestsRepository.findRequestForCheckOut(
-      request.getItemBarcode(), request.getUserBarcode());
-    log.info("findMediatedRequest:: mediated request found: {}", result.isPresent());
-    return result;
-  }
-
   public CheckOutDryRunResponse checkOutDryRun(CheckOutDryRunRequest request) {
     log.info("checkOutDryRun:: check-out dry run for item {}", request::getItemBarcode);
     return checkOutClient.checkOutDryRun(request);
@@ -121,12 +121,12 @@ public class CheckOutServiceImpl implements CheckOutService {
       () -> cloneLoanPolicy(loanPolicyId, lendingTenantId));
   }
 
-  private void cloneLoanPolicy(String loanPolicyId, String sourceTenantId) {
-    log.info("cloneLoanPolicy:: fetching loan policy {} from tenant {}", loanPolicyId, sourceTenantId);
-    LoanPolicy loanPolicy = systemUserService.executeSystemUserScoped(sourceTenantId,
+  private void cloneLoanPolicy(String loanPolicyId, String lendingTenantId) {
+    log.info("cloneLoanPolicy:: fetching loan policy {} from lending tenant", loanPolicyId);
+    LoanPolicy loanPolicy = systemUserService.executeSystemUserScoped(lendingTenantId,
         () -> circulationStorageService.fetchLoanPolicy(loanPolicyId))
       .orElseThrow(() -> notFound(String.format("Loan policy %s not found in tenant %s",
-        loanPolicyId, sourceTenantId)));
+        loanPolicyId, lendingTenantId)));
     log.info("cloneLoanPolicy:: cloning loan policy {} to local tenant", loanPolicyId);
     loanPolicy.setName(CLONED_LOAN_POLICY_PREFIX + loanPolicy.getName());
     circulationStorageService.createLoanPolicy(loanPolicy);
