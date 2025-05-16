@@ -31,6 +31,8 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class CheckOutServiceImpl implements CheckOutService {
 
+  private static final String CLONED_LOAN_POLICY_PREFIX = "COPY_OF_";
+
   private final SystemUserScopedExecutionService systemUserService;
   private final CheckOutClient checkOutClient;
   private final CirculationMapper circulationMapper;
@@ -102,12 +104,13 @@ public class CheckOutServiceImpl implements CheckOutService {
       .orElseThrow(() -> notFound(String.format("Loan policy %s not found in tenant %s",
         loanPolicyId, sourceTenantId)));
     log.info("cloneLoanPolicy:: cloning loan policy {} to local tenant", loanPolicyId);
+    loanPolicy.setName(CLONED_LOAN_POLICY_PREFIX + loanPolicy.getName());
     circulationStorageService.createLoanPolicy(loanPolicy);
   }
 
   private CheckOutResponse doCheckOut(CheckOutRequest request) {
     log.info("checkOut: checking out item {} for user {}", request::getItemBarcode,
-      request::getItemBarcode);
+      request::getUserBarcode);
     return checkOutClient.checkOut(request);
   }
 
