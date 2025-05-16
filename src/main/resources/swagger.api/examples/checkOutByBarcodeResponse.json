@@ -1,0 +1,75 @@
+{
+  "id": "d16f0c36-7105-4a46-98e8-736d0e3e7d3e",
+  "userId": "2205005b-ca51-4a04-87fd-938eefa8f6de",
+  "borrower": {
+    "firstName": "psych",
+    "lastName": "rick",
+    "barcode": "123",
+    "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b"
+  },
+  "itemId": "7212ba6a-8dcf-45a1-be9a-ffaa847c4423",
+  "loanPolicyId": "43198de5-f56a-4a53-a0bd-5a324418967a",
+  "loanPolicy": {
+    "name": "One Hour"
+  },
+  "overdueFinePolicyId": "cd3f6cac-fa17-4079-9fae-2fb28e521412",
+  "overdueFinePolicy": {
+    "name": "Overdue fine policy"
+  },
+  "lostItemPolicyId": "ed892c0e-52e0-4cd9-8133-c0ef07b4a709",
+  "lostItemPolicy": {
+    "name": "Lost item fee policy"
+  },
+  "item": {
+    "id": "7212ba6a-8dcf-45a1-be9a-ffaa847c4423",
+    "title": "A semantic web primer",
+    "barcode": "10101",
+    "status": {
+      "name": "Checked out"
+    },
+    "datesOfPublication": ["c2004"],
+    "physicalDescriptions": ["xx, 238 p. : ill. ; 24 cm."],
+    "instanceId": "5bf370e0-8cca-4d9c-82e4-5170ab2a0a39",
+    "callNumberComponents": {
+      "callNumber": "TK5105.88815 . A58 2004 FT MEADE"
+    },
+    "callNumber": "TK5105.88815 . A58 2004 FT MEADE",
+    "materialType": {
+      "name": "book"
+    },
+    "instanceHrid": "inst000000000022",
+    "copyNumber": "Copy 2",
+    "location": {
+      "name": "Main Library"
+    },
+    "holdingsRecordId": "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19",
+    "contributors": [{
+      "name": "Antoniou, Grigoris"
+    }, {
+      "name": "Van Harmelen, Frank"
+    }
+    ]
+  },
+  "loanDate": "2025-05-16T09:15:48.769+00:00",
+  "dueDate": "2025-05-16T10:15:48.769+00:00",
+  "action": "checkedout",
+  "feesAndFines": {
+    "amountRemainingToPay": 0.0
+  },
+  "metadata": {
+    "createdDate": "2025-05-16T09:15:50.691+00:00",
+    "createdByUserId": "b7e131c6-f6d5-424b-935b-089d3704cc55",
+    "updatedDate": "2025-05-16T09:15:50.691+00:00",
+    "updatedByUserId": "b7e131c6-f6d5-424b-935b-089d3704cc55"
+  },
+  "isDcb": false,
+  "itemEffectiveLocationIdAtCheckOut": "fcd64ce1-6995-48f0-840e-89ffa2288371",
+  "checkoutServicePointId": "3a40852d-49fd-4df2-a1f9-6e2641a6e91f",
+  "patronGroupAtCheckout": {
+    "id": "3684a786-6671-4268-8ed0-9db82ebca60b",
+    "name": "staff"
+  },
+  "status": {
+    "name": "Open"
+  }
+}
