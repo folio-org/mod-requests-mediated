@@ -1,9 +1,9 @@
 package org.folio.mr.service;
 
-import java.util.Optional;
+import java.util.Collection;
 
 import org.folio.mr.domain.entity.FakePatronLink;
 
 public interface FakePatronLinkService {
-  Optional<FakePatronLink> getFakePatronLink(String realUserId);
+  Collection<FakePatronLink> getFakePatronLinks(String realUserId);
 }

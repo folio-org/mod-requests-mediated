@@ -2,7 +2,9 @@ package org.folio.mr.service.impl;
 
 import static org.folio.mr.exception.ExceptionFactory.notFound;
 
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.folio.mr.client.CheckOutClient;
 import org.folio.mr.domain.dto.CheckOutDryRunRequest;
@@ -14,12 +16,14 @@ import org.folio.mr.domain.dto.LoanPolicy;
 import org.folio.mr.domain.dto.User;
 import org.folio.mr.domain.entity.FakePatronLink;
 import org.folio.mr.domain.mapper.CirculationMapper;
+import org.folio.mr.exception.ExceptionFactory;
 import org.folio.mr.service.CheckOutService;
 import org.folio.mr.service.CirculationStorageService;
 import org.folio.mr.service.ConsortiumService;
 import org.folio.mr.service.FakePatronLinkService;
 import org.folio.mr.service.SearchService;
 import org.folio.mr.service.UserService;
+import org.folio.mr.support.CqlQuery;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +48,7 @@ public class CheckOutServiceImpl implements CheckOutService {
 
   @Override
   public CheckOutResponse checkOut(CheckOutRequest request) {
+    log.info("checkOut:: userBarcode={}, itemBarcode={}", request::getUserBarcode, request::getItemBarcode);
     String lendingTenantId = findItem(request.getItemBarcode()).getTenantId();
     if (!consortiumService.getCurrentTenantId().equals(lendingTenantId)) {
       String loanPolicyId = resolveLoanPolicyId(request, lendingTenantId);
@@ -73,16 +78,37 @@ public class CheckOutServiceImpl implements CheckOutService {
 
   private String resolveFakeUserBarcode(String realUserBarcode) {
     String barcode = userService.fetchUserByBarcode(realUserBarcode)
-      .map(User::getId)
-      .flatMap(fakePatronLinkService::getFakePatronLink)
-      .map(FakePatronLink::getFakeUserId)
-      .map(UUID::toString)
-      .map(userService::fetchUser)
+      .map(this::findFakeUser)
       .map(User::getBarcode)
       .orElseThrow();
 
-    log.info("resolveFakeUserBarcode:: user barcode is {}", barcode);
+    log.info("resolveFakeUserBarcode:: fake user barcode is {}", barcode);
     return barcode;
+  }
+
+  private User findFakeUser(User realUser) {
+    String realUserId = realUser.getId();
+    log.info("findFakeUser:: looking for fake patron for user {}", realUserId);
+    Set<String> fakeUserIds = fakePatronLinkService.getFakePatronLinks(realUserId)
+      .stream()
+      .map(FakePatronLink::getFakeUserId)
+      .map(UUID::toString)
+      .collect(Collectors.toSet());
+
+    if (fakeUserIds.isEmpty()) {
+      throw ExceptionFactory.notFound("Failed to find fake patron link for user " + realUserId);
+    }
+
+    CqlQuery query = CqlQuery.exactMatch("patronGroup", realUser.getPatronGroup())
+      .and(CqlQuery.exactMatchAnyId(fakeUserIds));
+
+    User fakeUser = userService.fetchUsers(query, 1)
+      .stream()
+      .findFirst()
+      .orElseThrow(() -> notFound("Failed to find fake patron for user " + realUserId));
+
+    log.info("findFakeUser:: fake patron for user {} found", realUserId);
+    return fakeUser;
   }
 
   public CheckOutDryRunResponse checkOutDryRun(CheckOutDryRunRequest request) {

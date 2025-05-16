@@ -1,6 +1,6 @@
 package org.folio.mr.service.impl;
 
-import java.util.Optional;
+import java.util.Collection;
 import java.util.UUID;
 
 import org.folio.mr.domain.entity.FakePatronLink;
@@ -19,10 +19,10 @@ public class FakePatronLinkServiceImpl implements FakePatronLinkService {
   private final FakePatronLinkRepository fakePatronLinkRepository;
 
   @Override
-  public Optional<FakePatronLink> getFakePatronLink(String realUserId) {
+  public Collection<FakePatronLink> getFakePatronLinks(String realUserId) {
     log.info("getFakePatronLink:: fetching fake patron link for real user {}", realUserId);
-    Optional<FakePatronLink> result = fakePatronLinkRepository.findByUserId(UUID.fromString(realUserId));
-    log.info("getFakePatronLink:: fake patron link found: {}", result::isPresent);
-    return result;
+    Collection<FakePatronLink> links = fakePatronLinkRepository.findByUserId(UUID.fromString(realUserId));
+    log.info("getFakePatronLink:: {} fake patron links found", links::size);
+    return links;
   }
 }

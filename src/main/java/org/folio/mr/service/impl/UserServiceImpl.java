@@ -2,6 +2,7 @@ package org.folio.mr.service.impl;
 
 import static org.folio.mr.support.CqlQuery.exactMatch;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.folio.mr.client.UserClient;
@@ -52,5 +53,13 @@ public class UserServiceImpl implements UserService {
       .findFirst();
     log.info("fetchUserByBarcode:: user found: {}", result.isPresent());
     return result;
+  }
+
+  @Override
+  public List<User> fetchUsers(CqlQuery query, int limit) {
+    log.info("fetchUsers:: fetching users by query: {}", query);
+    List<User> users = userClient.getByQuery(query, limit).getUsers();
+    log.info("fetchUsers:: {} user found", users::size);
+    return users;
   }
 }
