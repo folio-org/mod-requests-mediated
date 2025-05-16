@@ -52,10 +52,14 @@ public class CheckOutServiceImpl implements CheckOutService {
   public CheckOutResponse checkOut(CheckOutRequest request) {
     log.info("checkOut:: userBarcode={}, itemBarcode={}", request::getUserBarcode, request::getItemBarcode);
     String lendingTenantId = findItem(request.getItemBarcode()).getTenantId();
-    if (!consortiumService.getCurrentTenantId().equals(lendingTenantId)) {
-      String loanPolicyId = resolveLoanPolicyId(request, lendingTenantId);
+    Optional<MediatedRequestEntity> mediatedRequest = findMediatedRequest(request);
+    if (mediatedRequest.isPresent() && !consortiumService.getCurrentTenantId().equals(lendingTenantId)) {
+      log.info("checkOut:: attempting to copy loan policy from lending to local tenant");
+      String loanPolicyId = resolveLoanPolicyId(request, lendingTenantId, mediatedRequest.get());
       cloneLoanPolicyToLocalTenant(loanPolicyId, lendingTenantId);
       request.setForceLoanPolicyId(UUID.fromString(loanPolicyId));
+    } else {
+      log.info("checkOut:: no need to clone loan policy, performing  regular check-out");
     }
     return doCheckOut(request);
   }
@@ -65,30 +69,32 @@ public class CheckOutServiceImpl implements CheckOutService {
       .orElseThrow(() -> notFound("Failed to find item with barcode " + itemBarcode));
   }
 
-  private String resolveLoanPolicyId(CheckOutRequest request, String lendingTenantId) {
+  private String resolveLoanPolicyId(CheckOutRequest request, String lendingTenantId,
+    MediatedRequestEntity mediatedRequest) {
+
     log.info("resolveLoanPolicy:: resolving loan policy for user {} and item {} in tenant {}",
       request::getUserBarcode, request::getItemBarcode, () -> lendingTenantId);
-    String fakeUserBarcode = resolveFakeRequesterBarcode(request, lendingTenantId);
+    String fakeUserBarcode = resolveFakeRequesterBarcode(mediatedRequest, lendingTenantId);
     CheckOutDryRunRequest dryRunRequest = circulationMapper.toDryRunRequest(request)
       .userBarcode(fakeUserBarcode);
-    CheckOutDryRunResponse dryRunResponse = systemUserService.executeSystemUserScoped(
-      lendingTenantId, () -> checkOutDryRun(dryRunRequest));
-    String loanPolicyId = dryRunResponse.getLoanPolicyId();
+    String loanPolicyId = systemUserService.executeSystemUserScoped(
+      lendingTenantId, () -> checkOutDryRun(dryRunRequest).getLoanPolicyId());
     log.info("resolveLoanPolicy:: resolved loan policy ID: {}", loanPolicyId);
     return loanPolicyId;
   }
 
-  private String resolveFakeRequesterBarcode(CheckOutRequest request, String lendingTenantId) {
-    MediatedRequestEntity mediatedRequest = findMediatedRequest(request);
+  private String resolveFakeRequesterBarcode(MediatedRequestEntity mediatedRequest,
+    String lendingTenantId) {
+
     String confirmedRequestId = mediatedRequest.getConfirmedRequestId().toString();
     log.info("resolveFakeRequesterBarcode:: mediated request found: {}, confirmed request ID: {}",
       mediatedRequest.getId(), confirmedRequestId);
 
-    // corresponding circulation request in lending tenant has the same ID
+    // corresponding request in lending tenant has the same ID
     Request requestInLendingTenant = systemUserService.executeSystemUserScoped(lendingTenantId,
       () -> circulationRequestService.get(confirmedRequestId));
 
-    log.info("resolveFakeRequesterBarcode:: request {} in tenant {} found",
+    log.info("resolveFakeRequesterBarcode:: request {} found in tenant {}",
       confirmedRequestId, lendingTenantId);
 
     String fakePatronBarcode = Optional.of(requestInLendingTenant)
@@ -100,16 +106,16 @@ public class CheckOutServiceImpl implements CheckOutService {
     return fakePatronBarcode;
   }
 
-  private MediatedRequestEntity findMediatedRequest(CheckOutRequest request) {
+  private Optional<MediatedRequestEntity> findMediatedRequest(CheckOutRequest request) {
     log.info("findMediatedRequest:: looking for mediated request awaiting pickup/delivery");
-    return mediatedRequestsRepository.findRequestForCheckOut(
-        request.getItemBarcode(), request.getUserBarcode())
-      .orElseThrow(() -> notFound("Failed to find request for check-out"));
+    Optional<MediatedRequestEntity> result = mediatedRequestsRepository.findRequestForCheckOut(
+      request.getItemBarcode(), request.getUserBarcode());
+    log.info("findMediatedRequest:: mediated request found: {}", result.isPresent());
+    return result;
   }
 
   public CheckOutDryRunResponse checkOutDryRun(CheckOutDryRunRequest request) {
-    log.info("checkOutDryRun:: check-out dry run for user {} and item {}",
-      request::getUserBarcode, request::getItemBarcode);
+    log.info("checkOutDryRun:: check-out dry run for item {}", request::getItemBarcode);
     return checkOutClient.checkOutDryRun(request);
   }
 
