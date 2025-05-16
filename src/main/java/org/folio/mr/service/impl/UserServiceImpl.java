@@ -1,7 +1,5 @@
 package org.folio.mr.service.impl;
 
-import java.util.Optional;
-
 import org.folio.mr.client.UserClient;
 import org.folio.mr.client.UserGroupClient;
 import org.folio.mr.domain.dto.User;
@@ -23,9 +21,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public User fetchUser(String id) {
     log.info("fetchUser:: fetching user {}", id);
-    Optional<User> user = userClient.get(id);
-    log.info("fetchUser:: user found: {}", user.isPresent());
-    return user.orElse(null);
+    return userClient.get(id).orElse(null);
   }
 
   @Override
@@ -39,5 +35,4 @@ public class UserServiceImpl implements UserService {
     log.info("create:: creating user {}", user.getId());
     return userClient.postUser(user);
   }
-
 }
