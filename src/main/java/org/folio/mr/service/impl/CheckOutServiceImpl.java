@@ -21,9 +21,7 @@ import org.folio.mr.service.CheckOutService;
 import org.folio.mr.service.CirculationRequestService;
 import org.folio.mr.service.CirculationStorageService;
 import org.folio.mr.service.ConsortiumService;
-import org.folio.mr.service.FakePatronLinkService;
 import org.folio.mr.service.SearchService;
-import org.folio.mr.service.UserService;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
@@ -40,8 +38,6 @@ public class CheckOutServiceImpl implements CheckOutService {
   private final SystemUserScopedExecutionService systemUserService;
   private final CheckOutClient checkOutClient;
   private final CirculationMapper circulationMapper;
-  private final FakePatronLinkService fakePatronLinkService;
-  private final UserService userService;
   private final SearchService searchService;
   private final CirculationStorageService circulationStorageService;
   private final ConsortiumService consortiumService;
@@ -90,7 +86,7 @@ public class CheckOutServiceImpl implements CheckOutService {
     log.info("resolveFakeRequesterBarcode:: mediated request found: {}, confirmed request ID: {}",
       mediatedRequest.getId(), confirmedRequestId);
 
-    // corresponding request in lending tenant has the same ID
+    // corresponding request in lending tenant should have the same ID
     Request requestInLendingTenant = systemUserService.executeSystemUserScoped(lendingTenantId,
       () -> circulationRequestService.get(confirmedRequestId));
 

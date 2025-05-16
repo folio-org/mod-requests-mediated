@@ -1,8 +1,5 @@
 package org.folio.mr.service.impl;
 
-import static org.folio.mr.support.CqlQuery.exactMatch;
-
-import java.util.List;
 import java.util.Optional;
 
 import org.folio.mr.client.UserClient;
@@ -10,7 +7,6 @@ import org.folio.mr.client.UserGroupClient;
 import org.folio.mr.domain.dto.User;
 import org.folio.mr.domain.dto.UserGroup;
 import org.folio.mr.service.UserService;
-import org.folio.mr.support.CqlQuery;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -44,22 +40,4 @@ public class UserServiceImpl implements UserService {
     return userClient.postUser(user);
   }
 
-  @Override
-  public Optional<User> fetchUserByBarcode(String barcode) {
-    log.info("fetchUserByBarcode:: fetching user by barcode {}", barcode);
-    Optional<User> result = userClient.getByQuery(exactMatch("barcode", barcode), 1)
-      .getUsers()
-      .stream()
-      .findFirst();
-    log.info("fetchUserByBarcode:: user found: {}", result.isPresent());
-    return result;
-  }
-
-  @Override
-  public List<User> fetchUsers(CqlQuery query, int limit) {
-    log.info("fetchUsers:: fetching users by query: {}", query);
-    List<User> users = userClient.getByQuery(query, limit).getUsers();
-    log.info("fetchUsers:: {} user found", users::size);
-    return users;
-  }
 }
