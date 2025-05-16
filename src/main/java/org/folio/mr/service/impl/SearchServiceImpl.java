@@ -82,6 +82,8 @@ public class SearchServiceImpl implements SearchService {
 
   @Override
   public ConsortiumItems searchItems(BatchIds batchIds) {
-    return searchClient.searchItems(batchIds);
+    // this search can be performed in central tenant only!
+    return executionService.executeSystemUserScoped(consortiumService.getCentralTenantId(),
+      () -> searchClient.searchItems(batchIds));
   }
 }

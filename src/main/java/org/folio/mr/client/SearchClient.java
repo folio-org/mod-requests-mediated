@@ -21,6 +21,7 @@ public interface SearchClient {
   @GetMapping("/consortium/item/{itemId}")
   ConsortiumItem searchItem(@PathVariable("itemId") String itemId);
 
+  // this search can be performed in central tenant only!
   @PostMapping("/consortium/batch/items")
   ConsortiumItems searchItems(@RequestBody BatchIds batchIds);
 
