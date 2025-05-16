@@ -20,7 +20,7 @@ public class FakePatronLinkServiceImpl implements FakePatronLinkService {
 
   @Override
   public Collection<FakePatronLink> getFakePatronLinks(String realUserId) {
-    log.info("getFakePatronLink:: fetching fake patron link for real user {}", realUserId);
+    log.info("getFakePatronLink:: fetching fake patron links for real user {}", realUserId);
     Collection<FakePatronLink> links = fakePatronLinkRepository.findByUserId(UUID.fromString(realUserId));
     log.info("getFakePatronLink:: {} fake patron links found", links::size);
     return links;

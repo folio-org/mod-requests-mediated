@@ -129,8 +129,6 @@
           "pathPattern": "/requests-mediated/loans/check-out-by-barcode",
           "permissionsRequired": ["requests-mediated.loans.check-out-by-barcode.execute"],
           "modulePermissions": [
-            "users.collection.get",
-            "users.item.get",
             "circulation-storage.loan-policies.collection.get",
             "circulation-storage.loan-policies.item.get",
             "circulation-storage.loan-policies.item.post",
@@ -294,6 +292,10 @@
     {
       "id": "user-tenants",
       "version": "1.0"
+    },
+    {
+      "id": "request-storage",
+      "version": "6.1"
     }
   ],
   "optional": [
@@ -327,7 +329,9 @@
         "mod-settings.global.read.circulation",
         "circulation.check-out-by-barcode-dry-run.post",
         "circulation-storage.loan-policies.collection.get",
-        "circulation-storage.loan-policies.item.get"
+        "circulation-storage.loan-policies.item.get",
+        "circulation-storage.requests.collection.get",
+        "circulation-storage.requests.item.get"
       ]
     }
   },

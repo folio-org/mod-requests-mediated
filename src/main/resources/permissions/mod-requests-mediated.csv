@@ -17,3 +17,5 @@ inventory-storage.location-units.libraries.collection.get
 circulation.check-out-by-barcode-dry-run.post
 circulation-storage.loan-policies.collection.get
 circulation-storage.loan-policies.item.get
+circulation-storage.requests.collection.get
+circulation-storage.requests.item.get
