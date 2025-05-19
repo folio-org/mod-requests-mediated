@@ -18,7 +18,6 @@ import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.domain.mapper.CirculationMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.CheckOutService;
-import org.folio.mr.service.CirculationRequestService;
 import org.folio.mr.service.CirculationStorageService;
 import org.folio.mr.service.ConsortiumService;
 import org.folio.mr.service.SearchService;
@@ -42,20 +41,24 @@ public class CheckOutServiceImpl implements CheckOutService {
   private final CirculationStorageService circulationStorageService;
   private final ConsortiumService consortiumService;
   private final MediatedRequestsRepository mediatedRequestsRepository;
-  private final CirculationRequestService circulationRequestService;
 
   @Override
   public CheckOutResponse checkOut(CheckOutRequest request) {
     log.info("checkOut:: userBarcode={}, itemBarcode={}", request::getUserBarcode, request::getItemBarcode);
-    String lendingTenantId = findItem(request.getItemBarcode()).getTenantId();
     Optional<MediatedRequestEntity> mediatedRequest = findMediatedRequest(request);
-    if (mediatedRequest.isPresent() && !consortiumService.getCurrentTenantId().equals(lendingTenantId)) {
-      log.info("checkOut:: attempting to copy loan policy from lending to local tenant");
-      String loanPolicyId = resolveLoanPolicyId(request, lendingTenantId, mediatedRequest.get());
-      cloneLoanPolicyToLocalTenant(loanPolicyId, lendingTenantId);
-      request.setForceLoanPolicyId(UUID.fromString(loanPolicyId));
+    if (mediatedRequest.isPresent()) {
+      log.info("checkOut:: mediated request is found");
+      String lendingTenantId = findItem(request.getItemBarcode()).getTenantId();
+      if (consortiumService.getCurrentTenantId().equals(lendingTenantId)) {
+        log.info("checkOut:: item was found in local tenant, no need to clone loan policy");
+      } else {
+        log.info("checkOut:: attempting to copy loan policy from lending to local tenant");
+        String loanPolicyId = resolveLoanPolicyId(request, lendingTenantId, mediatedRequest.get());
+        cloneLoanPolicyToLocalTenant(loanPolicyId, lendingTenantId);
+        request.setForceLoanPolicyId(UUID.fromString(loanPolicyId));
+      }
     } else {
-      log.info("checkOut:: no need to clone loan policy, performing  regular check-out");
+      log.info("checkOut:: mediated request was not found");
     }
     return doCheckOut(request);
   }
@@ -67,10 +70,8 @@ public class CheckOutServiceImpl implements CheckOutService {
 
   private Optional<MediatedRequestEntity> findMediatedRequest(CheckOutRequest request) {
     log.info("findMediatedRequest:: looking for mediated request awaiting pickup/delivery");
-    Optional<MediatedRequestEntity> result = mediatedRequestsRepository.findRequestForCheckOut(
+    return mediatedRequestsRepository.findRequestForCheckOut(
       request.getItemBarcode(), request.getUserBarcode());
-    log.info("findMediatedRequest:: mediated request found: {}", result.isPresent());
-    return result;
   }
 
   private String resolveLoanPolicyId(CheckOutRequest request, String lendingTenantId,
@@ -94,9 +95,10 @@ public class CheckOutServiceImpl implements CheckOutService {
     log.info("resolveFakeRequesterBarcode:: mediated request found: {}, confirmed request ID: {}",
       mediatedRequest.getId(), confirmedRequestId);
 
-    // corresponding request in lending tenant should have the same ID
+    // corresponding request in lending tenant should have the same ID as confirmed request
     Request requestInLendingTenant = systemUserService.executeSystemUserScoped(lendingTenantId,
-      () -> circulationRequestService.get(confirmedRequestId));
+      () -> circulationStorageService.fetchRequest(confirmedRequestId))
+      .orElseThrow(() -> notFound("Failed to find request " + confirmedRequestId));
 
     log.info("resolveFakeRequesterBarcode:: request {} found in tenant {}",
       confirmedRequestId, lendingTenantId);
@@ -133,7 +135,7 @@ public class CheckOutServiceImpl implements CheckOutService {
   }
 
   private CheckOutResponse doCheckOut(CheckOutRequest request) {
-    log.info("checkOut: checking out item {} for user {}", request::getItemBarcode,
+    log.info("checkOut: checking out item {} to user {}", request::getItemBarcode,
       request::getUserBarcode);
     return checkOutClient.checkOut(request);
   }
