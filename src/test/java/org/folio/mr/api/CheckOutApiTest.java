@@ -1,5 +1,6 @@
 package org.folio.mr.api;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -37,6 +38,8 @@ import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.test.types.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
@@ -354,6 +357,61 @@ class CheckOutApiTest extends BaseIT {
     wireMockServer.verify(0, getRequestedFor(urlMatching(LOAN_POLICIES_URL + ".*")));
     wireMockServer.verify(0, postRequestedFor(urlEqualTo(LOAN_POLICIES_URL)));
     wireMockServer.verify(0, postRequestedFor(urlEqualTo(CIRCULATION_CHECK_OUT_URL)));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = { 400, 422, 500 })
+  @SneakyThrows
+  void circulationCheckOutErrorsAreForwarded(int checkOutResponseStatus) {
+    MediatedRequestEntity mediatedRequest = buildMediatedRequestEntity(OPEN_AWAITING_PICKUP)
+      .withRequesterBarcode(REAL_USER_BARCODE)
+      .withItemBarcode(ITEM_BARCODE)
+      .withConfirmedRequestId(CONFIRMED_REQUEST_ID);
+
+    mediatedRequestsRepository.save(mediatedRequest);
+
+    mockHelper.mockItemBatchSearch(TENANT_ID_CENTRAL, buildBatchIds(),
+      buildItemBatchSearchResponse(ITEM_BARCODE, TENANT_ID_COLLEGE));
+
+    mockHelper.mockGetRequest(buildRequest(mediatedRequest, FAKE_USER_BARCODE), TENANT_ID_COLLEGE);
+
+    mockHelper.mockCirculationCheckOutDryRun(
+      buildCheckOutDryRunRequest(FAKE_USER_BARCODE, ITEM_BARCODE),
+      buildCheckOutDryRunResponse(LOAN_POLICY_ID.toString()),
+      TENANT_ID_COLLEGE);
+
+    LoanPolicy existingClonedLoanPolicy = buildLoanPolicy("COPY_OF_Test loan policy");
+    mockHelper.mockGetLoanPolicy(existingClonedLoanPolicy, TENANT_ID_CONSORTIUM);
+
+    CheckOutRequest circulationCheckOutRequest = buildCheckOutRequest(REAL_USER_BARCODE, ITEM_BARCODE)
+      .forceLoanPolicyId(LOAN_POLICY_ID);
+
+    wireMockServer.stubFor(post(urlEqualTo(CIRCULATION_CHECK_OUT_URL))
+      .withRequestBody(equalTo(asJsonString(circulationCheckOutRequest)))
+      .withHeader(TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(aResponse().withStatus(checkOutResponseStatus)
+        .withBody("Response status is " + checkOutResponseStatus)));
+
+    // check out
+    checkOut(buildCheckOutRequest(REAL_USER_BARCODE, ITEM_BARCODE))
+      .andExpect(status().is(checkOutResponseStatus))
+      .andExpect(content().string("Response status is " + checkOutResponseStatus));
+
+    wireMockServer.verify(1, postRequestedFor(urlEqualTo(ITEM_BATCH_SEARCH_URL))
+      .withHeader(TENANT, equalTo(TENANT_ID_CENTRAL)));
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(CIRCULATION_STORAGE_REQUESTS_URL + "/" +
+      mediatedRequest.getConfirmedRequestId().toString()))
+      .withHeader(TENANT, equalTo(TENANT_ID_COLLEGE)));
+    wireMockServer.verify(1, postRequestedFor(urlEqualTo(CIRCULATION_CHECK_OUT_DRY_RUN_URL))
+      .withHeader(TENANT, equalTo(TENANT_ID_COLLEGE)));
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(LOAN_POLICIES_URL + "/" + LOAN_POLICY_ID))
+      .withHeader(TENANT, equalTo(TENANT_ID_CONSORTIUM)));
+    wireMockServer.verify(0, getRequestedFor(urlEqualTo(LOAN_POLICIES_URL + "/" + LOAN_POLICY_ID))
+      .withHeader(TENANT, equalTo(TENANT_ID_COLLEGE)));
+    wireMockServer.verify(0, postRequestedFor(urlEqualTo(LOAN_POLICIES_URL))
+      .withHeader(TENANT, equalTo(TENANT_ID_CONSORTIUM)));
+    wireMockServer.verify(1, postRequestedFor(urlEqualTo(CIRCULATION_CHECK_OUT_URL))
+      .withHeader(TENANT, equalTo(TENANT_ID_CONSORTIUM)));
   }
 
   private static LoanPolicy buildLoanPolicy(String Test_loan_policy) {
