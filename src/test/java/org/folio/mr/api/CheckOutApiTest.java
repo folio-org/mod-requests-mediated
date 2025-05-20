@@ -1,12 +1,16 @@
 package org.folio.mr.api;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequestEntity;
 import static org.folio.spring.integration.XOkapiHeaders.TENANT;
@@ -257,6 +261,99 @@ class CheckOutApiTest extends BaseIT {
     wireMockServer.verify(0, postRequestedFor(urlEqualTo(LOAN_POLICIES_URL)));
     wireMockServer.verify(1, postRequestedFor(urlEqualTo(CIRCULATION_CHECK_OUT_URL))
       .withHeader(TENANT, equalTo(TENANT_ID_CONSORTIUM)));
+  }
+
+  @Test
+  @SneakyThrows
+  void checkOutFailsWithWhenItemIsNotFound() {
+    MediatedRequestEntity mediatedRequest = buildMediatedRequestEntity(OPEN_AWAITING_PICKUP)
+      .withRequesterBarcode(REAL_USER_BARCODE)
+      .withItemBarcode(ITEM_BARCODE)
+      .withConfirmedRequestId(CONFIRMED_REQUEST_ID);
+
+    mediatedRequestsRepository.save(mediatedRequest);
+
+    wireMockServer.stubFor(post(urlPathEqualTo(ITEM_BATCH_SEARCH_URL))
+      .withRequestBody(equalTo(asJsonString(buildBatchIds())))
+      .withHeader(TENANT, equalTo(TENANT_ID_CENTRAL))
+      .willReturn(notFound()));
+
+    checkOut(buildCheckOutRequest(REAL_USER_BARCODE, ITEM_BARCODE))
+      .andExpect(status().isNotFound());
+
+    wireMockServer.verify(1, postRequestedFor(urlEqualTo(ITEM_BATCH_SEARCH_URL))
+      .withHeader(TENANT, equalTo(TENANT_ID_CENTRAL)));
+    wireMockServer.verify(0, getRequestedFor(urlMatching(CIRCULATION_STORAGE_REQUESTS_URL + ".*")));
+    wireMockServer.verify(0, postRequestedFor(urlEqualTo(CIRCULATION_CHECK_OUT_DRY_RUN_URL)));
+    wireMockServer.verify(0, getRequestedFor(urlMatching(LOAN_POLICIES_URL + ".*")));
+    wireMockServer.verify(0, postRequestedFor(urlEqualTo(LOAN_POLICIES_URL)));
+    wireMockServer.verify(0, postRequestedFor(urlEqualTo(CIRCULATION_CHECK_OUT_URL)));
+  }
+
+  @Test
+  @SneakyThrows
+  void checkOutFailsWhenSecondaryRequestIsNotFound() {
+    MediatedRequestEntity mediatedRequest = buildMediatedRequestEntity(OPEN_AWAITING_PICKUP)
+      .withRequesterBarcode(REAL_USER_BARCODE)
+      .withItemBarcode(ITEM_BARCODE)
+      .withConfirmedRequestId(CONFIRMED_REQUEST_ID);
+
+    mediatedRequestsRepository.save(mediatedRequest);
+
+    mockHelper.mockItemBatchSearch(TENANT_ID_CENTRAL, buildBatchIds(),
+      buildItemBatchSearchResponse(ITEM_BARCODE, TENANT_ID_COLLEGE));
+
+    wireMockServer.stubFor(get(urlPathEqualTo(CIRCULATION_STORAGE_REQUESTS_URL + "/" + CONFIRMED_REQUEST_ID))
+      .withHeader(TENANT, equalTo(TENANT_ID_COLLEGE))
+      .willReturn(notFound()));
+
+    checkOut(buildCheckOutRequest(REAL_USER_BARCODE, ITEM_BARCODE))
+      .andExpect(status().isNotFound());
+
+    wireMockServer.verify(1, postRequestedFor(urlEqualTo(ITEM_BATCH_SEARCH_URL))
+      .withHeader(TENANT, equalTo(TENANT_ID_CENTRAL)));
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(
+      CIRCULATION_STORAGE_REQUESTS_URL + "/" + CONFIRMED_REQUEST_ID))
+      .withHeader(TENANT, equalTo(TENANT_ID_COLLEGE)));
+    wireMockServer.verify(0, postRequestedFor(urlEqualTo(CIRCULATION_CHECK_OUT_DRY_RUN_URL)));
+    wireMockServer.verify(0, getRequestedFor(urlMatching(LOAN_POLICIES_URL + ".*")));
+    wireMockServer.verify(0, postRequestedFor(urlEqualTo(LOAN_POLICIES_URL)));
+    wireMockServer.verify(0, postRequestedFor(urlEqualTo(CIRCULATION_CHECK_OUT_URL)));
+  }
+
+  @Test
+  @SneakyThrows
+  void checkOutFailsWhenDryRunFails() {
+    MediatedRequestEntity mediatedRequest = buildMediatedRequestEntity(OPEN_AWAITING_PICKUP)
+      .withRequesterBarcode(REAL_USER_BARCODE)
+      .withItemBarcode(ITEM_BARCODE)
+      .withConfirmedRequestId(CONFIRMED_REQUEST_ID);
+
+    mediatedRequestsRepository.save(mediatedRequest);
+
+    mockHelper.mockItemBatchSearch(TENANT_ID_CENTRAL, buildBatchIds(),
+      buildItemBatchSearchResponse(ITEM_BARCODE, TENANT_ID_COLLEGE));
+
+    mockHelper.mockGetRequest(buildRequest(mediatedRequest, FAKE_USER_BARCODE), TENANT_ID_COLLEGE);
+
+    wireMockServer.stubFor(post(urlEqualTo(CIRCULATION_CHECK_OUT_DRY_RUN_URL))
+      .withRequestBody(equalToJson(asJsonString(buildCheckOutDryRunRequest(FAKE_USER_BARCODE, ITEM_BARCODE))))
+      .withHeader(TENANT, equalTo(TENANT_ID_COLLEGE))
+      .willReturn(serverError()));
+
+    checkOut(buildCheckOutRequest(REAL_USER_BARCODE, ITEM_BARCODE))
+      .andExpect(status().is5xxServerError());
+
+    wireMockServer.verify(1, postRequestedFor(urlEqualTo(ITEM_BATCH_SEARCH_URL))
+      .withHeader(TENANT, equalTo(TENANT_ID_CENTRAL)));
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(
+      CIRCULATION_STORAGE_REQUESTS_URL + "/" +  CONFIRMED_REQUEST_ID))
+      .withHeader(TENANT, equalTo(TENANT_ID_COLLEGE)));
+    wireMockServer.verify(1, postRequestedFor(urlEqualTo(CIRCULATION_CHECK_OUT_DRY_RUN_URL))
+      .withHeader(TENANT, equalTo(TENANT_ID_COLLEGE)));
+    wireMockServer.verify(0, getRequestedFor(urlMatching(LOAN_POLICIES_URL + ".*")));
+    wireMockServer.verify(0, postRequestedFor(urlEqualTo(LOAN_POLICIES_URL)));
+    wireMockServer.verify(0, postRequestedFor(urlEqualTo(CIRCULATION_CHECK_OUT_URL)));
   }
 
   private static LoanPolicy buildLoanPolicy(String Test_loan_policy) {
