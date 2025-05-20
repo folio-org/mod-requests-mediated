@@ -202,17 +202,14 @@ class CheckOutApiTest extends BaseIT {
   @Test
   @SneakyThrows
   void regularCheckOutWhenMediatedRequestIsNotFound() {
-    // mock item search
     mockHelper.mockItemBatchSearch(TENANT_ID_CENTRAL, buildBatchIds(),
       buildItemBatchSearchResponse(ITEM_BARCODE, TENANT_ID_COLLEGE));
 
-    // mock circulation check-out
     CheckOutRequest circulationCheckOutRequest = buildCheckOutRequest(REAL_USER_BARCODE, ITEM_BARCODE);
     CheckOutResponse circulationCheckOutResponse = buildCheckOutResponse();
     mockHelper.mockCirculationCheckOut(circulationCheckOutRequest, circulationCheckOutResponse,
       TENANT_ID_CONSORTIUM);
 
-    // check out
     checkOut(buildCheckOutRequest(REAL_USER_BARCODE, ITEM_BARCODE))
       .andExpect(status().isOk())
       .andExpect(content().json(asJsonString(circulationCheckOutResponse)));
@@ -230,7 +227,6 @@ class CheckOutApiTest extends BaseIT {
   @Test
   @SneakyThrows
   void regularCheckOutWhenItemIsInLocalTenant() {
-    // mock mediated request
     MediatedRequestEntity mediatedRequest = buildMediatedRequestEntity(OPEN_AWAITING_PICKUP)
       .withRequesterBarcode(REAL_USER_BARCODE)
       .withItemBarcode(ITEM_BARCODE)
@@ -238,17 +234,14 @@ class CheckOutApiTest extends BaseIT {
 
     mediatedRequestsRepository.save(mediatedRequest);
 
-    // mock item search
     mockHelper.mockItemBatchSearch(TENANT_ID_CENTRAL, buildBatchIds(),
       buildItemBatchSearchResponse(ITEM_BARCODE, TENANT_ID_CONSORTIUM));
 
-    // mock circulation check-out
     CheckOutRequest circulationCheckOutRequest = buildCheckOutRequest(REAL_USER_BARCODE, ITEM_BARCODE);
     CheckOutResponse circulationCheckOutResponse = buildCheckOutResponse();
     mockHelper.mockCirculationCheckOut(circulationCheckOutRequest, circulationCheckOutResponse,
       TENANT_ID_CONSORTIUM);
 
-    // check out
     checkOut(buildCheckOutRequest(REAL_USER_BARCODE, ITEM_BARCODE))
       .andExpect(status().isOk())
       .andExpect(content().json(asJsonString(circulationCheckOutResponse)));
@@ -389,7 +382,6 @@ class CheckOutApiTest extends BaseIT {
       .willReturn(aResponse().withStatus(checkOutResponseStatus)
         .withBody("Response status is " + checkOutResponseStatus)));
 
-    // check out
     checkOut(buildCheckOutRequest(REAL_USER_BARCODE, ITEM_BARCODE))
       .andExpect(status().is(checkOutResponseStatus))
       .andExpect(content().string("Response status is " + checkOutResponseStatus));
