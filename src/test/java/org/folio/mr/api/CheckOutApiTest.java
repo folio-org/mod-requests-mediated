@@ -20,8 +20,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.UUID;
 
-import org.folio.mr.domain.MediatedRequestStatus;
-import org.folio.mr.domain.RequestLevel;
 import org.folio.mr.domain.dto.BatchIds;
 import org.folio.mr.domain.dto.CheckOutDryRunRequest;
 import org.folio.mr.domain.dto.CheckOutDryRunResponse;
@@ -33,7 +31,6 @@ import org.folio.mr.domain.dto.LoanPolicy;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.RequestRequester;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
-import org.folio.mr.domain.entity.MediatedRequestStep;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.test.types.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +69,7 @@ class CheckOutApiTest extends BaseIT {
   private MediatedRequestsRepository mediatedRequestsRepository;
 
   @BeforeEach
-  public void clearDatabase() {
+  void clearDatabase() {
     mediatedRequestsRepository.deleteAll();
   }
 
@@ -414,10 +411,10 @@ class CheckOutApiTest extends BaseIT {
       .withHeader(TENANT, equalTo(TENANT_ID_CONSORTIUM)));
   }
 
-  private static LoanPolicy buildLoanPolicy(String Test_loan_policy) {
+  private static LoanPolicy buildLoanPolicy(String name) {
     return new LoanPolicy()
       .id(LOAN_POLICY_ID.toString())
-      .name(Test_loan_policy);
+      .name(name);
   }
 
   private static Request buildRequest(MediatedRequestEntity mediatedRequest, String requesterBarcode) {
@@ -454,18 +451,6 @@ class CheckOutApiTest extends BaseIT {
 
   private static CheckOutDryRunResponse buildCheckOutDryRunResponse(String loanPolicyId) {
     return new CheckOutDryRunResponse().loanPolicyId(loanPolicyId);
-  }
-
-  private static MediatedRequestEntity buildMediatedRequest(String requesterBarcode, String itemBarcode,
-    MediatedRequestStatus status, MediatedRequestStep step) {
-
-    return new MediatedRequestEntity()
-      .withRequesterBarcode(requesterBarcode)
-      .withItemBarcode(itemBarcode)
-      .withMediatedWorkflow("Private request")
-      .withMediatedRequestStatus(status)
-      .withMediatedRequestStep(step.getValue())
-      .withRequestLevel(RequestLevel.ITEM);
   }
 
   private ConsortiumItems buildItemBatchSearchResponse(String itemBarcode, String tenantId) {
