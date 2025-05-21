@@ -207,6 +207,31 @@ paths:
           $ref: '#/components/responses/badRequestResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
+  /requests-mediated/loans/check-out-by-barcode:
+    post:
+      description: Check out an item for secure request
+      operationId: checkOutByBarcode
+      tags:
+        - mediatedRequestsLoans
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/checkOutRequest'
+        required: true
+      responses:
+        '200':
+          description: Item was checked out successfully
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas/circulation/check-out-response.yaml'
+              example:
+                $ref: 'examples/checkOutByBarcodeResponse.json'
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
 components:
   schemas:
     mediatedRequest:
@@ -249,6 +274,16 @@ components:
       $ref: 'schemas/inventory/loantype.json'
     request:
       $ref: 'schemas/circulation/request.json'
+    checkOutRequest:
+      $ref: 'schemas/circulation/check-out-request.yaml'
+    checkOutResponse:
+      $ref: 'schemas/circulation/check-out-response.yaml'
+    checkOutDryDunRequest:
+      $ref: 'schemas/circulation/check-out-dry-run-request.yaml'
+    checkOutDryRunResponse:
+      $ref: 'schemas/circulation/check-out-dry-run-response.yaml'
+    loanPolicy:
+      $ref: 'schemas/circulation-storage/loan-policy.json'
     searchInstanceResponse:
       $ref: 'schemas/search/searchInstancesResponse.json'
     ecsTlr:
@@ -257,6 +292,8 @@ components:
       $ref: 'schemas/users/getUserTenantsResponse.yaml'
     consortiumItems:
       $ref: 'schemas/search/consortiumItems.yaml'
+    searchBatchIds:
+      $ref: 'schemas/search/batchIds.yaml'
   parameters:
     mediatedRequestId:
       name: mediatedRequestId

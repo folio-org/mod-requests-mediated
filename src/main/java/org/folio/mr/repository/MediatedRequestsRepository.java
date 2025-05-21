@@ -24,6 +24,16 @@ public interface MediatedRequestsRepository extends JpaCqlRepository<MediatedReq
   @Query("""
     SELECT mr from MediatedRequestEntity mr
     WHERE mr.itemBarcode = ?1
+    AND mr.requesterBarcode = ?2
+    AND mr.mediatedWorkflow = 'Private request'
+    AND mr.mediatedRequestStatus = 'Open'
+    AND (mr.mediatedRequestStep = 'Awaiting pickup' OR mr.mediatedRequestStep = 'Awaiting delivery')
+    """)
+  Optional<MediatedRequestEntity> findRequestForCheckOut(String itemBarcode, String requesterBarcode);
+
+  @Query("""
+    SELECT mr from MediatedRequestEntity mr
+    WHERE mr.itemBarcode = ?1
     AND mr.mediatedWorkflow = 'Private request'
     AND mr.mediatedRequestStatus = 'Open'
     AND mr.mediatedRequestStep = 'Item arrived'
