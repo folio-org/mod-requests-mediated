@@ -7,7 +7,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.moreThanOrExactly;
 import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
@@ -149,9 +148,8 @@ class MediatedRequestActionsApiTest extends BaseIT {
         .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL)));
     wireMockServer.verify(postRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
-      .withRequestBody(matchingJsonPath("fulfillmentPreference", equalTo("Delivery"))));
-    wireMockServer.verify(putRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL + "/" + circulationRequestId))
-      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
+      .withRequestBody(matchingJsonPath("fulfillmentPreference", equalTo("Hold Shelf")))
+      .withRequestBody(matchingJsonPath("pickupServicePointId", equalTo(INTERIM_SERVICE_POINT_ID))));
     wireMockServer.verify(0, postRequestedFor(urlMatching(ECS_TLR_URL)));
   }
 

@@ -1,3 +1,6 @@
+## 1.0.15 2025-05-21
+* Use Interim SP in local requests management (MODREQMED-120)
+
 ## 1.0.14 2025-05-21
 * Check-out API (MODREQMED-122)
 

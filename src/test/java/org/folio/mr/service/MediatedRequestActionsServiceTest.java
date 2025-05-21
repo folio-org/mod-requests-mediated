@@ -8,6 +8,7 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequestEntity;
+import static org.folio.mr.util.TestEntityBuilder.buildUser;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -107,6 +108,8 @@ class MediatedRequestActionsServiceTest {
       .thenReturn(mappedRequest);
     when(circulationRequestService.get(anyString())).thenReturn(new Request());
     when(circulationRequestService.update(any(Request.class))).thenReturn(new Request());
+    when(userService.fetchUser(anyString())).thenReturn(
+      buildUser(initialRequest.getRequesterId().toString()));
 
     MediatedRequest result = mediatedRequestActionsService.confirmItemArrival(itemBarcode);
 
