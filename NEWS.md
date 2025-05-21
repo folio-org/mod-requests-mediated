@@ -1,3 +1,6 @@
+## 1.0.14 2025-05-21
+* Check-out API (MODREQMED-122)
+
 ## 1.0.13 2025-05-07
 * Add support for case-insensitive mediated request search (MODREQMED-17)
 * Extend `send-item-in-transit` response with additional user properties (MODREQMED-116)
