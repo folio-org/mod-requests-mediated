@@ -15,6 +15,7 @@ public interface MediatedRequestActionsService {
   void decline(UUID mediatedRequestId);
   void changeStatusToInTransitForApproval(MediatedRequestEntity request);
   void changeStatusToAwaitingPickup(MediatedRequestEntity request);
+  void changeStatusToAwaitingDelivery(MediatedRequestEntity request);
   void changeStatusToClosedFilled(MediatedRequestEntity request);
   void changeStatusToClosedCanceled(MediatedRequestEntity mediatedRequest, Request confirmedRequest);
   MediatedRequestWorkflowLog saveMediatedRequestWorkflowLog(MediatedRequest request);
