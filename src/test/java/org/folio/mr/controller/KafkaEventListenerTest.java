@@ -50,6 +50,7 @@ import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -128,11 +129,12 @@ class KafkaEventListenerTest extends BaseIT {
   }
 
   @ParameterizedTest
-  @EnumSource(value = Request.StatusEnum.class, names = {"OPEN_AWAITING_PICKUP", "OPEN_AWAITING_DELIVERY"})
+  @CsvSource({"Open - Awaiting pickup,Open - Awaiting pickup",
+    "Open - Awaiting delivery,Open - Awaiting delivery"})
   void mediatedRequestInStatusOpenInTransitToBeCheckedOutIsUpdatedUponConfirmedRequestUpdate(
-    Request.StatusEnum newRequestStatus) {
-
-    KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_IN_TRANSIT, newRequestStatus);
+    String newRequestStatusStr, String newMediatedRequestStatusStr) {
+    KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_IN_TRANSIT,
+      Request.StatusEnum.fromValue(newRequestStatusStr));
     var mediatedRequest = buildMediatedRequest(MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
     mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID.toString());
     var initialMediatedRequest =
@@ -142,8 +144,7 @@ class KafkaEventListenerTest extends BaseIT {
     publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
 
     MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
-    assertEquals(MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP.getValue(),
-      updatedMediatedRequest.getStatus());
+    assertEquals(newMediatedRequestStatusStr, updatedMediatedRequest.getStatus());
   }
 
   @ParameterizedTest
