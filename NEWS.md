@@ -1,3 +1,6 @@
+## 1.0.16 2025-05-28
+* Support for `Open - Awaiting delivery` status (MODREQMED-127)
+
 ## 1.0.15 2025-05-21
 * Use Interim SP in local requests management (MODREQMED-120)
 
