@@ -1,3 +1,10 @@
+## 1.2.2 2025-05-29
+* Support for `Open - Awaiting delivery` status (MODREQMED-127)
+* Use Interim SP in local requests management (MODREQMED-120)
+* Check-out API (MODREQMED-122)
+* Extend `send-item-in-transit` response with additional user properties (MODREQMED-116)
+* Fix synchronization of mediated request and circulation request for oLOAN collection items (MODREQMED-111)
+
 ## 1.2.1 2025-04-23
 * Support items without barcodes (MODREQMED-109)
 * Increase memory allocation to 1gb (MODREQMED-103)

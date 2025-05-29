@@ -1,7 +1,10 @@
 package org.folio.mr.controller;
 
+import static java.util.Optional.ofNullable;
+import static java.util.function.Predicate.not;
+
 import java.util.Date;
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 import org.folio.mr.domain.MediatedRequestContext;
@@ -18,7 +21,10 @@ import org.folio.mr.domain.dto.MediatedRequestRequester;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.SendItemInTransitRequest;
 import org.folio.mr.domain.dto.SendItemInTransitResponse;
+import org.folio.mr.domain.dto.SendItemInTransitResponseRequester;
 import org.folio.mr.domain.dto.SendItemInTransitResponseStaffSlipContext;
+import org.folio.mr.domain.dto.User;
+import org.folio.mr.domain.dto.UserPersonal;
 import org.folio.mr.rest.resource.MediatedRequestsActionsApi;
 import org.folio.mr.service.MediatedRequestActionsService;
 import org.folio.mr.service.impl.StaffSlipContextService;
@@ -92,7 +98,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
         .middleName(requester.getMiddleName())
         .lastName(requester.getLastName()));
 
-    Optional.ofNullable(request.getSearchIndex())
+    ofNullable(request.getSearchIndex())
       .map(MediatedRequestSearchIndex::getCallNumberComponents)
       .ifPresent(components -> response.getItem().callNumberComponents(
         new MediatedRequestItemCallNumberComponents()
@@ -124,6 +130,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
     MediatedRequest request = context.getRequest();
     MediatedRequestItem item = request.getItem();
     MediatedRequestRequester requester = request.getRequester();
+    User user = context.getRequester();
     Date inTransitDate = logActionAndGetActionDate(context.getRequest());
 
     SendItemInTransitResponse response = new SendItemInTransitResponse()
@@ -143,14 +150,28 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
       .mediatedRequest(new ConfirmItemArrivalResponseMediatedRequest()
         .id(UUID.fromString(request.getId()))
         .status(request.getStatus().getValue()))
-      .requester(new ConfirmItemArrivalResponseRequester()
+      .requester(new SendItemInTransitResponseRequester()
         .id(UUID.fromString(request.getRequesterId()))
         .barcode(requester.getBarcode())
         .firstName(requester.getFirstName())
         .middleName(requester.getMiddleName())
         .lastName(requester.getLastName()));
 
-    Optional.ofNullable(request.getSearchIndex())
+    ofNullable(user)
+      .map(User::getPersonal)
+      .map(UserPersonal::getAddresses)
+      .filter(not(List::isEmpty))
+      .map(List::getFirst)
+      .ifPresent(address ->
+        response.getRequester()
+          .addressLine1(address.getAddressLine1())
+          .addressLine2(address.getAddressLine2())
+          .city(address.getCity())
+          .postalCode(address.getPostalCode())
+          .region(address.getRegion())
+          .countryId(address.getCountryId()));
+
+    ofNullable(request.getSearchIndex())
       .map(MediatedRequestSearchIndex::getCallNumberComponents)
       .ifPresent(components -> response.getItem().callNumberComponents(
         new MediatedRequestItemCallNumberComponents()

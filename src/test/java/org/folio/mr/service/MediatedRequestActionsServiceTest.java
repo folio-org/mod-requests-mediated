@@ -8,6 +8,7 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequestEntity;
+import static org.folio.mr.util.TestEntityBuilder.buildUser;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,6 +39,7 @@ import org.folio.mr.domain.entity.MediatedRequestWorkflow;
 import org.folio.mr.domain.mapper.MediatedRequestMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.impl.MediatedRequestActionsServiceImpl;
+import org.folio.mr.service.impl.UserServiceImpl;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.junit.jupiter.api.Test;
@@ -79,6 +81,9 @@ class MediatedRequestActionsServiceTest {
   @Mock
   private SystemUserScopedExecutionService executionService;
 
+  @Mock
+  private UserServiceImpl userService;
+
   @InjectMocks
   private MediatedRequestActionsServiceImpl mediatedRequestActionsService;
 
@@ -103,6 +108,8 @@ class MediatedRequestActionsServiceTest {
       .thenReturn(mappedRequest);
     when(circulationRequestService.get(anyString())).thenReturn(new Request());
     when(circulationRequestService.update(any(Request.class))).thenReturn(new Request());
+    when(userService.fetchUser(anyString())).thenReturn(
+      buildUser(initialRequest.getRequesterId().toString()));
 
     MediatedRequest result = mediatedRequestActionsService.confirmItemArrival(itemBarcode);
 
@@ -146,6 +153,7 @@ class MediatedRequestActionsServiceTest {
     MediatedRequestContext result = mediatedRequestActionsService.sendItemInTransit(itemBarcode);
 
     verify(mediatedRequestsRepository).save(any(MediatedRequestEntity.class));
+    verify(userService).fetchUser(initialRequest.getRequesterId().toString());
     assertThat(result.getRequest().getStatus().getValue(), is("Open - In transit to be checked out"));
     assertThat(result.getRequest().getMediatedRequestStep(), is("In transit to be checked out"));
   }
