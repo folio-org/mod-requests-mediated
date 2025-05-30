@@ -105,11 +105,16 @@ public class RequestEventHandler implements KafkaEventHandler<Request> {
       actionsService.changeStatusToInTransitForApproval(mediatedRequest);
       wasMediatedRequestUpdated = true;
     }
-    if ((newRequestStatus == OPEN_AWAITING_PICKUP || newRequestStatus == OPEN_AWAITING_DELIVERY) &&
-      oldRequestStatus == OPEN_IN_TRANSIT &&
+    if (newRequestStatus == OPEN_AWAITING_PICKUP && oldRequestStatus == OPEN_IN_TRANSIT &&
       mediatedRequestStatusEquals(mediatedRequest, OPEN, IN_TRANSIT_TO_BE_CHECKED_OUT)
     ) {
       actionsService.changeStatusToAwaitingPickup(mediatedRequest);
+      wasMediatedRequestUpdated = true;
+    }
+    if (newRequestStatus == OPEN_AWAITING_DELIVERY && oldRequestStatus == OPEN_IN_TRANSIT &&
+      mediatedRequestStatusEquals(mediatedRequest, OPEN, IN_TRANSIT_TO_BE_CHECKED_OUT)
+    ) {
+      actionsService.changeStatusToAwaitingDelivery(mediatedRequest);
       wasMediatedRequestUpdated = true;
     }
     if (newRequestStatus == CLOSED_FILLED &&

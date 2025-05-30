@@ -5,6 +5,7 @@ import static java.util.Optional.ofNullable;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.CLOSED_CANCELLED;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.CLOSED_DECLINED;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.CLOSED_FILLED;
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_AWAITING_DELIVERY;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_AWAITING_PICKUP;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
@@ -393,6 +394,12 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   public void changeStatusToAwaitingPickup(MediatedRequestEntity request) {
     log.info("changeStatusToAwaitingPickup:: request id: {}", request.getId());
     changeMediatedRequestStatus(request, OPEN_AWAITING_PICKUP);
+  }
+
+  @Override
+  public void changeStatusToAwaitingDelivery(MediatedRequestEntity request) {
+    log.info("changeStatusToAwaitingDelivery:: request id: {}", request.getId());
+    changeMediatedRequestStatus(request, OPEN_AWAITING_DELIVERY);
   }
 
   @Override
