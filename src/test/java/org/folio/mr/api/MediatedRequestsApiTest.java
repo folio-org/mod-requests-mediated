@@ -42,6 +42,8 @@ import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.test.types.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
@@ -56,6 +58,11 @@ class MediatedRequestsApiTest extends BaseIT {
   private static final String UUID_PATTEN =
     "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$";
   private static final String URL_MEDIATED_REQUESTS = "/requests-mediated/mediated-requests";
+  private static final String INSTANCE_ID_1 = "69640328-788e-43fc-9c3c-af39e243f3b7";
+  private static final String INSTANCE_TITLE_1 = "ABA Journal";
+  private static final String INSTANCE_HRID_1 = "inst000000000001";
+  private static final String INSTANCE_ID_2 = "03e561cf-d2cb-4200-9b93-73d4410d971f";
+  private static final String INSTANCE_HRID_2 = "inst000000000002";
 
   @Autowired
   private MediatedRequestsRepository mediatedRequestsRepository;
@@ -79,9 +86,12 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("totalRecords", is(0)));
   }
 
-  @Test
-  void mediatedRequestWithAllDetailsShouldBeCreated() {
-    MediatedRequest mediatedRequest = createMediatedRequest();
+  @SneakyThrows
+  @ParameterizedTest
+  @CsvSource(value = {INSTANCE_ID_1 + ";" + INSTANCE_TITLE_1 + ";" + INSTANCE_HRID_1,
+    INSTANCE_ID_2 + ";" + INSTANCE_TITLE_2 + ";" + INSTANCE_HRID_2}, delimiter = ';')
+  void mediatedRequestWithAllDetailsShouldBeCreated(String instanceId, String title, String hrid) {
+    MediatedRequest mediatedRequest = createMediatedRequest(instanceId, title, hrid);
     MediatedRequestEntity entity = mediatedRequestsRepository.findById(UUID.fromString(mediatedRequest.getId()))
       .orElseThrow(() -> new AssertionError("Failed to find mediated request in DB"));
 
@@ -100,7 +110,9 @@ class MediatedRequestsApiTest extends BaseIT {
     assertThat(entity.getProxyMiddleName(), is("M"));
     assertThat(entity.getProxyLastName(), is("Proxy"));
     assertThat(entity.getProxyBarcode(), is("proxy"));
-    assertThat(entity.getInstanceId(), is(UUID.fromString("69640328-788e-43fc-9c3c-af39e243f3b7")));
+    assertThat(entity.getInstanceId(), is(UUID.fromString(instanceId)));
+    assertThat(entity.getInstanceTitle(), is(title));
+    assertThat(entity.getInstanceHrid(), is(hrid));
     assertThat(entity.getHoldingsRecordId(), is(UUID.fromString("0c45bb50-7c9b-48b0-86eb-178a494e25fe")));
     assertThat(entity.getItemId(), is(UUID.fromString("9428231b-dd31-4f70-8406-fe22fbdeabc2")));
     assertThat(entity.getItemBarcode(), is("A14837334314"));
@@ -130,11 +142,14 @@ class MediatedRequestsApiTest extends BaseIT {
     assertThat(entity.getUpdatedByUsername(), nullValue());
   }
 
-  @Test
   @SneakyThrows
-  void mediatedRequestWithoutSomeDetailsShouldBeCreated() {
+  @ParameterizedTest
+  @CsvSource(value = {INSTANCE_ID_1 + ";" + INSTANCE_TITLE_1 + ";" + INSTANCE_HRID_1,
+    INSTANCE_ID_2 + ";" + INSTANCE_TITLE_2 + ";" + INSTANCE_HRID_2}, delimiter = ';')
+  void mediatedRequestWithoutSomeDetailsShouldBeCreated(String instanceId, String title,
+    String hrid) {
+
     Date requestDate = new Date();
-    String instanceId = "69640328-788e-43fc-9c3c-af39e243f3b7";
     MediatedRequest request = new MediatedRequest()
       .requestLevel(TITLE)
       .requestType(HOLD)
@@ -161,7 +176,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("patronComments").doesNotExist())
       .andExpect(jsonPath("requesterId", is("9812e24b-0a66-457a-832c-c5e789797e35")))
       .andExpect(jsonPath("proxyUserId").doesNotExist())
-      .andExpect(jsonPath("instanceId", is("69640328-788e-43fc-9c3c-af39e243f3b7")))
+      .andExpect(jsonPath("instanceId", is(instanceId)))
       .andExpect(jsonPath("holdingsRecordId").doesNotExist())
       .andExpect(jsonPath("itemId").doesNotExist())
       .andExpect(jsonPath("mediatedRequestStatus", is("New")))
@@ -177,7 +192,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("deliveryAddressTypeId", is("93d3d88d-499b-45d0-9bc7-ac73c3a19880")))
       .andExpect(jsonPath("confirmedRequestId").doesNotExist())
       .andExpect(jsonPath("pickupServicePointId").doesNotExist())
-      .andExpect(jsonPath("instance.title", is("ABA Journal")))
+      .andExpect(jsonPath("instance.title", is(title)))
       .andExpect(jsonPath("instance.identifiers", hasSize(2)))
       .andExpect(jsonPath("instance.identifiers[0].value", is("0747-0088")))
       .andExpect(jsonPath("instance.identifiers[0].identifierTypeId", is("913300b2-03ed-469a-8179-c1092c991227")))
@@ -196,7 +211,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("instance.contributorNames", hasSize(2)))
       .andExpect(jsonPath("instance.contributorNames[0].name", is("First, Author")))
       .andExpect(jsonPath("instance.contributorNames[1].name", is("Second, Writer")))
-      .andExpect(jsonPath("instance.hrid", is("inst000000000001")))
+      .andExpect(jsonPath("instance.hrid", is(hrid)))
       .andExpect(jsonPath("item").doesNotExist())
       .andExpect(jsonPath("staffSlipContext").doesNotExist())
       .andExpect(jsonPath("requester.barcode", is("111")))
@@ -246,7 +261,7 @@ class MediatedRequestsApiTest extends BaseIT {
     assertThat(entity.getProxyMiddleName(), nullValue());
     assertThat(entity.getProxyLastName(), nullValue());
     assertThat(entity.getProxyBarcode(), nullValue());
-    assertThat(entity.getInstanceId(), is(UUID.fromString("69640328-788e-43fc-9c3c-af39e243f3b7")));
+    assertThat(entity.getInstanceId(), is(UUID.fromString(instanceId)));
     assertThat(entity.getHoldingsRecordId(), nullValue());
     assertThat(entity.getItemId(), nullValue());
     assertThat(entity.getItemBarcode(), nullValue());
@@ -280,7 +295,7 @@ class MediatedRequestsApiTest extends BaseIT {
   @SneakyThrows
   void minimalMediatedRequestShouldBeCreated() {
     Date requestDate = new Date();
-    String instanceId = "69640328-788e-43fc-9c3c-af39e243f3b7";
+    String instanceId = INSTANCE_ID_1;
     MediatedRequest request = new MediatedRequest()
       .requestLevel(TITLE)
       .requestDate(requestDate)
@@ -378,8 +393,12 @@ class MediatedRequestsApiTest extends BaseIT {
 
   @SneakyThrows
   private MediatedRequest createMediatedRequest() {
+    return createMediatedRequest(INSTANCE_ID_1, INSTANCE_TITLE_1, INSTANCE_HRID_1);
+  }
+
+  @SneakyThrows
+  private MediatedRequest createMediatedRequest(String instanceId, String title, String hrid) {
     Date requestDate = new Date();
-    String instanceId = "69640328-788e-43fc-9c3c-af39e243f3b7";
     MediatedRequest request = new MediatedRequest()
       .requestLevel(ITEM)
       .requestType(PAGE)
@@ -433,7 +452,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("deliveryAddress").doesNotExist())
       .andExpect(jsonPath("confirmedRequestId").doesNotExist())
       .andExpect(jsonPath("pickupServicePointId", is("3a40852d-49fd-4df2-a1f9-6e2641a6e91f")))
-      .andExpect(jsonPath("instance.title", is("ABA Journal")))
+      .andExpect(jsonPath("instance.title", is(title)))
       .andExpect(jsonPath("instance.identifiers", hasSize(2)))
       .andExpect(jsonPath("instance.identifiers[0].value", is("0747-0088")))
       .andExpect(jsonPath("instance.identifiers[0].identifierTypeId", is("913300b2-03ed-469a-8179-c1092c991227")))
@@ -452,6 +471,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("instance.contributorNames", hasSize(2)))
       .andExpect(jsonPath("instance.contributorNames[0].name", is("First, Author")))
       .andExpect(jsonPath("instance.contributorNames[1].name", is("Second, Writer")))
+      .andExpect(jsonPath("instance.hrid", is(hrid)))
       .andExpect(jsonPath("item.barcode", is("A14837334314")))
       .andExpect(jsonPath("item.enumeration", is("v.70:no.7-12")))
       .andExpect(jsonPath("item.volume", is("vol.1")))
@@ -550,5 +570,42 @@ class MediatedRequestsApiTest extends BaseIT {
         .headers(defaultHeaders())
         .contentType(MediaType.APPLICATION_JSON));
   }
+
+  private static final String INSTANCE_TITLE_2 = "Lorem ipsum dolor sit amet, consectetur " +
+    "adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim " +
+    "ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo " +
+    "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
+    "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui " +
+    "officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur " +
+    "adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim " +
+    "ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo " +
+    "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
+    "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui " +
+    "officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur " +
+    "adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim " +
+    "ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo " +
+    "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
+    "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui " +
+    "officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur " +
+    "adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim " +
+    "ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo " +
+    "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
+    "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui " +
+    "officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur " +
+    "adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut " +
+    "enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea " +
+    "commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum " +
+    "dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in " +
+    "culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, " +
+    "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna " +
+    "aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip " +
+    "ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse " +
+    "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, " +
+    "sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, " +
+    "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna " +
+    "aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip " +
+    "ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse " +
+    "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, " +
+    "sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
 }
