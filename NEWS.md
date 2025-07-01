@@ -1,3 +1,6 @@
+## 1.2.3 2025-07-01
+* Support for instance titles longer than 255 characters (MODREQMED-137)
+
 ## 1.2.2 2025-05-29
 * Support for `Open - Awaiting delivery` status (MODREQMED-127)
 * Use Interim SP in local requests management (MODREQMED-120)
