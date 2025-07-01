@@ -1,3 +1,6 @@
+## 1.0.17 2025-07-01
+* Support for instance titles longer than 255 characters (MODREQMED-136)
+
 ## 1.0.16 2025-05-28
 * Support for `Open - Awaiting delivery` status (MODREQMED-127)
 
