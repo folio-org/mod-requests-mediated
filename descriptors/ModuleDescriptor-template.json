@@ -134,6 +134,21 @@
             "circulation-storage.loan-policies.item.post",
             "circulation.check-out-by-barcode.post"
           ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/requests-mediated/loans/{loanId}/declare-item-lost",
+          "permissionsRequired": ["requests-mediated.loans.declare-item-lost.execute"],
+          "modulePermissions": [
+            "circulation.loans.declare-item-lost.post",
+            "circulation-storage.loans.item.get",
+            "circulation-storage.loans.collection.get",
+            "circulation-storage.requests.item.get",
+            "circulation-storage.requests.collection.get",
+            "tlr.loans.declare-item-lost.execute"
+          ]
         }
       ]
     },
@@ -219,6 +234,11 @@
       "permissionName": "requests-mediated.loans.check-out-by-barcode.execute",
       "displayName": "requests-mediated - check out an item by barcode",
       "description": "Check out an item by barcode"
+    },
+    {
+      "permissionName": "requests-mediated.loans.declare-item-lost.execute",
+      "displayName": "requests-mediated - declare item lost by loan ID",
+      "description": "Declare item lost by loan ID"
     },
     {
       "permissionName": "requests-mediated.internal.fetch-request-details.all",
