@@ -46,8 +46,8 @@ public class DeclareLostServiceImpl implements DeclareLostService {
     // Declare item lost in the central tenant
 
     var mediatedRequest = loanClient.getLoanById(loanId.toString())
-      .flatMap(loan -> mediatedRequestsRepository.findLastClosedFilled(loan.getUserId(),
-        loan.getItemId().toString()))
+      .flatMap(loan -> mediatedRequestsRepository.findLastClosedFilled(
+        UUID.fromString(loan.getUserId()), loan.getItemId()))
       .orElseThrow(() -> new NotFoundException("Mediated request not found for loanId: " + loanId));
 
     ofNullable(mediatedRequest.getConfirmedRequestId())

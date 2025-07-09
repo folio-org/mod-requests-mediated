@@ -54,5 +54,5 @@ public interface MediatedRequestsRepository extends JpaCqlRepository<MediatedReq
     ORDER BY mr.updatedDate DESC
     LIMIT 1
     """)
-  Optional<MediatedRequestEntity> findLastClosedFilled(String requesterId, String itemId);
+  Optional<MediatedRequestEntity> findLastClosedFilled(UUID requesterId, UUID itemId);
 }
