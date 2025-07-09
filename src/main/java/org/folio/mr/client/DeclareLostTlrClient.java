@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "declare-lost", url = "tlr",
+@FeignClient(name = "declare-lost-tlr", url = "tlr",
   configuration = { FeignClientConfiguration.class, ErrorForwardingFeignClientConfiguration.class })
 public interface DeclareLostTlrClient {
 

@@ -31,7 +31,7 @@ public class DeclareLostServiceImpl implements DeclareLostService {
   private final RequestStorageClient requestStorageClient;
   private final SystemUserScopedExecutionService systemUserService;
   private final ConsortiumService consortiumService;
-  private final DeclareLostCirculationClient declareLostClient;
+  private final DeclareLostCirculationClient declareLostCirculationClient;
   private final DeclareLostTlrClient declareLostTlrClient;
 
   @Override
@@ -40,7 +40,7 @@ public class DeclareLostServiceImpl implements DeclareLostService {
       declareLostRequest::getDeclaredLostDateTime, declareLostRequest::getServicePointId);
 
     // Declare item lost locally
-    declareLostClient.declareItemLost(loanId.toString(), declareLostRequest);
+    declareLostCirculationClient.declareItemLost(loanId.toString(), declareLostRequest);
     log.info("declareLost:: Declared item lost locally for loanId: {}", loanId);
 
     // Declare item lost in the central tenant
