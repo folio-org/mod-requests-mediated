@@ -55,7 +55,7 @@ public class DeclareLostServiceImpl implements DeclareLostService {
       .map(this::fetchRequestFromCentralTenant)
       .map(Request::getRequesterId)
       .ifPresent(fakeRequesterId -> declareItemLostInCentralTenantTlr(mediatedRequest.getItemId(),
-          fakeRequesterId));
+          fakeRequesterId, declareLostRequest.getServicePointId()));
   }
 
   private Request fetchRequestFromCentralTenant(String requestId) {
@@ -64,11 +64,12 @@ public class DeclareLostServiceImpl implements DeclareLostService {
       .orElseThrow(() -> new NotFoundException("Request not found in Central tenant for ID: " + requestId));
   }
 
-  private void declareItemLostInCentralTenantTlr(UUID itemId, String fakeRequesterId) {
+  private void declareItemLostInCentralTenantTlr(UUID itemId, String fakeRequesterId, UUID servicePointId) {
     systemUserService.executeAsyncSystemUserScoped(consortiumService.getCentralTenantId(),
       () -> declareLostTlrClient.declareItemLost(
         new DeclareLostTlrRequest()
           .itemId(itemId)
-          .userId(UUID.fromString(fakeRequesterId))));
+          .userId(UUID.fromString(fakeRequesterId))
+          .servicePointId(servicePointId)));
   }
 }
