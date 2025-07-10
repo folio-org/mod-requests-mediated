@@ -44,6 +44,7 @@ public class DeclareLostApiTest extends BaseIT {
     UUID userId = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID confirmedRequestId = UUID.randomUUID();
+    UUID fakeRequesterId = UUID.randomUUID();
     DeclareLostCirculationRequest request = createDeclareLostRequest();
 
     wireMockServer.stubFor(WireMock.post(urlPathEqualTo("/circulation/loans/" + loanId +
@@ -63,7 +64,14 @@ public class DeclareLostApiTest extends BaseIT {
         .withRequesterId(userId)
         .withConfirmedRequestId(confirmedRequestId));
 
-    mockHelper.mockGetRequest(new Request().id(confirmedRequestId.toString()), TENANT_ID_CENTRAL);
+    mockHelper.mockGetRequest(new Request()
+      .id(confirmedRequestId.toString())
+      .requesterId(fakeRequesterId.toString()),
+      TENANT_ID_CENTRAL);
+
+    wireMockServer.stubFor(WireMock.post(urlPathEqualTo("/tlr/loans/declare-item-lost"))
+      .withHeader(TENANT, equalTo(TENANT_ID_CENTRAL))
+      .willReturn(noContent()));
 
     performDeclareLostRequest(loanId, request).andExpect(status().isNoContent());
   }
