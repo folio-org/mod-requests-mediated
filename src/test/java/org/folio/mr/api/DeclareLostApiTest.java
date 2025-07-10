@@ -30,7 +30,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import lombok.SneakyThrows;
 
 @IntegrationTest
-public class DeclareLostApiTest extends BaseIT {
+class DeclareLostApiTest extends BaseIT {
 
   @Autowired
   private MockMvc mockMvc;
