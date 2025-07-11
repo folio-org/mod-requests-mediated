@@ -322,6 +322,10 @@
     {
       "id": "ecs-tlr",
       "version": "1.0"
+    },
+    {
+      "id": "ecs-loans",
+      "version": "1.1"
     }
   ],
   "metadata": {
