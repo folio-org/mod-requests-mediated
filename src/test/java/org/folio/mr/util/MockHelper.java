@@ -19,10 +19,12 @@ import org.folio.mr.domain.dto.CheckOutRequest;
 import org.folio.mr.domain.dto.CheckOutResponse;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.ConsortiumItems;
+import org.folio.mr.domain.dto.Loan;
 import org.folio.mr.domain.dto.LoanPolicy;
 import org.folio.mr.domain.dto.Request;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 
 public class MockHelper {
   private static final String ITEM_SEARCH_URL = "/search/consortium/item";
@@ -32,6 +34,7 @@ public class MockHelper {
   private static final String CIRCULATION_CHECK_OUT_DRY_RUN_URL =
     "/circulation/check-out-by-barcode-dry-run";
   private static final String LOAN_POLICIES_URL = "/loan-policy-storage/loan-policies";
+  private static final String LOAN_STORAGE_URL = "/loan-storage/loans/";
 
   private final WireMockServer wireMockServer;
 
@@ -56,6 +59,12 @@ public class MockHelper {
     wireMockServer.stubFor(get(urlPathEqualTo(CIRCULATION_STORAGE_REQUESTS_URL + "/" + request.getId()))
       .withHeader(TENANT, equalTo(tenantId))
       .willReturn(okJson(asJsonString(request))));
+  }
+
+  public void mockGetLoan(Loan loan, String tenantId) {
+    wireMockServer.stubFor(WireMock.get(urlPathEqualTo(LOAN_STORAGE_URL + loan.getId()))
+      .withHeader(TENANT, equalTo(tenantId))
+      .willReturn(okJson(asJsonString(loan))));
   }
 
   public void mockCirculationCheckOut(CheckOutRequest request, CheckOutResponse response,

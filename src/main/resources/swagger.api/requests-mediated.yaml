@@ -232,6 +232,29 @@ paths:
           $ref: '#/components/responses/badRequestResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
+  /requests-mediated/loans/{loanId}/declare-item-lost:
+    post:
+      description: Declare item lost for a loan
+      operationId: declareItemLost
+      tags:
+        - mediatedRequestsLoans
+      parameters:
+        - $ref: '#/components/parameters/loanId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/declareLostCirculationRequest'
+        required: true
+      responses:
+        '204':
+          description: Item was declared lost successfully
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+        '422':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
 components:
   schemas:
     mediatedRequest:
@@ -294,9 +317,22 @@ components:
       $ref: 'schemas/search/consortiumItems.yaml'
     searchBatchIds:
       $ref: 'schemas/search/batchIds.yaml'
+    declareLostCirculationRequest:
+      $ref: 'schemas/circulation/declareLostCirculationRequest.yaml'
+    declareLostTlrRequest:
+      $ref: 'schemas/circulation/declareLostTlrRequest.yaml'
+    loan:
+      $ref: 'schemas/circulation-storage/loan.yaml'
   parameters:
     mediatedRequestId:
       name: mediatedRequestId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    loanId:
+      name: loanId
       in: path
       required: true
       schema:
