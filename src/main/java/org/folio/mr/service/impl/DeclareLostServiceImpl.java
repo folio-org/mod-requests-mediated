@@ -11,6 +11,7 @@ import org.folio.mr.client.RequestStorageClient;
 import org.folio.mr.domain.dto.DeclareLostCirculationRequest;
 import org.folio.mr.domain.dto.DeclareLostTlrRequest;
 import org.folio.mr.domain.dto.Request;
+import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.ConsortiumService;
 import org.folio.mr.service.DeclareLostService;
@@ -50,26 +51,46 @@ public class DeclareLostServiceImpl implements DeclareLostService {
         UUID.fromString(loan.getUserId()), loan.getItemId()))
       .orElseThrow(() -> new NotFoundException("Mediated request not found for loanId: " + loanId));
 
-    ofNullable(mediatedRequest.getConfirmedRequestId())
-      .map(UUID::toString)
-      .map(this::fetchRequestFromCentralTenant)
-      .map(Request::getRequesterId)
-      .ifPresent(fakeRequesterId -> declareItemLostInCentralTenantTlr(mediatedRequest.getItemId(),
-          fakeRequesterId, declareLostRequest.getServicePointId()));
+    declareItemLostInCentralTenantTlr(mediatedRequest, declareLostRequest);
+  }
+
+  private void declareItemLostInCentralTenantTlr(MediatedRequestEntity mediatedRequest,
+    DeclareLostCirculationRequest declareLostRequest) {
+
+    log.info("declareItemLostInCentralTenantTlr:: mediatedRequest.id={}, " +
+        "declaredLostDateTime={}, servicePointId={}", mediatedRequest::getId,
+      declareLostRequest::getDeclaredLostDateTime, declareLostRequest::getServicePointId);
+
+    systemUserService.executeAsyncSystemUserScoped(consortiumService.getCentralTenantId(),
+      () -> ofNullable(mediatedRequest.getConfirmedRequestId())
+        .map(UUID::toString)
+        .map(this::fetchRequestFromCentralTenant)
+        .map(Request::getRequesterId)
+        .ifPresent(fakeRequesterId -> declareItemLostInTlr(mediatedRequest.getItemId(),
+          fakeRequesterId, declareLostRequest)));
   }
 
   private Request fetchRequestFromCentralTenant(String requestId) {
-    return systemUserService.executeSystemUserScoped(consortiumService.getCentralTenantId(),
-        () -> requestStorageClient.getRequest(requestId))
-      .orElseThrow(() -> new NotFoundException("Request not found in Central tenant for ID: " + requestId));
+    log.info("fetchRequestFromCentralTenant:: requestId={}", requestId);
+
+    return requestStorageClient.getRequest(requestId)
+      .orElseThrow(() -> new NotFoundException(
+        "Request not found in Central tenant for ID: " + requestId));
   }
 
-  private void declareItemLostInCentralTenantTlr(UUID itemId, String fakeRequesterId, UUID servicePointId) {
-    systemUserService.executeAsyncSystemUserScoped(consortiumService.getCentralTenantId(),
-      () -> declareLostTlrClient.declareItemLost(
-        new DeclareLostTlrRequest()
-          .itemId(itemId)
-          .userId(UUID.fromString(fakeRequesterId))
-          .servicePointId(servicePointId)));
+  private void declareItemLostInTlr(UUID itemId, String fakeRequesterId,
+    DeclareLostCirculationRequest declareLostRequest) {
+
+    log.info("declareItemLostInTlr:: itemId={}, fakeRequesterId={}, declaredLostDateTime={}, " +
+        "servicePointId={}", () -> itemId,
+      () -> fakeRequesterId, declareLostRequest::getDeclaredLostDateTime,
+      declareLostRequest::getServicePointId);
+
+    declareLostTlrClient.declareItemLost(
+      new DeclareLostTlrRequest()
+        .itemId(itemId)
+        .userId(UUID.fromString(fakeRequesterId))
+        .servicePointId(declareLostRequest.getServicePointId())
+        .comment(declareLostRequest.getComment()));
   }
 }
