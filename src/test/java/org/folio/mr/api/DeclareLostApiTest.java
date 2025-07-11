@@ -66,8 +66,7 @@ class DeclareLostApiTest extends BaseIT {
 
     mockHelper.mockGetRequest(new Request()
       .id(confirmedRequestId.toString())
-      .requesterId(fakeRequesterId.toString()),
-      TENANT_ID_CENTRAL);
+      .requesterId(fakeRequesterId.toString()), TENANT_ID_CENTRAL);
 
     wireMockServer.stubFor(WireMock.post(urlPathEqualTo("/tlr/loans/declare-item-lost"))
       .withHeader(TENANT, equalTo(TENANT_ID_CENTRAL))
