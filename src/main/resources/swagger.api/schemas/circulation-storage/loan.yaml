@@ -1,0 +1,127 @@
+type: object
+title: Loan
+description: Links the item with the patron and applies certain conditions based on policies
+properties:
+  id:
+    type: string
+    format: uuid
+    description: Unique ID (generated UUID) of the loan
+  userId:
+    type: string
+    description: ID of the patron the item was lent to. Required for open loans, not required for closed loans (for anonymization).
+  proxyUserId:
+    type: string
+    format: uuid
+    description: ID of the user representing a proxy for the patron
+  itemId:
+    type: string
+    format: uuid
+    description: ID of the item lent to the patron
+  itemEffectiveLocationIdAtCheckOut:
+    type: string
+    format: uuid
+    description: The effective location, at the time of checkout, of the item loaned to the patron.
+  status:
+    type: object
+    description: Overall status of the loan
+    properties:
+      name:
+        type: string
+        description: Name of the status (currently can be any value, values commonly used are Open and Closed)
+  loanDate:
+    type: string
+    description: Date time when the loan began
+  dueDate:
+    type: string
+    format: date-time
+    description: Date time when the item is due to be returned
+  returnDate:
+    type: string
+    description: Date time when the item is returned and the loan ends
+  systemReturnDate:
+    type: string
+    format: date-time
+    description: Date time when the returned item is actually processed
+  action:
+    type: string
+    description: Last action performed on a loan
+  actionComment:
+    type: string
+    description: Comment to last action performed on a loan
+  itemStatus:
+    type: string
+    description: Last item status used in relation to this loan
+  renewalCount:
+    type: integer
+    description: Count of how many times a loan has been renewed
+  loanPolicyId:
+    type: string
+    description: ID of last policy used in relation to this loan
+  checkoutServicePointId:
+    type: string
+    format: uuid
+    description: ID of the Service Point where the last checkout occurred
+  checkinServicePointId:
+    type: string
+    format: uuid
+    description: ID of the Service Point where the last checkin occurred
+  patronGroupIdAtCheckout:
+    type: string
+    description: Patron Group Id at checkout
+  dueDateChangedByRecall:
+    type: boolean
+    description: Indicates whether or not this loan had its due date modified by a recall on the loaned item
+  isDcb:
+    type: boolean
+    description: Indicates whether or not this loan is associated for DCB use case
+  declaredLostDate:
+    type: string
+    format: date-time
+    description: Date and time the item was declared lost during this loan
+  claimedReturnedDate:
+    type: string
+    format: date-time
+    description: Date and time the item was claimed returned for this loan
+  overdueFinePolicyId:
+    type: string
+    format: uuid
+    description: ID of overdue fines policy at the time the item is checked in or renewed
+  lostItemPolicyId:
+    type: string
+    format: uuid
+    description: ID of lost item policy which determines when the item ages to lost and the associated fees
+  metadata:
+    type: object
+    $ref: ../metadata.json
+    description: Metadata about creation and changes to loan, provided by the server
+  agedToLostDelayedBilling:
+    type: object
+    description: Aged to Lost Delayed Billing processing
+    properties:
+      lostItemHasBeenBilled:
+        type: boolean
+        description: Indicates if the aged to lost fee has been billed
+      dateLostItemShouldBeBilled:
+        type: string
+        format: date-time
+        description: Indicates when the aged to lost fee should be billed
+      agedToLostDate:
+        type: string
+        format: date-time
+        description: Date and time the item was aged to lost for this loan
+  reminders:
+    type: object
+    description: Information about reminders for overdue loan
+    properties:
+      lastFeeBilled:
+        type: object
+        description: Information about the most recent reminder fee billing
+        properties:
+          number:
+            type: integer
+            description: Last reminder fee billed, sequence number
+          date:
+            type: string
+            format: date-time
+            description: Last reminder fee billed, date
+

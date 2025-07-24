@@ -19,3 +19,4 @@ circulation-storage.loan-policies.collection.get
 circulation-storage.loan-policies.item.get
 circulation-storage.requests.collection.get
 circulation-storage.requests.item.get
+tlr.loans.declare-item-lost.execute
