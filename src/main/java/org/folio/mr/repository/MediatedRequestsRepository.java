@@ -43,4 +43,16 @@ public interface MediatedRequestsRepository extends JpaCqlRepository<MediatedReq
   Optional<MediatedRequestEntity> findByConfirmedRequestId(UUID confirmedRequestId);
 
   Optional<List<MediatedRequestEntity>> findByItemId(UUID itemId);
+
+  @Query("""
+    SELECT mr from MediatedRequestEntity mr
+    WHERE mr.requesterId = ?1
+    AND mr.itemId = ?2
+    AND mr.mediatedWorkflow = 'Private request'
+    AND mr.mediatedRequestStatus = 'Closed'
+    AND mr.mediatedRequestStep = 'Filled'
+    ORDER BY mr.updatedDate DESC
+    LIMIT 1
+    """)
+  Optional<MediatedRequestEntity> findLastClosedFilled(UUID requesterId, UUID itemId);
 }
