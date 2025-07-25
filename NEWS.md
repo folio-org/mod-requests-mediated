@@ -1,3 +1,6 @@
+## 1.0.18 2025-07-25
+* Declare lost API for mediated requests (MODREQMED-134)
+
 ## 1.0.17 2025-07-01
 * Support for instance titles longer than 255 characters (MODREQMED-136)
 
