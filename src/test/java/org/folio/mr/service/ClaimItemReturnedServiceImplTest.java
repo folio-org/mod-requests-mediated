@@ -91,7 +91,7 @@ class ClaimItemReturnedServiceImplTest {
 
     service.claimItemReturned(loanId, request);
 
-    verify(circulationClient).claimItemReturned(eq(loanId.toString()), eq(request));
+    verify(circulationClient).claimItemReturned(loanId.toString(), request);
     ArgumentCaptor<ClaimItemReturnedTlrRequest> tlrCaptor = ArgumentCaptor.forClass(ClaimItemReturnedTlrRequest.class);
     verify(tlrClient).claimItemReturned(tlrCaptor.capture());
     ClaimItemReturnedTlrRequest tlrReq = tlrCaptor.getValue();
