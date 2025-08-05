@@ -11,7 +11,6 @@ import static org.folio.spring.integration.XOkapiHeaders.TENANT;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import org.folio.mr.domain.dto.ClaimItemReturnedCirculationRequest;
