@@ -49,9 +49,8 @@ class ClaimItemReturnedServiceImplTest {
     requestStorageClient = mock(RequestStorageClient.class);
     systemUserService = mock(SystemUserScopedExecutionService.class);
     consortiumService = mock(ConsortiumService.class);
-    service = new ClaimItemReturnedServiceImpl(
-      circulationClient, tlrClient, mediatedRequestsRepository,
-      loanClient, requestStorageClient, systemUserService, consortiumService);
+    service = new ClaimItemReturnedServiceImpl(mediatedRequestsRepository, loanClient,
+      requestStorageClient, systemUserService, consortiumService, circulationClient, tlrClient);
   }
 
   @Test
