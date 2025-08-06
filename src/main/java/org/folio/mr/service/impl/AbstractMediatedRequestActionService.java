@@ -3,6 +3,7 @@ package org.folio.mr.service.impl;
 import static java.util.Optional.ofNullable;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import org.folio.mr.client.LoanClient;
 import org.folio.mr.client.RequestStorageClient;
@@ -40,7 +41,7 @@ public abstract class AbstractMediatedRequestActionService {
           requestId));
     }
 
-    protected void executeInCentralTenant(MediatedRequestEntity mediatedRequest, java.util.function.Consumer<String> action) {
+    protected void executeInCentralTenant(MediatedRequestEntity mediatedRequest, Consumer<String> action) {
       systemUserService.executeAsyncSystemUserScoped(consortiumService.getCentralTenantId(),
         () -> ofNullable(mediatedRequest.getConfirmedRequestId())
           .map(UUID::toString)
