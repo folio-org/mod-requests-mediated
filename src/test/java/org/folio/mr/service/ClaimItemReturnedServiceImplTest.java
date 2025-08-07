@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,33 +24,32 @@ import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.impl.ClaimItemReturnedServiceImpl;
 import org.folio.spring.service.SystemUserScopedExecutionService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class ClaimItemReturnedServiceImplTest {
 
+  @Mock
   private ClaimItemReturnedCirculationClient circulationClient;
+  @Mock
   private ClaimItemReturnedTlrClient tlrClient;
+  @Mock
   private MediatedRequestsRepository mediatedRequestsRepository;
+  @Mock
   private LoanClient loanClient;
+  @Mock
   private RequestStorageClient requestStorageClient;
+  @Mock
   private SystemUserScopedExecutionService systemUserService;
+  @Mock
   private ConsortiumService consortiumService;
+  @InjectMocks
   private ClaimItemReturnedServiceImpl service;
-
-  @BeforeEach
-  void setUp() {
-    circulationClient = mock(ClaimItemReturnedCirculationClient.class);
-    tlrClient = mock(ClaimItemReturnedTlrClient.class);
-    mediatedRequestsRepository = mock(MediatedRequestsRepository.class);
-    loanClient = mock(LoanClient.class);
-    requestStorageClient = mock(RequestStorageClient.class);
-    systemUserService = mock(SystemUserScopedExecutionService.class);
-    consortiumService = mock(ConsortiumService.class);
-    service = new ClaimItemReturnedServiceImpl(mediatedRequestsRepository, loanClient,
-      requestStorageClient, systemUserService, consortiumService, circulationClient, tlrClient);
-  }
 
   @Test
   void claimItemReturnedShouldForwardToCirculationAndTlr() {

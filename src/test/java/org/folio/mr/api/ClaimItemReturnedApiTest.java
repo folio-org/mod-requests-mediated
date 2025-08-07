@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -31,9 +30,6 @@ import lombok.SneakyThrows;
 
 @IntegrationTest
 class ClaimItemReturnedApiTest extends BaseIT {
-
-  @Autowired
-  private MockMvc mockMvc;
 
   @Autowired
   private MediatedRequestsRepository mediatedRequestsRepository;
@@ -97,18 +93,17 @@ class ClaimItemReturnedApiTest extends BaseIT {
   }
 
   private ClaimItemReturnedCirculationRequest createClaimItemReturnedRequest() {
-    ClaimItemReturnedCirculationRequest req = new ClaimItemReturnedCirculationRequest();
-    req.setItemClaimedReturnedDateTime(now());
-    req.setComment("Test comment");
-    return req;
+    return new ClaimItemReturnedCirculationRequest()
+      .itemClaimedReturnedDateTime(now())
+      .comment("Test comment");
   }
 
   @SneakyThrows
   private ResultActions performClaimItemReturnedRequest(UUID loanId,
     ClaimItemReturnedCirculationRequest request) {
 
-    final HttpHeaders httpHeaders = defaultHeaders();
-    httpHeaders.add(TENANT, TENANT_ID_SECURE);
+    HttpHeaders httpHeaders = new HttpHeaders();
+    httpHeaders.setAll(buildHeaders(TENANT_ID_SECURE));
 
     return mockMvc.perform(post("/requests-mediated/loans/{loanId}/claim-item-returned", loanId)
       .headers(httpHeaders)
