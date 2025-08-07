@@ -84,6 +84,9 @@ class MediatedRequestActionsServiceTest {
   @Mock
   private UserServiceImpl userService;
 
+  @Mock
+  private ValidatorService validatorService;
+
   @InjectMocks
   private MediatedRequestActionsServiceImpl mediatedRequestActionsService;
 
