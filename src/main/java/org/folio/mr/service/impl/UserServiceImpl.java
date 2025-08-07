@@ -1,5 +1,6 @@
 package org.folio.mr.service.impl;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.folio.mr.client.UserClient;
 import org.folio.mr.client.UserGroupClient;
 import org.folio.mr.domain.dto.User;
@@ -34,5 +35,18 @@ public class UserServiceImpl implements UserService {
   public User create(User user) {
     log.info("create:: creating user {}", user.getId());
     return userClient.postUser(user);
+  }
+
+  @Override
+  public boolean isInactive(String userId) {
+    log.info("isInactive:: checking if user {} is active", userId);
+
+    return userClient.get(userId)
+      .map(User::getActive)
+      .map(BooleanUtils::negate)
+      .orElseGet(() -> {
+        log.warn("isInactive:: user {} not found", userId);
+        return true;
+      });
   }
 }

@@ -105,7 +105,9 @@
             "circulation.requests.collection.get",
             "circulation.requests.item.post",
             "circulation.requests.item.put",
-            "users.item.post"
+            "users.item.post",
+            "users.item.get",
+            "users.collection.get"
           ]
         },
         {

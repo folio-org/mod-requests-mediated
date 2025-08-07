@@ -323,6 +323,39 @@ class MediatedRequestActionsApiTest extends BaseIT {
 
   @Test
   @SneakyThrows
+  void mediatedRequestConfirmationFailsForInactiveRequester() {
+    UUID instanceId = UUID.randomUUID();
+
+    String requesterId = UUID.randomUUID().toString();
+    User user = new User()
+      .id(requesterId)
+      .active(false);
+    wireMockServer.stubFor(WireMock.get(urlMatching(USERS_URL_TEMPLATE + "/.+"))
+      .willReturn(jsonResponse(user, HttpStatus.SC_OK)));
+
+    MediatedRequestEntity initialRequest = mediatedRequestsRepository.save(
+      buildMediatedRequestEntity(NEW_AWAITING_CONFIRMATION)
+        .withInstanceId(instanceId)
+        .withRequesterId(UUID.fromString(requesterId)));
+
+    confirmMediatedRequest(initialRequest.getId())
+      .andExpect(status().isUnprocessableEntity())
+      .andExpect(jsonPath("errors").value(iterableWithSize(1)))
+      .andExpect(jsonPath("errors[0].code")
+        .value(is("MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON")))
+      .andExpect(jsonPath("errors[0].message")
+        .value(is("Mediated request cannot be confirmed for inactive patron")))
+      .andExpect(jsonPath("$.errors[0].parameters[0].key", is("requesterId")))
+      .andExpect(jsonPath("$.errors[0].parameters[0].value", is(requesterId)));;
+
+    wireMockServer.verify(0, getRequestedFor(urlMatching(INSTANCES_URL)));
+    wireMockServer.verify(0, getRequestedFor(urlPathMatching(SEARCH_ITEMS_URL)));
+    wireMockServer.verify(0, postRequestedFor(urlMatching(CIRCULATION_REQUESTS_URL)));
+    wireMockServer.verify(0, postRequestedFor(urlMatching(ECS_TLR_URL)));
+  }
+
+  @Test
+  @SneakyThrows
   void successfulMediatedRequestDecline() {
     // given
     MediatedRequestEntity initialRequest = mediatedRequestsRepository.save(
