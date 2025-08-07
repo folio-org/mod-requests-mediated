@@ -102,8 +102,8 @@ class ClaimItemReturnedApiTest extends BaseIT {
   private ResultActions performClaimItemReturnedRequest(UUID loanId,
     ClaimItemReturnedCirculationRequest request) {
 
-    HttpHeaders httpHeaders = new HttpHeaders();
-    httpHeaders.setAll(buildHeaders(TENANT_ID_SECURE));
+    final HttpHeaders httpHeaders = defaultHeaders();
+    httpHeaders.add(TENANT, TENANT_ID_SECURE);
 
     return mockMvc.perform(post("/requests-mediated/loans/{loanId}/claim-item-returned", loanId)
       .headers(httpHeaders)
