@@ -31,13 +31,13 @@ public abstract class AbstractMediatedRequestActionService {
       return loanClient.getLoanById(loanId.toString())
         .flatMap(loan -> mediatedRequestsRepository.findLastClosedFilled(
           UUID.fromString(loan.getUserId()), loan.getItemId()))
-        .orElseThrow(() -> new NotFoundException("Mediated request not found for loanId: " + loanId));
+        .orElseThrow(() -> new NotFoundException("Loan or Mediated request not found for loanId: " + loanId));
     }
 
-    protected Request fetchRequestFromCentralTenant(String requestId) {
-      log.info("fetchRequestFromCentralTenant:: requestId={}", requestId);
+    protected Request fetchRequestFromSecureTenant(String requestId) {
+      log.info("fetchRequestFromSecureTenant:: requestId={}", requestId);
       return requestStorageClient.getRequest(requestId)
-        .orElseThrow(() -> new NotFoundException( "Request not found in Central tenant for ID: " +
+        .orElseThrow(() -> new NotFoundException( "Request not found in Secure tenant for ID: " +
           requestId));
     }
 
@@ -45,7 +45,7 @@ public abstract class AbstractMediatedRequestActionService {
       systemUserService.executeAsyncSystemUserScoped(consortiumService.getCentralTenantId(),
         () -> ofNullable(mediatedRequest.getConfirmedRequestId())
           .map(UUID::toString)
-          .map(this::fetchRequestFromCentralTenant)
+          .map(this::fetchRequestFromSecureTenant)
           .map(Request::getRequesterId)
           .ifPresent(action));
     }
