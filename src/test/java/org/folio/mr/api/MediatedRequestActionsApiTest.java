@@ -346,7 +346,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .andExpect(jsonPath("errors[0].message")
         .value(is("Mediated request cannot be confirmed for inactive patron")))
       .andExpect(jsonPath("$.errors[0].parameters[0].key", is("requesterId")))
-      .andExpect(jsonPath("$.errors[0].parameters[0].value", is(requesterId)));;
+      .andExpect(jsonPath("$.errors[0].parameters[0].value", is(requesterId)));
 
     wireMockServer.verify(0, getRequestedFor(urlMatching(INSTANCES_URL)));
     wireMockServer.verify(0, getRequestedFor(urlPathMatching(SEARCH_ITEMS_URL)));
