@@ -48,13 +48,14 @@ public class MediatedRequestsLoansActionServiceImpl implements MediatedRequestsL
       .orElseThrow(() -> new NotFoundException("Loan not found for loanId: " + loanId));
     return mediatedRequestsRepository.findLastClosedFilled(
       UUID.fromString(loan.getUserId()), loan.getItemId())
-      .orElseThrow(() -> new IllegalArgumentException("Mediated request not found for loanId: " + loanId));
+      .orElseThrow(() -> new NotFoundException("Mediated request not found for loanId: " + loanId));
+    //TODO handle this case with ValidationException
   }
 
   private Request fetchRequestLocally(String requestId) {
     log.info("fetchRequestLocally:: requestId={}", requestId);
     return requestStorageClient.getRequest(requestId)
-      .orElseThrow(() -> new org.folio.spring.exception.NotFoundException("Request not found locally for ID: " + requestId));
+      .orElseThrow(() -> new NotFoundException("Request not found locally for ID: " + requestId));
   }
 
   private void executeInCentralTenant(MediatedRequestEntity mediatedRequest, Consumer<String> action) {
