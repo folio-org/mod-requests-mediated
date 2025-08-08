@@ -20,6 +20,7 @@ import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.ConsortiumService;
 import org.folio.mr.service.MediatedRequestsLoansActionService;
+import org.folio.spring.exception.NotFoundException;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
@@ -44,7 +45,7 @@ public class MediatedRequestsLoansActionServiceImpl implements MediatedRequestsL
 
   private MediatedRequestEntity findMediatedRequest(UUID loanId) {
     var loan = loanClient.getLoanById(loanId.toString())
-      .orElseThrow(() -> new org.folio.spring.exception.NotFoundException("Loan not found for loanId: " + loanId));
+      .orElseThrow(() -> new NotFoundException("Loan not found for loanId: " + loanId));
     return mediatedRequestsRepository.findLastClosedFilled(
       UUID.fromString(loan.getUserId()), loan.getItemId())
       .orElseThrow(() -> new IllegalArgumentException("Mediated request not found for loanId: " + loanId));
