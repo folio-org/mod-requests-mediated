@@ -23,10 +23,12 @@ import org.folio.mr.service.MediatedRequestsLoansActionService;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 @Service
 @Log4j2
+@RequiredArgsConstructor
 public class MediatedRequestsLoansActionServiceImpl implements MediatedRequestsLoansActionService {
 
   private final ClaimItemReturnedCirculationClient claimItemReturnedCirculationClient;
@@ -39,28 +41,6 @@ public class MediatedRequestsLoansActionServiceImpl implements MediatedRequestsL
   private final RequestStorageClient requestStorageClient;
   private final SystemUserScopedExecutionService systemUserService;
   private final ConsortiumService consortiumService;
-
-  public MediatedRequestsLoansActionServiceImpl(
-    MediatedRequestsRepository mediatedRequestsRepository,
-    LoanClient loanClient,
-    RequestStorageClient requestStorageClient,
-    SystemUserScopedExecutionService systemUserService,
-    ConsortiumService consortiumService,
-    ClaimItemReturnedCirculationClient claimItemReturnedCirculationClient,
-    ClaimItemReturnedTlrClient claimItemReturnedTlrClient,
-    DeclareLostCirculationClient declareLostCirculationClient,
-    DeclareLostTlrClient declareLostTlrClient) {
-
-    this.mediatedRequestsRepository = mediatedRequestsRepository;
-    this.loanClient = loanClient;
-    this.requestStorageClient = requestStorageClient;
-    this.systemUserService = systemUserService;
-    this.consortiumService = consortiumService;
-    this.claimItemReturnedCirculationClient = claimItemReturnedCirculationClient;
-    this.claimItemReturnedTlrClient = claimItemReturnedTlrClient;
-    this.declareLostCirculationClient = declareLostCirculationClient;
-    this.declareLostTlrClient = declareLostTlrClient;
-  }
 
   private MediatedRequestEntity findMediatedRequest(UUID loanId) {
     var loan = loanClient.getLoanById(loanId.toString())
