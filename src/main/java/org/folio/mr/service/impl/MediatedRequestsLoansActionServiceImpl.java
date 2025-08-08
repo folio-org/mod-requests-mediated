@@ -18,6 +18,7 @@ import org.folio.mr.domain.dto.DeclareLostTlrRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.repository.MediatedRequestsRepository;
+import org.folio.mr.service.CirculationStorageService;
 import org.folio.mr.service.ConsortiumService;
 import org.folio.mr.service.MediatedRequestsLoansActionService;
 import org.folio.spring.exception.NotFoundException;
@@ -39,9 +40,9 @@ public class MediatedRequestsLoansActionServiceImpl implements MediatedRequestsL
 
   private final MediatedRequestsRepository mediatedRequestsRepository;
   private final LoanClient loanClient;
-  private final RequestStorageClient requestStorageClient;
   private final SystemUserScopedExecutionService systemUserService;
   private final ConsortiumService consortiumService;
+  private final CirculationStorageService circulationStorageService;
 
   private MediatedRequestEntity findMediatedRequest(UUID loanId) {
     var loan = loanClient.getLoanById(loanId.toString())
@@ -54,7 +55,7 @@ public class MediatedRequestsLoansActionServiceImpl implements MediatedRequestsL
 
   private Request fetchRequestLocally(String requestId) {
     log.info("fetchRequestLocally:: requestId={}", requestId);
-    return requestStorageClient.getRequest(requestId)
+    return circulationStorageService.fetchRequest(requestId)
       .orElseThrow(() -> new NotFoundException("Request not found locally for ID: " + requestId));
   }
 
