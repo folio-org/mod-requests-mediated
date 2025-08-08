@@ -28,26 +28,27 @@ public abstract class AbstractMediatedRequestActionService {
     protected final ConsortiumService consortiumService;
 
     protected MediatedRequestEntity findMediatedRequest(UUID loanId) {
-      return loanClient.getLoanById(loanId.toString())
-        .flatMap(loan -> mediatedRequestsRepository.findLastClosedFilled(
-          UUID.fromString(loan.getUserId()), loan.getItemId()))
-        .orElseThrow(() -> new NotFoundException("Loan or Mediated request not found for loanId: " + loanId));
+      var loan = loanClient.getLoanById(loanId.toString())
+        .orElseThrow(() -> new NotFoundException("Loan not found for loanId: " + loanId));
+
+      return mediatedRequestsRepository.findLastClosedFilled(
+        UUID.fromString(loan.getUserId()), loan.getItemId())
+        .orElseThrow(() -> new IllegalArgumentException("Mediated request not found for loanId: " + loanId));
     }
 
-    protected Request fetchRequestFromSecureTenant(String requestId) {
-      log.info("fetchRequestFromSecureTenant:: requestId={}", requestId);
+    protected Request fetchRequestLocally(String requestId) {
+      log.info("fetchRequestLocally:: requestId={}", requestId);
+
       return requestStorageClient.getRequest(requestId)
-        .orElseThrow(() -> new NotFoundException( "Request not found in Secure tenant for ID: " +
-          requestId));
+        .orElseThrow(() -> new NotFoundException("Request not found locally for ID: " + requestId));
     }
 
     protected void executeInCentralTenant(MediatedRequestEntity mediatedRequest, Consumer<String> action) {
       systemUserService.executeAsyncSystemUserScoped(consortiumService.getCentralTenantId(),
         () -> ofNullable(mediatedRequest.getConfirmedRequestId())
           .map(UUID::toString)
-          .map(this::fetchRequestFromSecureTenant)
+          .map(this::fetchRequestLocally)
           .map(Request::getRequesterId)
           .ifPresent(action));
     }
 }
-
