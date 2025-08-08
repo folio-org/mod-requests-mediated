@@ -50,6 +50,7 @@ public class MediatedRequestsLoansActionServiceImpl implements MediatedRequestsL
     ClaimItemReturnedTlrClient claimItemReturnedTlrClient,
     DeclareLostCirculationClient declareLostCirculationClient,
     DeclareLostTlrClient declareLostTlrClient) {
+
     this.mediatedRequestsRepository = mediatedRequestsRepository;
     this.loanClient = loanClient;
     this.requestStorageClient = requestStorageClient;
