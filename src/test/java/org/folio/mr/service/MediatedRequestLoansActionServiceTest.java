@@ -23,6 +23,7 @@ import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.impl.MediatedRequestsLoansActionServiceImpl;
+import org.folio.spring.exception.NotFoundException;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +37,8 @@ class MediatedRequestLoansActionServiceTest {
 
   @Mock
   private ClaimItemReturnedCirculationClient circulationClient;
+  @Mock
+  private CirculationStorageService circulationStorageService;
   @Mock
   private ClaimItemReturnedTlrClient tlrClient;
   @Mock
@@ -78,7 +81,7 @@ class MediatedRequestLoansActionServiceTest {
 
     Request centralRequest = new Request();
     centralRequest.setRequesterId(fakeUserId.toString());
-    when(requestStorageClient.getRequest(confirmedRequestId)).thenReturn(Optional.of(centralRequest));
+    when(circulationStorageService.fetchRequest(confirmedRequestId)).thenReturn(Optional.of(centralRequest));
     when(consortiumService.getCentralTenantId()).thenReturn("central");
     doAnswer(invocation -> {
       Runnable runnable = invocation.getArgument(1);
@@ -107,6 +110,14 @@ class MediatedRequestLoansActionServiceTest {
     loan.setItemId(UUID.randomUUID());
     when(loanClient.getLoanById(loanId.toString())).thenReturn(Optional.of(loan));
     when(mediatedRequestsRepository.findLastClosedFilled(any(), any())).thenReturn(Optional.empty());
-    assertThrows(RuntimeException.class, () -> service.claimItemReturned(loanId, request));
+    assertThrows(NotFoundException.class, () -> service.claimItemReturned(loanId, request));
+  }
+
+  @Test
+  void claimItemReturnedShouldThrowNotFoundIfLoanNotFound() {
+    UUID loanId = UUID.randomUUID();
+    ClaimItemReturnedCirculationRequest request = new ClaimItemReturnedCirculationRequest();
+    when(loanClient.getLoanById(loanId.toString())).thenReturn(Optional.empty());
+    assertThrows(org.folio.spring.exception.NotFoundException.class, () -> service.claimItemReturned(loanId, request));
   }
 }
