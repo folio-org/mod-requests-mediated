@@ -22,7 +22,7 @@ import org.folio.mr.domain.dto.Loan;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.repository.MediatedRequestsRepository;
-import org.folio.mr.service.impl.ClaimItemReturnedServiceImpl;
+import org.folio.mr.service.impl.MediatedRequestsLoansActionServiceImpl;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +32,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class ClaimItemReturnedServiceImplTest {
+class MediatedRequestLoansActionServiceTest {
 
   @Mock
   private ClaimItemReturnedCirculationClient circulationClient;
@@ -49,7 +49,7 @@ class ClaimItemReturnedServiceImplTest {
   @Mock
   private ConsortiumService consortiumService;
   @InjectMocks
-  private ClaimItemReturnedServiceImpl service;
+  private MediatedRequestsLoansActionServiceImpl service;
 
   @Test
   void claimItemReturnedShouldForwardToCirculationAndTlr() {
