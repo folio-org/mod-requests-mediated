@@ -259,6 +259,29 @@ paths:
           $ref: '#/components/responses/badRequestResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
+  /requests-mediated/loans/{loanId}/claim-item-returned:
+    post:
+      description: Claim item returned for a loan
+      operationId: claimItemReturned
+      tags:
+        - mediatedRequestsLoans
+      parameters:
+        - $ref: '#/components/parameters/loanId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/claimItemReturnedCirculationRequest'
+        required: true
+      responses:
+        '204':
+          description: Item was claimed returned successfully
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+        '422':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
 components:
   schemas:
     mediatedRequest:
@@ -327,6 +350,10 @@ components:
       $ref: 'schemas/circulation/declareLostTlrRequest.yaml'
     loan:
       $ref: 'schemas/circulation-storage/loan.yaml'
+    claimItemReturnedCirculationRequest:
+      $ref: 'schemas/circulation/claimItemReturnedCirculationRequest.yaml'
+    claimItemReturnedTlrRequest:
+      $ref: 'schemas/circulation/claimItemReturnedTlrRequest.yaml'
   parameters:
     mediatedRequestId:
       name: mediatedRequestId
