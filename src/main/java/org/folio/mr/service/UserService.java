@@ -7,4 +7,5 @@ public interface UserService {
   User fetchUser(String id);
   UserGroup fetchUserGroup(String id);
   User create(User user);
+  boolean isInactive(String userId);
 }
