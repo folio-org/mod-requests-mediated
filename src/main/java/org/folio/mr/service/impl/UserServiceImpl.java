@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public boolean isInactive(String userId) {
-    log.info("isInactive:: checking if user {} is active", userId);
+    log.info("isInactive:: checking if user {} is inactive", userId);
 
     return userClient.get(userId)
       .map(User::getActive)

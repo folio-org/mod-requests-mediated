@@ -37,8 +37,8 @@ class ValidatorServiceImplTests {
     assertEquals("MEDIATED_REQUEST_SAVE_NOT_ALLOWED_FOR_INACTIVE_PATRON",
       ex.getCode().getValue());
     assertEquals(1, ex.getParameters().size());
-    assertEquals("requesterId", ex.getParameters().getFirst().getKey());
-    assertEquals(requesterId, ex.getParameters().getFirst().getValue());
+    assertEquals("requesterId", ex.getParameters().get(0).getKey());
+    assertEquals(requesterId, ex.getParameters().get(0).getValue());
   }
 
   @Test
@@ -59,8 +59,8 @@ class ValidatorServiceImplTests {
     ValidationException ex = assertThrows(ValidationException.class,
       () -> validatorService.validateRequesterForConfirm(entity));
     assertEquals(1, ex.getParameters().size());
-    assertEquals("requesterId", ex.getParameters().getFirst().getKey());
-    assertEquals(requesterId.toString(), ex.getParameters().getFirst().getValue());
+    assertEquals("requesterId", ex.getParameters().get(0).getKey());
+    assertEquals(requesterId.toString(), ex.getParameters().get(0).getValue());
     assertEquals("Mediated request cannot be confirmed for inactive patron", ex.getMessage());
     assertEquals("MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON",
       ex.getCode().getValue());

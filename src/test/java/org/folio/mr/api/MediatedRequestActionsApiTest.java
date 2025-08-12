@@ -330,7 +330,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
     User user = new User()
       .id(requesterId)
       .active(false);
-    wireMockServer.stubFor(WireMock.get(urlMatching(USERS_URL_TEMPLATE + "/.+"))
+    wireMockServer.stubFor(WireMock.get(urlMatching(USERS_URL_TEMPLATE + "/" + requesterId))
       .willReturn(jsonResponse(user, HttpStatus.SC_OK)));
 
     MediatedRequestEntity initialRequest = mediatedRequestsRepository.save(
