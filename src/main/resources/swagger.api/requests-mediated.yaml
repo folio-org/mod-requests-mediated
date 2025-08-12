@@ -23,6 +23,8 @@ paths:
           $ref: '#/components/responses/mediatedRequest'
         '400':
           $ref: '#/components/responses/badRequestResponse'
+        '422':
+          $ref: '#/components/responses/badRequestResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
     get:
@@ -136,6 +138,8 @@ paths:
           $ref: '#/components/responses/badRequestResponse'
         '404':
           $ref: '#/components/responses/notFoundResponse'
+        '422':
+          $ref: '#/components/responses/badRequestResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
   /requests-mediated/mediated-requests/{mediatedRequestId}/decline:

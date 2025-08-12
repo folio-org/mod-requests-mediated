@@ -37,6 +37,7 @@ import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.SearchInstance;
 import org.folio.mr.domain.dto.SearchInstancesResponse;
 import org.folio.mr.domain.dto.SearchItem;
+import org.folio.mr.domain.dto.User;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.test.types.IntegrationTest;
@@ -44,6 +45,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EmptySource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
@@ -63,6 +67,7 @@ class MediatedRequestsApiTest extends BaseIT {
   private static final String INSTANCE_HRID_1 = "inst000000000001";
   private static final String INSTANCE_ID_2 = "03e561cf-d2cb-4200-9b93-73d4410d971f";
   private static final String INSTANCE_HRID_2 = "inst000000000002";
+  private static final String REQUESTER_ID = "9812e24b-0a66-457a-832c-c5e789797e35";
 
   @Autowired
   private MediatedRequestsRepository mediatedRequestsRepository;
@@ -100,7 +105,7 @@ class MediatedRequestsApiTest extends BaseIT {
     assertThat(entity.getRequestType(), is(RequestType.PAGE));
     assertThat(entity.getRequestDate().getTime(), is(mediatedRequest.getRequestDate().getTime()));
     assertThat(entity.getPatronComments(), is("test"));
-    assertThat(entity.getRequesterId(), is(UUID.fromString("9812e24b-0a66-457a-832c-c5e789797e35")));
+    assertThat(entity.getRequesterId(), is(UUID.fromString(REQUESTER_ID)));
     assertThat(entity.getRequesterFirstName(), is("Requester"));
     assertThat(entity.getRequesterMiddleName(), is("X"));
     assertThat(entity.getRequesterLastName(), is("Mediated"));
@@ -156,7 +161,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .fulfillmentPreference(DELIVERY)
       .deliveryAddressTypeId("93d3d88d-499b-45d0-9bc7-ac73c3a19880")
       .requestDate(requestDate)
-      .requesterId("9812e24b-0a66-457a-832c-c5e789797e35")
+      .requesterId(REQUESTER_ID)
       .instanceId(instanceId);
 
     wireMockServer.stubFor(WireMock.get(urlMatching("/search/instances" + ".*"))
@@ -174,7 +179,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("requestType", is("Hold")))
       .andExpect(jsonPath("requestDate", is(dateToString(requestDate))))
       .andExpect(jsonPath("patronComments").doesNotExist())
-      .andExpect(jsonPath("requesterId", is("9812e24b-0a66-457a-832c-c5e789797e35")))
+      .andExpect(jsonPath("requesterId", is(REQUESTER_ID)))
       .andExpect(jsonPath("proxyUserId").doesNotExist())
       .andExpect(jsonPath("instanceId", is(instanceId)))
       .andExpect(jsonPath("holdingsRecordId").doesNotExist())
@@ -251,7 +256,7 @@ class MediatedRequestsApiTest extends BaseIT {
     assertThat(entity.getRequestType(), is(RequestType.HOLD));
     assertThat(entity.getRequestDate().getTime(), is(mediatedRequest.getRequestDate().getTime()));
     assertThat(entity.getPatronComments(), nullValue());
-    assertThat(entity.getRequesterId(), is(UUID.fromString("9812e24b-0a66-457a-832c-c5e789797e35")));
+    assertThat(entity.getRequesterId(), is(UUID.fromString(REQUESTER_ID)));
     assertThat(entity.getRequesterFirstName(), is("Requester"));
     assertThat(entity.getRequesterMiddleName(), is("X"));
     assertThat(entity.getRequesterLastName(), is("Mediated"));
@@ -299,7 +304,7 @@ class MediatedRequestsApiTest extends BaseIT {
     MediatedRequest request = new MediatedRequest()
       .requestLevel(TITLE)
       .requestDate(requestDate)
-      .requesterId("9812e24b-0a66-457a-832c-c5e789797e35")
+      .requesterId(REQUESTER_ID)
       .instanceId(instanceId);
 
     wireMockServer.stubFor(WireMock.get(urlMatching("/search/instances" + ".*"))
@@ -311,6 +316,47 @@ class MediatedRequestsApiTest extends BaseIT {
         HttpStatus.SC_OK)));
 
     postRequest(request).andExpect(status().isCreated());
+  }
+
+  @ParameterizedTest
+  @NullSource
+  @EmptySource
+  @ValueSource(strings = { "requester-id" })
+  @SneakyThrows
+  void mediatedRequestShouldNotBeCreatedWhenRequesterIsNotProvidedOrNotAValidUUID(
+    String requesterId) {
+
+    Date requestDate = new Date();
+    MediatedRequest request = new MediatedRequest()
+      .requestLevel(TITLE)
+      .requestDate(requestDate)
+      .requesterId(requesterId)
+      .instanceId(INSTANCE_ID_1);
+
+    postRequest(request).andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @SneakyThrows
+  void mediatedRequestShouldNotBeCreatedWhenInactiveRequesterIsProvided() {
+    MediatedRequest request = new MediatedRequest()
+      .requestLevel(TITLE)
+      .requestDate(new Date())
+      .requesterId(REQUESTER_ID)
+      .instanceId(INSTANCE_ID_1);
+
+    wireMockServer.stubFor(WireMock.get(urlMatching("/users/.*"))
+      .willReturn(jsonResponse(new User().id(REQUESTER_ID).active(false), HttpStatus.SC_OK)));
+
+    postRequest(request)
+      .andExpect(status().isUnprocessableEntity())
+      .andExpect(jsonPath("errors").value(iterableWithSize(1)))
+      .andExpect(jsonPath("$.errors[0].message",
+        is("Mediated request cannot be saved for inactive patron")))
+      .andExpect(jsonPath("$.errors[0].code",
+        is("MEDIATED_REQUEST_SAVE_NOT_ALLOWED_FOR_INACTIVE_PATRON")))
+      .andExpect(jsonPath("$.errors[0].parameters[0].key", is("requesterId")))
+      .andExpect(jsonPath("$.errors[0].parameters[0].value", is(REQUESTER_ID)));
   }
 
   @SneakyThrows
@@ -405,7 +451,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .fulfillmentPreference(HOLD_SHELF)
       .requestDate(requestDate)
       .patronComments("test")
-      .requesterId("9812e24b-0a66-457a-832c-c5e789797e35")
+      .requesterId(REQUESTER_ID)
       .proxyUserId("7b89ee8c-6524-432e-8c57-82bc860af38f")
       .instanceId(instanceId)
       .holdingsRecordId("0c45bb50-7c9b-48b0-86eb-178a494e25fe")
@@ -433,7 +479,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("requestType", is("Page")))
       .andExpect(jsonPath("requestDate", is(dateToString(requestDate))))
       .andExpect(jsonPath("patronComments", is("test")))
-      .andExpect(jsonPath("requesterId", is("9812e24b-0a66-457a-832c-c5e789797e35")))
+      .andExpect(jsonPath("requesterId", is(REQUESTER_ID)))
       .andExpect(jsonPath("proxyUserId", is("7b89ee8c-6524-432e-8c57-82bc860af38f")))
       .andExpect(jsonPath("instanceId", is(instanceId)))
       .andExpect(jsonPath("holdingsRecordId", is("0c45bb50-7c9b-48b0-86eb-178a494e25fe")))
