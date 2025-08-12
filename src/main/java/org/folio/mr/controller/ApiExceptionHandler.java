@@ -1,8 +1,14 @@
 package org.folio.mr.controller;
 
+import java.util.List;
+
 import feign.FeignException;
 import org.folio.mr.domain.dto.Error;
 import org.folio.mr.domain.dto.ErrorResponse;
+import org.folio.mr.domain.dto.Errors;
+import org.folio.mr.domain.dto.Parameter;
+import org.folio.mr.domain.type.ErrorCode;
+import org.folio.mr.exception.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +16,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.ValidationException;
 import lombok.extern.log4j.Log4j2;
 
 @RestControllerAdvice
@@ -20,28 +25,35 @@ public class ApiExceptionHandler {
   @ExceptionHandler
   public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException e) {
     logException(e);
-    return buildResponseEntity(e, HttpStatus.NOT_FOUND);
+    return buildResponseEntity(HttpStatus.NOT_FOUND, e);
   }
 
   @ExceptionHandler
   public ResponseEntity<ErrorResponse> handleFeignException(FeignException e) {
     logException(e);
-    return buildResponseEntity(e, HttpStatus.valueOf(e.status()));
+    return buildResponseEntity(HttpStatus.valueOf(e.status()), e);
   }
 
-  @ExceptionHandler
-  public ResponseEntity<ErrorResponse> handleValidationException(ValidationException e) {
+  @ExceptionHandler(ValidationException.class)
+  public ResponseEntity<Errors> handleValidationExceptions(ValidationException e) {
     logException(e);
-    return buildResponseEntity(e, HttpStatus.UNPROCESSABLE_ENTITY);
+    return buildSingleErrorResponseEntity(HttpStatus.UNPROCESSABLE_ENTITY,
+      buildError(e, e.getCode(), e.getParameters()));
   }
 
-  private static void logException(Exception e) {
-    log.warn("logException:: handling exception", e);
-  }
+  private static ResponseEntity<ErrorResponse> buildResponseEntity(HttpStatusCode httpStatusCode,
+    Exception e) {
 
-  private static ResponseEntity<ErrorResponse> buildResponseEntity(Exception e, HttpStatusCode status) {
-    return ResponseEntity.status(status)
+    return ResponseEntity.status(httpStatusCode)
       .body(buildErrorResponse(e));
+  }
+
+  private static ResponseEntity<Errors> buildSingleErrorResponseEntity(
+    HttpStatusCode httpStatusCode, Error error) {
+
+    return buildResponseEntity(httpStatusCode, new Errors()
+      .errors(List.of(error))
+      .totalRecords(1));
   }
 
   private static ErrorResponse buildErrorResponse(Exception e) {
@@ -50,6 +62,22 @@ public class ApiExceptionHandler {
         .message(e.getMessage())
         .type(e.getClass().getSimpleName()))
       .totalRecords(1);
+  }
+
+  private static ResponseEntity<Errors> buildResponseEntity(HttpStatusCode httpStatusCode,
+    Errors errorResponse) {
+
+    return ResponseEntity.status(httpStatusCode).body(errorResponse);
+  }
+
+  private static Error buildError(Exception e, ErrorCode code, List<Parameter> parameters) {
+    return new Error(e.getMessage())
+      .code(code.getValue())
+      .parameters(parameters);
+  }
+
+  private static void logException(Exception e) {
+    log.warn("logException:: handling exception", e);
   }
 
 }

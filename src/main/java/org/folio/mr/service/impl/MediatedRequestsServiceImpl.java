@@ -10,6 +10,7 @@ import org.folio.mr.domain.mapper.MediatedRequestMapper;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.MediatedRequestDetailsService;
 import org.folio.mr.service.MediatedRequestsService;
+import org.folio.mr.service.ValidatorService;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   private final MediatedRequestsRepository mediatedRequestsRepository;
   private final MediatedRequestMapper requestsMapper;
   private final MediatedRequestDetailsService requestDetailsService;
+  private final ValidatorService validatorService;
 
   @Override
   public Optional<MediatedRequest> get(UUID id) {
@@ -63,6 +65,8 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
 
   @Override
   public MediatedRequest post(MediatedRequest mediatedRequest) {
+    validatorService.validateRequesterForSave(mediatedRequest);
+
     MediatedRequest extendedRequest = requestDetailsService.addRequestDetailsForCreate(
       mediatedRequest);
     MediatedRequestEntity savedEntity = mediatedRequestsRepository.save(
