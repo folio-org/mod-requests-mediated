@@ -1,3 +1,6 @@
+## 1.2.5 2025-08-19
+* Reject mediated request placed for inactive patron (MODREQMED-149)
+
 ## 1.2.4 2025-07-24
 * Declare lost API for mediated requests (MODREQMED-146)
 
