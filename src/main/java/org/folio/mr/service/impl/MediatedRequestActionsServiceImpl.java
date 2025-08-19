@@ -43,6 +43,7 @@ import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestActionsService;
 import org.folio.mr.service.SearchService;
 import org.folio.mr.service.UserService;
+import org.folio.mr.service.ValidatorService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.stereotype.Service;
@@ -64,11 +65,15 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   private final FolioExecutionContext folioExecutionContext;
   private final SearchService searchService;
   private final SystemUserScopedExecutionService executionService;
+  private final ValidatorService validatorService;
 
   @Override
   public void confirm(UUID id) {
     MediatedRequestEntity mediatedRequest = findMediatedRequest(id);
     log.info("confirm:: found mediated request: {}", id);
+
+    validatorService.validateRequesterForConfirm(mediatedRequest);
+
     Request request = createRequest(mediatedRequest);
     updateMediatedRequest(mediatedRequest, request);
     log.info("confirm:: mediated request {} was successfully confirmed", id);
