@@ -122,7 +122,7 @@
     },
     {
       "id": "requests-mediated-loans",
-      "version": "1.1",
+      "version": "1.2",
       "handlers": [
         {
           "methods": [
@@ -150,6 +150,21 @@
             "circulation-storage.requests.item.get",
             "circulation-storage.requests.collection.get",
             "tlr.loans.declare-item-lost.execute"
+          ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/requests-mediated/loans/{loanId}/claim-item-returned",
+          "permissionsRequired": ["requests-mediated.loans.claim-item-returned.execute"],
+          "modulePermissions": [
+            "circulation.loans.claim-item-returned.post",
+            "circulation-storage.loans.item.get",
+            "circulation-storage.loans.collection.get",
+            "circulation-storage.requests.item.get",
+            "circulation-storage.requests.collection.get",
+            "tlr.loans.claim-item-returned.execute"
           ]
         }
       ]
@@ -241,6 +256,11 @@
       "permissionName": "requests-mediated.loans.declare-item-lost.execute",
       "displayName": "requests-mediated - declare item lost by loan ID",
       "description": "Declare item lost by loan ID"
+    },
+    {
+      "permissionName": "requests-mediated.loans.claim-item-returned.execute",
+      "displayName": "requests-mediated - claim item returned by loan ID",
+      "description": "Claim item returned by loan ID"
     },
     {
       "permissionName": "requests-mediated.internal.fetch-request-details.all",
@@ -358,7 +378,8 @@
         "circulation-storage.loan-policies.item.get",
         "circulation-storage.requests.collection.get",
         "circulation-storage.requests.item.get",
-        "tlr.loans.declare-item-lost.execute"
+        "tlr.loans.declare-item-lost.execute",
+        "tlr.loans.claim-item-returned.execute"
       ]
     }
   },
