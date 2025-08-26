@@ -41,8 +41,8 @@
     <mapstruct.version>1.5.3.Final</mapstruct.version>
 
     <!-- test dependencies -->
-    <wiremock.version>3.12.1</wiremock.version>
-    <testcontainers.version>1.20.6</testcontainers.version>
+    <wiremock.version>3.13.1</wiremock.version>
+    <testcontainers.version>1.21.3</testcontainers.version>
   </properties>
 
   <dependencies>
@@ -180,7 +180,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-backend-testing</artifactId>
-      <version>1.5.5</version>
+      <version>3.0.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
