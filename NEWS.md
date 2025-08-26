@@ -1,3 +1,6 @@
+## 1.2.6 2025-08-26
+* Claim item returned API (MODREQMED-135)
+
 ## 1.2.5 2025-08-19
 * Reject mediated request placed for inactive patron (MODREQMED-149)
 
