@@ -282,6 +282,31 @@ paths:
           $ref: '#/components/responses/badRequestResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
+  /requests-mediated/loans/{loanId}/declare-claimed-returned-item-as-missing:
+    post:
+      operationId: declareClaimedReturnedItemAsMissing
+      description: Declare claimed returned item as missing
+      tags:
+        - mediatedRequestsLoans
+      parameters:
+        - $ref: '#/components/parameters/loanId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/declareClaimedReturnedItemAsMissingCirculationRequest"
+        required: true
+      responses:
+        '204':
+          description: Item successfully declared missing
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+        '422':
+          $ref: '#/components/responses/unprocessableEntityResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
 components:
   schemas:
     mediatedRequest:
@@ -354,6 +379,10 @@ components:
       $ref: 'schemas/circulation/claimItemReturnedCirculationRequest.yaml'
     claimItemReturnedTlrRequest:
       $ref: 'schemas/circulation/claimItemReturnedTlrRequest.yaml'
+    declareClaimedReturnedItemAsMissingCirculationRequest:
+      $ref: 'schemas/circulation/declareClaimedReturnedItemAsMissingCirculationRequest.yaml'
+    declareClaimedReturnedItemAsMissingTlrRequest:
+      $ref: 'schemas/circulation/declareClaimedReturnedItemAsMissingTlrRequest.yaml'
   parameters:
     mediatedRequestId:
       name: mediatedRequestId
