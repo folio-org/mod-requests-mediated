@@ -128,7 +128,7 @@ public class MediatedRequestsLoansActionServiceImpl implements MediatedRequestsL
   private void declareItemMissingInTlr(UUID itemId, String fakeRequesterId,
     DeclareClaimedReturnedItemAsMissingCirculationRequest request) {
 
-    log.info("declareMissing:: itemId={}, fakeRequesterId={}", itemId, fakeRequesterId);
+    log.info("declareItemMissingInTlr:: itemId={}, fakeRequesterId={}", itemId, fakeRequesterId);
     tlrClient.declareClaimedReturnedItemAsMissing(
       new DeclareClaimedReturnedItemAsMissingTlrRequest()
         .itemId(itemId)
