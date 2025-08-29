@@ -25,13 +25,13 @@ class DeclareClaimedReturnedItemAsMissingApiTest extends BaseIT {
   private static final UUID CONFIRMED_REQUEST_ID = UUID.randomUUID();
 
   private static final String COMMENT = "Test comment";
-  public static final String REQUESTS_MEDIATED_DECLARE_MISSING_URL_TEMPLATE =
+  private static final String REQUESTS_MEDIATED_DECLARE_MISSING_URL_TEMPLATE =
     "/requests-mediated/loans/%s/declare-claimed-returned-item-as-missing";
   private static final String CIRCULATION_DECLARE_MISSING_URL_TEMPLATE =
     "/circulation/loans/%s/declare-claimed-returned-item-as-missing";
   private static final String CIRCULATION_DECLARE_MISSING_URL =
     String.format(CIRCULATION_DECLARE_MISSING_URL_TEMPLATE, LOAN_ID);
-  public static final String TLR_DECLARE_MISSING_URL =
+  private static final String TLR_DECLARE_MISSING_URL =
     "/tlr/loans/declare-claimed-returned-item-as-missing";
   private static final String LOAN_STORAGE_URL = "/loan-storage/loans";
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
