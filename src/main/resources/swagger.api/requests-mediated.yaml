@@ -252,11 +252,13 @@ paths:
         required: true
       responses:
         '204':
-          description: Item was declared lost successfully
+          description: Item successfully declared missing
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
         '404':
           $ref: '#/components/responses/notFoundResponse'
         '422':
-          $ref: '#/components/responses/badRequestResponse'
+          $ref: '#/components/responses/unprocessableEntityResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
   /requests-mediated/loans/{loanId}/claim-item-returned:
@@ -275,11 +277,13 @@ paths:
         required: true
       responses:
         '204':
-          description: Item was claimed returned successfully
+          description: Item successfully declared missing
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
         '404':
           $ref: '#/components/responses/notFoundResponse'
         '422':
-          $ref: '#/components/responses/badRequestResponse'
+          $ref: '#/components/responses/unprocessableEntityResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
   /requests-mediated/loans/{loanId}/declare-claimed-returned-item-as-missing:
@@ -442,7 +446,7 @@ components:
             objectExample:
               externalValue: 'examples/mediatedRequests.json'
     badRequestResponse:
-      description: Validation errors
+      description: Invalid request response
       content:
         application/json:
           example:
@@ -458,6 +462,16 @@ components:
           example:
             errors:
               - message: Request not found
+            total_records: 1
+          schema:
+            $ref: '#/components/schemas/errorResponse'
+    unprocessableEntityResponse:
+      description: Validation errors
+      content:
+        application/json:
+          example:
+            errors:
+              - message: Validation failed
             total_records: 1
           schema:
             $ref: '#/components/schemas/errorResponse'
