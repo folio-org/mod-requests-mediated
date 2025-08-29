@@ -398,7 +398,8 @@
         "circulation-storage.requests.collection.get",
         "circulation-storage.requests.item.get",
         "tlr.loans.declare-item-lost.execute",
-        "tlr.loans.claim-item-returned.execute"
+        "tlr.loans.claim-item-returned.execute",
+        "tlr.loans.declare-claimed-returned-item-as-missing.execute"
       ]
     }
   },
