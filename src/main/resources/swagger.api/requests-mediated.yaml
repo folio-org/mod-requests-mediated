@@ -302,7 +302,7 @@ paths:
         required: true
       responses:
         '204':
-          description: Item successfully declared missing
+          description: Item successfully declared as missing
         '400':
           $ref: '#/components/responses/badRequestResponse'
         '404':
