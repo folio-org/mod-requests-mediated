@@ -169,7 +169,7 @@
         },
         {
           "methods": ["POST"],
-          "pathPattern": "/requests-mediated/loans/declare-claimed-returned-item-as-missing",
+          "pathPattern": "/requests-mediated/loans/{loanId}/declare-claimed-returned-item-as-missing",
           "permissionsRequired": [
             "requests-mediated.loans.declare-claimed-returned-item-as-missing.execute"
           ],
