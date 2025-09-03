@@ -4,8 +4,9 @@ import java.util.UUID;
 
 import org.folio.mr.domain.dto.CheckOutRequest;
 import org.folio.mr.domain.dto.CheckOutResponse;
-import org.folio.mr.domain.dto.DeclareLostCirculationRequest;
 import org.folio.mr.domain.dto.ClaimItemReturnedCirculationRequest;
+import org.folio.mr.domain.dto.DeclareClaimedReturnedItemAsMissingCirculationRequest;
+import org.folio.mr.domain.dto.DeclareLostCirculationRequest;
 import org.folio.mr.exception.HttpFailureFeignException;
 import org.folio.mr.rest.resource.MediatedRequestsLoansApi;
 import org.folio.mr.service.CheckOutService;
@@ -42,6 +43,14 @@ public class MediatedRequestLoansController implements MediatedRequestsLoansApi 
   public ResponseEntity<Void> claimItemReturned(UUID loanId,
     ClaimItemReturnedCirculationRequest claimItemReturnedRequest) {
     mediatedRequestsLoansActionService.claimItemReturned(loanId, claimItemReturnedRequest);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Override
+  public ResponseEntity<Void> declareClaimedReturnedItemAsMissing(UUID loanId,
+    DeclareClaimedReturnedItemAsMissingCirculationRequest request) {
+
+    mediatedRequestsLoansActionService.declareItemMissing(loanId, request);
     return ResponseEntity.noContent().build();
   }
 

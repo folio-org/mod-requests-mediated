@@ -4,6 +4,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
+import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
@@ -96,6 +98,18 @@ public class MockHelper {
       .withRequestBody(equalToJson(asJsonString(loanPolicy)))
       .withHeader(TENANT, equalTo(tenantId))
       .willReturn(jsonResponse(asJsonString(loanPolicy), HttpStatus.SC_CREATED)));
+  }
+
+  public void mockPostNoContentResponse(String url, String tenant) {
+    wireMockServer.stubFor(post(urlPathEqualTo(url))
+      .withHeader(TENANT, equalTo(tenant))
+      .willReturn(noContent()));
+  }
+
+  public void mockGetNotFoundResponse(String url, String tenant) {
+    wireMockServer.stubFor(get(urlPathEqualTo(url))
+      .withHeader(TENANT, equalTo(tenant))
+      .willReturn(notFound()));
   }
 
 }
