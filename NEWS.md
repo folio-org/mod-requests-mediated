@@ -1,3 +1,6 @@
+## 1.2.7 2025-09-09
+* Declare item missing API (MODREQMED-152)
+
 ## 1.2.6 2025-08-26
 * Claim item returned API (MODREQMED-135)
 
