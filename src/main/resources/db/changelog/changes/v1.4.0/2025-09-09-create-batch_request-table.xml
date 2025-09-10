@@ -1,0 +1,113 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+  <changeSet id="create-batch-request-status-enum" author="Mukhiddin_Yusupov">
+    <sql dbms="postgresql">
+      CREATE TYPE BatchRequestStatus AS ENUM ('Pending', 'In progress', 'Completed', 'Failed');
+    </sql>
+  </changeSet>
+
+  <changeSet id="create-batch-request-split-status-enum" author="Mukhiddin_Yusupov">
+    <sql dbms="postgresql">
+      CREATE TYPE BatchRequestSplitStatus AS ENUM ('Pending', 'In progress', 'Completed', 'Failed');
+    </sql>
+  </changeSet>
+
+  <changeSet id="createBatchRequestTable" author="Mukhiddin_Yusupov">
+    <comment>
+      Create batch_request table
+    </comment>
+
+    <createTable tableName="batch_request">
+      <column name="id" type="uuid">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_batch_request"/>
+      </column>
+      <column name="requester_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="status" type="BatchRequestStatus">
+        <constraints nullable="false"/>
+      </column>
+      <column name="request_date" type="timestamp without time zone">
+        <constraints nullable="false"/>
+      </column>
+      <column name="patron_comments" type="text"/>
+      <column name="mediated_workflow" type="varchar(255)"/>
+      <!-- Metadata -->
+      <column name="created_date" type="timestamp without time zone"/>
+      <column name="created_by_user_id" type="uuid"/>
+      <column name="created_by_username" type="varchar(100)"/>
+      <column name="updated_date" type="timestamp without time zone"/>
+      <column name="updated_by_user_id" type="uuid"/>
+      <column name="updated_by_username" type="varchar(100)"/>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="createBatchRequestSplitTable" author="Mukhiddin_Yusupov">
+    <comment>
+      Create batch_request_split table
+    </comment>
+
+    <createTable tableName="batch_request_split">
+      <column name="id" type="uuid">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_batch_request_split"/>
+      </column>
+      <column name="batch_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="item_id" type="uuid"/>
+      <column name="requester_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="pickup_service_point_id" type="uuid"/>
+      <column name="status" type="BatchRequestSplitStatus">
+        <constraints nullable="false"/>
+      </column>
+      <column name="confirmed_request_id" type="uuid"/>
+      <column name="patron_comments" type="text"/>
+      <column name="error_details" type="text"/>
+
+      <!-- Metadata -->
+      <column name="created_date" type="timestamp without time zone">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_by_user_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_by_username" type="varchar(100)"/>
+      <column name="updated_date" type="timestamp without time zone">
+        <constraints nullable="false"/>
+      </column>
+      <column name="updated_by_user_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="updated_by_username" type="varchar(100)"/>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="add-batch_request_split_batch_id_foreign_key" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="batch_request"/>
+        <tableExists tableName="batch_request_split"/>
+        <not>
+          <foreignKeyConstraintExists foreignKeyName="batch_request_split_batch_id_foreign_key"
+                                      schemaName="${database.defaultSchemaName}"
+                                      foreignKeyTableName="batch_request_split"/>
+        </not>
+      </and>
+    </preConditions>
+
+    <comment>Add FK for batch_request in batch_request_split referenced to batch_request.id</comment>
+
+    <addForeignKeyConstraint baseTableName="batch_request_split"
+                             baseColumnNames="batch_id"
+                             referencedTableName="batch_request"
+                             referencedColumnNames="id"
+                             constraintName="batch_request_split_batch_id_foreign_key"/>
+  </changeSet>
+
+</databaseChangeLog>
