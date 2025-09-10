@@ -5,14 +5,13 @@ import static java.util.Optional.ofNullable;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import org.folio.mr.client.ClaimItemReturnedCirculationClient;
-import org.folio.mr.client.ClaimItemReturnedTlrClient;
-import org.folio.mr.client.DeclareLostCirculationClient;
-import org.folio.mr.client.DeclareLostTlrClient;
+import org.folio.mr.client.CirculationErrorForwardingClient;
 import org.folio.mr.client.LoanClient;
-import org.folio.mr.client.RequestStorageClient;
+import org.folio.mr.client.TlrErrorForwardingClient;
 import org.folio.mr.domain.dto.ClaimItemReturnedCirculationRequest;
 import org.folio.mr.domain.dto.ClaimItemReturnedTlrRequest;
+import org.folio.mr.domain.dto.DeclareClaimedReturnedItemAsMissingCirculationRequest;
+import org.folio.mr.domain.dto.DeclareClaimedReturnedItemAsMissingTlrRequest;
 import org.folio.mr.domain.dto.DeclareLostCirculationRequest;
 import org.folio.mr.domain.dto.DeclareLostTlrRequest;
 import org.folio.mr.domain.dto.Request;
@@ -33,16 +32,48 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class MediatedRequestsLoansActionServiceImpl implements MediatedRequestsLoansActionService {
 
-  private final ClaimItemReturnedCirculationClient claimItemReturnedCirculationClient;
-  private final ClaimItemReturnedTlrClient claimItemReturnedTlrClient;
-  private final DeclareLostCirculationClient declareLostCirculationClient;
-  private final DeclareLostTlrClient declareLostTlrClient;
+  private final CirculationErrorForwardingClient circulationClient;
+  private final TlrErrorForwardingClient tlrClient;
 
   private final MediatedRequestsRepository mediatedRequestsRepository;
   private final LoanClient loanClient;
   private final SystemUserScopedExecutionService systemUserService;
   private final ConsortiumService consortiumService;
   private final CirculationStorageService circulationStorageService;
+
+  @Override
+  public void declareLost(UUID loanId, DeclareLostCirculationRequest declareLostRequest) {
+    log.info("declareLost:: loanId={}, declaredLostDateTime={}, servicePointId={}", () -> loanId,
+      declareLostRequest::getDeclaredLostDateTime, declareLostRequest::getServicePointId);
+    circulationClient.declareItemLost(loanId.toString(), declareLostRequest);
+    log.info("declareLost:: Declared item lost locally for loanId: {}", loanId);
+    var mediatedRequest = findMediatedRequest(loanId);
+    executeInCentralTenant(mediatedRequest, fakeRequesterId ->
+      declareItemLostInTlr(mediatedRequest.getItemId(), fakeRequesterId, declareLostRequest));
+  }
+
+  @Override
+  public void claimItemReturned(UUID loanId, ClaimItemReturnedCirculationRequest request) {
+    log.info("claimItemReturned:: loanId={}, itemClaimedReturnedDateTime={}", loanId,
+      request.getItemClaimedReturnedDateTime());
+    circulationClient.claimItemReturned(loanId.toString(), request);
+    log.info("claimItemReturned:: Claimed item returned locally for loanId: {}", loanId);
+    var mediatedRequest = findMediatedRequest(loanId);
+    executeInCentralTenant(mediatedRequest, fakeRequesterId ->
+      claimItemReturnedInTlr(mediatedRequest.getItemId(), fakeRequesterId, request));
+  }
+
+  @Override
+  public void declareItemMissing(UUID loanId,
+    DeclareClaimedReturnedItemAsMissingCirculationRequest request) {
+
+    log.info("declareItemMissing:: loanId={}", loanId);
+    circulationClient.declareClaimedReturnedItemAsMissing(loanId.toString(), request);
+    log.info("declareItemMissing:: declared item missing locally for loanId: {}", loanId);
+    var mediatedRequest = findMediatedRequest(loanId);
+    executeInCentralTenant(mediatedRequest, fakeRequesterId ->
+      declareItemMissingInTlr(mediatedRequest.getItemId(), fakeRequesterId, request));
+  }
 
   private MediatedRequestEntity findMediatedRequest(UUID loanId) {
     var loan = loanClient.getLoanById(loanId.toString())
@@ -68,20 +99,11 @@ public class MediatedRequestsLoansActionServiceImpl implements MediatedRequestsL
         .ifPresent(action));
   }
 
-  @Override
-  public void claimItemReturned(UUID loanId, ClaimItemReturnedCirculationRequest request) {
-    log.info("claimItemReturned:: loanId={}, itemClaimedReturnedDateTime={}", loanId, request.getItemClaimedReturnedDateTime());
-    claimItemReturnedCirculationClient.claimItemReturned(loanId.toString(), request);
-    log.info("claimItemReturned:: Claimed item returned locally for loanId: {}", loanId);
-    var mediatedRequest = findMediatedRequest(loanId);
-    executeInCentralTenant(mediatedRequest, fakeRequesterId ->
-      claimItemReturnedInTlr(mediatedRequest.getItemId(), fakeRequesterId, request));
-  }
-
-  private void claimItemReturnedInTlr(UUID itemId, String fakeRequesterId, ClaimItemReturnedCirculationRequest claimItemReturnedRequest) {
+  private void claimItemReturnedInTlr(UUID itemId, String fakeRequesterId,
+    ClaimItemReturnedCirculationRequest claimItemReturnedRequest) {
     log.info("claimItemReturnedInTlr:: itemId={}, fakeRequesterId={}, itemClaimedReturnedDateTime={}",
       () -> itemId, () -> fakeRequesterId, claimItemReturnedRequest::getItemClaimedReturnedDateTime);
-    claimItemReturnedTlrClient.claimItemReturned(
+    tlrClient.claimItemReturned(
       new ClaimItemReturnedTlrRequest()
         .itemId(itemId)
         .userId(UUID.fromString(fakeRequesterId))
@@ -90,26 +112,28 @@ public class MediatedRequestsLoansActionServiceImpl implements MediatedRequestsL
     );
   }
 
-  @Override
-  public void declareLost(UUID loanId, DeclareLostCirculationRequest declareLostRequest) {
-    log.info("declareLost:: loanId={}, declaredLostDateTime={}, servicePointId={}", () -> loanId,
-      declareLostRequest::getDeclaredLostDateTime, declareLostRequest::getServicePointId);
-    declareLostCirculationClient.declareItemLost(loanId.toString(), declareLostRequest);
-    log.info("declareLost:: Declared item lost locally for loanId: {}", loanId);
-    var mediatedRequest = findMediatedRequest(loanId);
-    executeInCentralTenant(mediatedRequest, fakeRequesterId ->
-      declareItemLostInTlr(mediatedRequest.getItemId(), fakeRequesterId, declareLostRequest));
-  }
-
   private void declareItemLostInTlr(UUID itemId, String fakeRequesterId, DeclareLostCirculationRequest declareLostRequest) {
     log.info("declareItemLostInTlr:: itemId={}, fakeRequesterId={}, declaredLostDateTime={}, servicePointId={}",
       () -> itemId, () -> fakeRequesterId, declareLostRequest::getDeclaredLostDateTime, declareLostRequest::getServicePointId);
-    declareLostTlrClient.declareItemLost(
+    tlrClient.declareItemLost(
       new DeclareLostTlrRequest()
         .itemId(itemId)
         .userId(UUID.fromString(fakeRequesterId))
         .servicePointId(declareLostRequest.getServicePointId())
+        .declaredLostDateTime(declareLostRequest.getDeclaredLostDateTime())
         .comment(declareLostRequest.getComment())
+    );
+  }
+
+  private void declareItemMissingInTlr(UUID itemId, String fakeRequesterId,
+    DeclareClaimedReturnedItemAsMissingCirculationRequest request) {
+
+    log.info("declareItemMissingInTlr:: itemId={}, fakeRequesterId={}", itemId, fakeRequesterId);
+    tlrClient.declareClaimedReturnedItemAsMissing(
+      new DeclareClaimedReturnedItemAsMissingTlrRequest()
+        .itemId(itemId)
+        .userId(UUID.fromString(fakeRequesterId))
+        .comment(request.getComment())
     );
   }
 }

@@ -100,7 +100,7 @@ public class KafkaEventListener {
     var headerValue = headers.get(headerName);
     if (headerValue == null) {
       if (XOkapiHeaders.USER_ID.equals(headerName)) {
-        log.warn("getHeaderValue:: {} header is missing, this might be a system event", headerName);
+        log.warn("getHeaderValue:: {} header is missing, this might be a shadow user event creation", headerName);
         return null;
       }
       throw new KafkaEventDeserializationException(
