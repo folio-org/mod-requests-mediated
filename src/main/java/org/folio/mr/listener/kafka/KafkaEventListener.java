@@ -99,6 +99,10 @@ public class KafkaEventListener {
     log.debug("getHeaderValue:: headers: {}, headerName: {}", () -> headers, () -> headerName);
     var headerValue = headers.get(headerName);
     if (headerValue == null) {
+      if (XOkapiHeaders.USER_ID.equals(headerName)) {
+        log.warn("getHeaderValue:: {} header is missing, this might be a system event", headerName);
+        return null;
+      }
       throw new KafkaEventDeserializationException(
         String.format("Failed to get [%s] from message headers", headerName));
     }
