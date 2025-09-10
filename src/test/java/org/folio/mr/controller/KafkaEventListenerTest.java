@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static org.folio.mr.domain.dto.Request.StatusEnum.CLOSED_CANCELLED;
 import static org.folio.mr.domain.dto.Request.StatusEnum.CLOSED_FILLED;
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_AWAITING_PICKUP;
@@ -14,7 +15,6 @@ import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_NOT_YET_FILLED;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
 import static org.folio.mr.util.TestUtils.buildEvent;
 import static org.folio.mr.util.TestUtils.buildInventoryEvent;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -481,14 +481,48 @@ class KafkaEventListenerTest extends BaseIT {
     assertEquals(newBarcode, updatedRequest2.getItemBarcode());
   }
 
+  @SneakyThrows
   @Test
-  void shouldNotFailIfUserIdInHeaderIsNull() {
+  void shouldFailIfRequiredTenantHeaderIsMissing() {
     KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_NOT_YET_FILLED, OPEN_IN_TRANSIT);
 
-    assertDoesNotThrow(() -> publishEventAndWaitWithHeaders(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event,
-        Map.of(XOkapiHeaders.USER_ID, "test-user-id".getBytes(StandardCharsets.UTF_8))));
+    final int initialOffset = getOffset(REQUEST_KAFKA_TOPIC_NAME, CONSUMER_GROUP_ID);
+    publishEventWithCustomHeaders(REQUEST_KAFKA_TOPIC_NAME, event,
+      Map.of(XOkapiHeaders.USER_ID, "test-user-id".getBytes(StandardCharsets.UTF_8)));
+    Thread.sleep(2000); // Give time for message to be consumed and fail
 
-    assertDoesNotThrow(() -> publishEventAndWaitWithHeaders(TENANT_ID_COLLEGE, ITEM_KAFKA_TOPIC_NAME, event, Map.of()));
+    // Verify that the offset did NOT advance, meaning the message failed to process
+    final int currentOffset = getOffset(REQUEST_KAFKA_TOPIC_NAME, CONSUMER_GROUP_ID);
+    assertEquals(initialOffset, currentOffset,
+      "Expected offset to remain unchanged when required tenant header is missing");
+  }
+
+  @SneakyThrows
+  @Test
+  void shouldSucceedIfOptionalUserIdHeaderIsMissing() {
+    KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_NOT_YET_FILLED, OPEN_IN_TRANSIT);
+    final int initialOffset = getOffset(REQUEST_KAFKA_TOPIC_NAME, CONSUMER_GROUP_ID);
+    publishEventWithCustomHeaders(REQUEST_KAFKA_TOPIC_NAME, event,
+      Map.of(XOkapiHeaders.TENANT, TENANT_ID_CONSORTIUM.getBytes(StandardCharsets.UTF_8)));
+    Thread.sleep(2000); // Give time for message to be consumed and processed
+
+    // Verify that the offset DID advance, meaning the message was processed successfully
+    final int currentOffset = getOffset(REQUEST_KAFKA_TOPIC_NAME, CONSUMER_GROUP_ID);
+    assertEquals(initialOffset + 1, currentOffset,
+      "Expected offset to advance when optional user-id header is missing");
+  }
+
+  @SneakyThrows
+  private void publishEventWithCustomHeaders(String topic, KafkaEvent<?> event,
+    Map<String, byte[]> customHeaders) {
+
+    Collection<Header> headers = customHeaders.entrySet().stream()
+      .map(entry -> new RecordHeader(entry.getKey(), entry.getValue()))
+      .collect(toList());
+
+    var eventString = asJsonString(event);
+    kafkaTemplate.send(new ProducerRecord<>(topic, 0, randomId(), eventString, headers))
+      .get(10, SECONDS);
   }
 
   private void publishEventAndWaitWithHeaders(String tenant, String topic, KafkaEvent<?> event,
