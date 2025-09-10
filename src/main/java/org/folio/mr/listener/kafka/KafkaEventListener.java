@@ -95,16 +95,16 @@ public class KafkaEventListener {
     }
   }
 
-  private static String getHeaderValue(Map<String, Object> headers, String headerName, boolean required) {
+  private static String getHeaderValue(Map<String, Object> headers, String headerName, boolean isRequired) {
     log.debug("getHeaderValue:: headers: {}, headerName: {}", () -> headers, () -> headerName);
     var headerValue = headers.get(headerName);
     if (headerValue == null) {
-      if (!required) {
-        log.warn("getHeaderValue:: {} header is missing", headerName);
-        return null;
+      if (isRequired) {
+        throw new KafkaEventDeserializationException(String.format(
+          "Failed to get [%s] from message headers", headerName));
       }
-      throw new KafkaEventDeserializationException(String.format(
-        "Failed to get [%s] from message headers", headerName));
+      log.warn("getHeaderValue:: {} header is missing", headerName);
+      return null;
     }
     var value = new String((byte[]) headerValue, StandardCharsets.UTF_8);
     log.info("getHeaderValue:: header {} value is {}", headerName, value);

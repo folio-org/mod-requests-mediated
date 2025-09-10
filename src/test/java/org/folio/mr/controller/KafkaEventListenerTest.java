@@ -14,13 +14,16 @@ import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_NOT_YET_FILLED;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequest;
 import static org.folio.mr.util.TestUtils.buildEvent;
 import static org.folio.mr.util.TestUtils.buildInventoryEvent;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +32,7 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.awaitility.Awaitility;
 import org.folio.mr.api.BaseIT;
 import org.folio.mr.domain.dto.ConsortiumItem;
@@ -475,6 +479,34 @@ class KafkaEventListenerTest extends BaseIT {
 
     MediatedRequestEntity updatedRequest2 = getMediatedRequest(mediatedRequest2.getId());
     assertEquals(newBarcode, updatedRequest2.getItemBarcode());
+  }
+
+  @Test
+  void shouldNotFailIfUserIdInHeaderIsNull() {
+    KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_NOT_YET_FILLED, OPEN_IN_TRANSIT);
+
+    assertDoesNotThrow(() -> publishEventAndWaitWithHeaders(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event,
+        Map.of(XOkapiHeaders.USER_ID, "test-user-id".getBytes(StandardCharsets.UTF_8))));
+
+    assertDoesNotThrow(() -> publishEventAndWaitWithHeaders(TENANT_ID_COLLEGE, ITEM_KAFKA_TOPIC_NAME, event, Map.of()));
+  }
+
+  private void publishEventAndWaitWithHeaders(String tenant, String topic, KafkaEvent<?> event,
+      Map<String, byte[]> additionalHeaders) {
+
+    final int initialOffset = getOffset(topic, CONSUMER_GROUP_ID);
+    publishEventWithHeaders(tenant, topic, asJsonString(event), additionalHeaders);
+    waitForOffset(topic, CONSUMER_GROUP_ID, initialOffset + 1);
+  }
+
+  @SneakyThrows
+  private void publishEventWithHeaders(String tenant, String topic, String payload,
+      Map<String, byte[]> additionalHeaders) {
+
+    Collection<Header> headers = buildHeadersForKafkaProducer(tenant);
+    additionalHeaders.forEach((key, value) -> headers.add(new RecordHeader(key, value)));
+    kafkaTemplate.send(new ProducerRecord<>(topic, 0, randomId(), payload, headers))
+      .get(10, SECONDS);
   }
 
   private static KafkaEvent<Request> buildRequestUpdateEvent(Request.StatusEnum oldStatus,
