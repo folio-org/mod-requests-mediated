@@ -92,6 +92,12 @@ class KafkaEventListenerTest extends BaseIT {
 
     publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
 
+    await().atMost(30, SECONDS)
+      .until(() -> {
+        MediatedRequestEntity updatedRequest = getMediatedRequest(initialMediatedRequest.getId());
+        return MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL.getValue().equals(updatedRequest.getStatus());
+      });
+
     MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
     assertEquals(MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL.getValue(),
       updatedMediatedRequest.getStatus());
@@ -252,6 +258,12 @@ class KafkaEventListenerTest extends BaseIT {
     assertNotNull(initialMediatedRequest.getId());
 
     publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
+
+    await().atMost(30, SECONDS)
+      .until(() -> {
+        MediatedRequestEntity updatedRequest = getMediatedRequest(initialMediatedRequest.getId());
+        return MediatedRequest.StatusEnum.CLOSED_FILLED.getValue().equals(updatedRequest.getStatus());
+      });
 
     MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
     assertEquals(MediatedRequest.StatusEnum.CLOSED_FILLED.getValue(), updatedMediatedRequest.getStatus());
