@@ -87,20 +87,24 @@ public class KafkaEventListener {
         .getTypeFactory()
         .constructParametricType(kafkaEventClass, dataType);
       return objectMapper.<KafkaEvent<T>>readValue(eventString, eventType)
-        .withTenantIdHeaderValue(getHeaderValue(messageHeaders, XOkapiHeaders.TENANT))
-        .withUserIdHeaderValue(getHeaderValue(messageHeaders, XOkapiHeaders.USER_ID));
+        .withTenantIdHeaderValue(getHeaderValue(messageHeaders, XOkapiHeaders.TENANT, true))
+        .withUserIdHeaderValue(getHeaderValue(messageHeaders, XOkapiHeaders.USER_ID, false));
     } catch (JsonProcessingException e) {
       log.error("deserialize:: failed to deserialize event", e);
       throw new KafkaEventDeserializationException(e);
     }
   }
 
-  private static String getHeaderValue(Map<String, Object> headers, String headerName) {
+  private static String getHeaderValue(Map<String, Object> headers, String headerName, boolean isRequired) {
     log.debug("getHeaderValue:: headers: {}, headerName: {}", () -> headers, () -> headerName);
     var headerValue = headers.get(headerName);
     if (headerValue == null) {
-      throw new KafkaEventDeserializationException(
-        String.format("Failed to get [%s] from message headers", headerName));
+      if (isRequired) {
+        throw new KafkaEventDeserializationException(String.format(
+          "Failed to get [%s] from message headers", headerName));
+      }
+      log.warn("getHeaderValue:: {} header is missing", headerName);
+      return null;
     }
     var value = new String((byte[]) headerValue, StandardCharsets.UTF_8);
     log.info("getHeaderValue:: header {} value is {}", headerName, value);
