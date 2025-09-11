@@ -1,6 +1,8 @@
 package org.folio.mr.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.mr.domain.BatchRequestSplitStatus.COMPLETED;
+import static org.folio.mr.domain.BatchRequestStatus.IN_PROGRESS;
 import static org.mockito.Mockito.when;
 
 import java.sql.Timestamp;
@@ -35,16 +37,19 @@ class BatchRequestSplitRepositoryIT extends BaseIT {
   void batchRequestSplitMetadataShouldBeGeneratedWhenSaveEntity() {
     var randomUUID = UUID.randomUUID();
     var userId = UUID.randomUUID();
+    var requestDate = Timestamp.from(Instant.parse("2025-09-10T10:15:30.00Z"));
     var batch = BatchRequest.builder()
-      .id(randomUUID).requesterId(randomUUID)
-      .status(BatchRequestStatus.IN_PROGRESS)
-      .requestDate(Timestamp.from(Instant.now()))
+      .id(randomUUID)
+      .requesterId(randomUUID)
+      .status(BatchRequestStatus.fromValue("In progress"))
+      .requestDate(requestDate)
       .build();
     var requestSplit = BatchRequestSplit.builder()
       .id(randomUUID)
       .batchRequest(batch)
       .requesterId(randomUUID)
-      .status(BatchRequestSplitStatus.COMPLETED).build();
+      .status(BatchRequestSplitStatus.fromValue("Completed"))
+      .build();
     when(context.getUserId()).thenReturn(userId);
 
     var savedBatch = batchRequestRepository.save(batch);
@@ -58,5 +63,13 @@ class BatchRequestSplitRepositoryIT extends BaseIT {
     assertThat(List.of(savedBatch, savedSplit))
       .extracting(MetadataEntity::getCreatedByUserId)
       .containsOnly(userId, userId);
+
+    assertThat(savedBatch)
+      .extracting(BatchRequest::getRequesterId, BatchRequest::getRequestDate, BatchRequest::getStatus)
+      .containsExactly(randomUUID, requestDate, IN_PROGRESS);
+
+    assertThat(savedSplit)
+      .extracting(BatchRequestSplit::getRequesterId, BatchRequestSplit::getStatus)
+      .containsExactly(randomUUID, COMPLETED);
   }
 }
