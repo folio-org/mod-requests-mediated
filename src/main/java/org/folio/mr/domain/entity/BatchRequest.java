@@ -55,12 +55,6 @@ public class BatchRequest extends MetadataEntity implements Persistable<UUID>, I
   @Column(name = "mediated_workflow", length = 255)
   private String mediatedWorkflow;
 
-  @Column(name = "created_by_username", length = 100)
-  private String createdByUsername;
-
-  @Column(name = "updated_by_username", length = 100)
-  private String updatedByUsername;
-
   @Transient
   private boolean isNew = true;
 

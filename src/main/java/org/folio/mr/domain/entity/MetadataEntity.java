@@ -40,4 +40,10 @@ public class MetadataEntity {
   @LastModifiedBy
   @Column(name = "updated_by_user_id", nullable = false)
   private UUID updatedByUserId;
+
+  @Column(name = "created_by_username", length = 100)
+  private String createdByUsername;
+
+  @Column(name = "updated_by_username", length = 100)
+  private String updatedByUsername;
 }

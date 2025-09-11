@@ -68,12 +68,6 @@ public class BatchRequestSplit extends MetadataEntity implements Persistable<UUI
   @Column(name = "error_details")
   private String errorDetails;
 
-  @Column(name = "created_by_username", length = 100)
-  private String createdByUsername;
-
-  @Column(name = "updated_by_username", length = 100)
-  private String updatedByUsername;
-
   @Transient
   private boolean isNew = true;
 
