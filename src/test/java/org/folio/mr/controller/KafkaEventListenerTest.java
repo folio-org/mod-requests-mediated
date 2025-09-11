@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -489,12 +490,13 @@ class KafkaEventListenerTest extends BaseIT {
     final int initialOffset = getOffset(REQUEST_KAFKA_TOPIC_NAME, CONSUMER_GROUP_ID);
     publishEventWithCustomHeaders(REQUEST_KAFKA_TOPIC_NAME, event,
       Map.of(XOkapiHeaders.USER_ID, "test-user-id".getBytes(StandardCharsets.UTF_8)));
-    Thread.sleep(2000); // Give time for message to be consumed and fail
-
-    // Verify that the offset did NOT advance, meaning the message failed to process
-    final int currentOffset = getOffset(REQUEST_KAFKA_TOPIC_NAME, CONSUMER_GROUP_ID);
-    assertEquals(initialOffset, currentOffset,
-      "Expected offset to remain unchanged when required tenant header is missing");
+    await()
+      .atMost(10, TimeUnit.SECONDS)
+      .untilAsserted(() -> {
+        final int currentOffset = getOffset(REQUEST_KAFKA_TOPIC_NAME, CONSUMER_GROUP_ID);
+        assertEquals(initialOffset, currentOffset,
+          "Expected offset to remain unchanged when required tenant header is missing");
+      });
   }
 
   @SneakyThrows
@@ -504,12 +506,13 @@ class KafkaEventListenerTest extends BaseIT {
     final int initialOffset = getOffset(REQUEST_KAFKA_TOPIC_NAME, CONSUMER_GROUP_ID);
     publishEventWithCustomHeaders(REQUEST_KAFKA_TOPIC_NAME, event,
       Map.of(XOkapiHeaders.TENANT, TENANT_ID_CONSORTIUM.getBytes(StandardCharsets.UTF_8)));
-    Thread.sleep(2000); // Give time for message to be consumed and processed
-
-    // Verify that the offset DID advance, meaning the message was processed successfully
-    final int currentOffset = getOffset(REQUEST_KAFKA_TOPIC_NAME, CONSUMER_GROUP_ID);
-    assertEquals(initialOffset + 1, currentOffset,
-      "Expected offset to advance when optional user-id header is missing");
+    await()
+      .atMost(10, TimeUnit.SECONDS)
+      .untilAsserted(() -> {
+        final int currentOffset = getOffset(REQUEST_KAFKA_TOPIC_NAME, CONSUMER_GROUP_ID);
+        assertEquals(initialOffset + 1, currentOffset,
+          "Expected offset to advance when optional user-id header is missing");
+      });
   }
 
   @SneakyThrows
@@ -523,14 +526,6 @@ class KafkaEventListenerTest extends BaseIT {
     var eventString = asJsonString(event);
     kafkaTemplate.send(new ProducerRecord<>(topic, 0, randomId(), eventString, headers))
       .get(10, SECONDS);
-  }
-
-  private void publishEventAndWaitWithHeaders(String tenant, String topic, KafkaEvent<?> event,
-      Map<String, byte[]> additionalHeaders) {
-
-    final int initialOffset = getOffset(topic, CONSUMER_GROUP_ID);
-    publishEventWithHeaders(tenant, topic, asJsonString(event), additionalHeaders);
-    waitForOffset(topic, CONSUMER_GROUP_ID, initialOffset + 1);
   }
 
   @SneakyThrows
