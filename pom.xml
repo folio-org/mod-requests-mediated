@@ -51,11 +51,11 @@
       <artifactId>folio-spring-base</artifactId>
       <version>${folio-spring-support.version}</version>
     </dependency>
-    <dependency>
+    <!--dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-spring-cql</artifactId>
       <version>${folio-spring-support.version}</version>
-    </dependency>
+    </dependency-->
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-spring-system-user</artifactId>
