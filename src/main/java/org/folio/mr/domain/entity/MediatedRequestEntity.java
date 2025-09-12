@@ -15,15 +15,10 @@ import org.folio.mr.domain.converter.RequestTypeJdbcType;
 import org.folio.spring.cql.Cql2JpaCriteria;
 import org.folio.spring.cql.IgnoreCase;
 import org.hibernate.annotations.JdbcType;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.Type;
-import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
@@ -55,16 +50,9 @@ public class MediatedRequestEntity {
   @JdbcType(RequestLevelJdbcType.class)
   private RequestLevel requestLevel;
 
-//  @Enumerated(value = EnumType.STRING)
-//  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-
   @Column(name = "request_type", columnDefinition = "RequestType")
   @JdbcType(RequestTypeJdbcType.class)
   private RequestType requestType;
-
-//  @Column(name = "request_type", columnDefinition = "RequestType")
-//  @JdbcType(RequestTypeJdbcType.class)
-//  private String requestType;
 
   private Date requestDate;
 
