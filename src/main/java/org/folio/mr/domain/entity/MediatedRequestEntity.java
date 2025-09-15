@@ -19,8 +19,6 @@ import org.hibernate.annotations.JdbcType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
@@ -54,7 +52,6 @@ public class MediatedRequestEntity {
 
   @Column(name = "request_type", columnDefinition = "RequestType")
   @JdbcType(RequestTypeJdbcType.class)
-  @Enumerated(value = EnumType.STRING)
   private RequestType requestType;
 
   private Date requestDate;
@@ -138,6 +135,16 @@ public class MediatedRequestEntity {
   private String pickupServicePointName;
 
   private UUID confirmedRequestId;
+
+  private String idText;
+
+  private String requestLevelText;
+
+  private String requestTypeText;
+
+  private String mediatedRequestStatusText;
+
+  private String fulfillmentPreferenceText;
 
   // Metadata
 

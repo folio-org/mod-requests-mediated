@@ -5,4 +5,5 @@
                     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
 
     <include file="changes/v1.3.0/2025-06-30-change-instance-title-column-type.xml" relativeToChangelogFile="true"/>
+    <include file="changes/v1.3.0/2025-09-11-add-text-copy-columns.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
