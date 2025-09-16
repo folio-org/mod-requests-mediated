@@ -3,6 +3,7 @@ package org.folio.mr.api;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static java.lang.String.format;
 import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.DELIVERY;
 import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.HOLD_SHELF;
 import static org.folio.mr.domain.dto.MediatedRequest.RequestLevelEnum.ITEM;
@@ -374,6 +375,42 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(status().isOk())
       .andExpect(jsonPath("mediatedRequests", iterableWithSize(1)))
       .andExpect(jsonPath("mediatedRequests[0].id", is(mediatedRequest.getId())));
+  }
+
+  @Test
+  void mediatedRequestsShouldBeRetrievedByUuidQuery() {
+    var id = createMediatedRequest().getId();
+
+    // Full UUID
+    runQueryAndExpect(format("idText==\"%s\"", id), id);
+
+    // First 5 characters of the UUID
+    runQueryAndExpect(format("idText==\"%s*\"", id.substring(0, 5)), id);
+  }
+
+  @Test
+  void mediatedRequestsShouldBeRetrievedByEnumQuery() {
+    var id = createMediatedRequest().getId();
+
+    runQueryAndExpect("requestLevelText==(\"Item\" or \"Title\")", id);
+    runQueryAndExpect("requestLevelText==\"Ite*\"", id);
+
+    runQueryAndExpect("requestTypeText==\"Page\"", id);
+    runQueryAndExpect("requestTypeText==\"Pag*\"", id);
+
+    runQueryAndExpect("mediatedRequestStatusText==\"New\"", id);
+    runQueryAndExpect("mediatedRequestStatusText==\"Ne*\"", id);
+
+    runQueryAndExpect("fulfillmentPreferenceText==\"Hold shelf\"", id);
+    runQueryAndExpect("fulfillmentPreferenceText==\"Hold*\"", id);
+  }
+
+  @SneakyThrows
+  private void runQueryAndExpect(String query, String mediatedRequestId) {
+    getRequestsByQuery(query)
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("mediatedRequests", iterableWithSize(1)))
+      .andExpect(jsonPath("mediatedRequests[0].id", is(mediatedRequestId)));
   }
 
   @SneakyThrows
