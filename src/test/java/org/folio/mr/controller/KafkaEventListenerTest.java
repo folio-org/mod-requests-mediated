@@ -7,6 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
+import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static org.folio.mr.domain.dto.Request.StatusEnum.CLOSED_CANCELLED;
 import static org.folio.mr.domain.dto.Request.StatusEnum.CLOSED_FILLED;
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_AWAITING_PICKUP;
@@ -92,15 +93,10 @@ class KafkaEventListenerTest extends BaseIT {
 
     publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
 
-    await().atMost(30, SECONDS)
-      .until(() -> {
-        MediatedRequestEntity updatedRequest = getMediatedRequest(initialMediatedRequest.getId());
-        return MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL.getValue().equals(updatedRequest.getStatus());
-      });
+    waitForMediatedRequestStatus(initialMediatedRequest.getId(), OPEN_IN_TRANSIT_FOR_APPROVAL);
 
     MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
-    assertEquals(MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL.getValue(),
-      updatedMediatedRequest.getStatus());
+    assertEquals(OPEN_IN_TRANSIT_FOR_APPROVAL.getValue(), updatedMediatedRequest.getStatus());
   }
 
   @Test
@@ -115,8 +111,7 @@ class KafkaEventListenerTest extends BaseIT {
     publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
 
     MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
-    assertEquals(MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL.getValue(),
-      updatedMediatedRequest.getStatus());
+    assertEquals(OPEN_IN_TRANSIT_FOR_APPROVAL.getValue(), updatedMediatedRequest.getStatus());
   }
 
   @ParameterizedTest
@@ -259,11 +254,7 @@ class KafkaEventListenerTest extends BaseIT {
 
     publishEventAndWait(TENANT_ID_CONSORTIUM, REQUEST_KAFKA_TOPIC_NAME, event);
 
-    await().atMost(30, SECONDS)
-      .until(() -> {
-        MediatedRequestEntity updatedRequest = getMediatedRequest(initialMediatedRequest.getId());
-        return MediatedRequest.StatusEnum.CLOSED_FILLED.getValue().equals(updatedRequest.getStatus());
-      });
+    waitForMediatedRequestStatus(initialMediatedRequest.getId(), MediatedRequest.StatusEnum.CLOSED_FILLED);
 
     MediatedRequestEntity updatedMediatedRequest = getMediatedRequest(initialMediatedRequest.getId());
     assertEquals(MediatedRequest.StatusEnum.CLOSED_FILLED.getValue(), updatedMediatedRequest.getStatus());
@@ -500,8 +491,8 @@ class KafkaEventListenerTest extends BaseIT {
     KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_NOT_YET_FILLED, OPEN_IN_TRANSIT);
 
     final int initialOffset = getOffset(REQUEST_KAFKA_TOPIC_NAME, CONSUMER_GROUP_ID);
-    publishEventWithCustomHeaders(REQUEST_KAFKA_TOPIC_NAME, event,
-      Map.of(XOkapiHeaders.USER_ID, "test-user-id".getBytes(StandardCharsets.UTF_8)));
+    publishEventWithCustomHeaders(REQUEST_KAFKA_TOPIC_NAME, event, Map.of(XOkapiHeaders.USER_ID,
+      "test-user-id"));
     await()
       .atMost(10, TimeUnit.SECONDS)
       .untilAsserted(() -> {
@@ -516,8 +507,8 @@ class KafkaEventListenerTest extends BaseIT {
   void shouldSucceedIfOptionalUserIdHeaderIsMissing() {
     KafkaEvent<Request> event = buildRequestUpdateEvent(OPEN_NOT_YET_FILLED, OPEN_IN_TRANSIT);
     final int initialOffset = getOffset(REQUEST_KAFKA_TOPIC_NAME, CONSUMER_GROUP_ID);
-    publishEventWithCustomHeaders(REQUEST_KAFKA_TOPIC_NAME, event,
-      Map.of(XOkapiHeaders.TENANT, TENANT_ID_CONSORTIUM.getBytes(StandardCharsets.UTF_8)));
+    publishEventWithCustomHeaders(REQUEST_KAFKA_TOPIC_NAME, event, Map.of(XOkapiHeaders.TENANT,
+      TENANT_ID_CONSORTIUM));
     await()
       .atMost(10, TimeUnit.SECONDS)
       .untilAsserted(() -> {
@@ -529,10 +520,10 @@ class KafkaEventListenerTest extends BaseIT {
 
   @SneakyThrows
   private void publishEventWithCustomHeaders(String topic, KafkaEvent<?> event,
-    Map<String, byte[]> customHeaders) {
+    Map<String, String> customHeaders) {
 
     Collection<Header> headers = customHeaders.entrySet().stream()
-      .map(entry -> new RecordHeader(entry.getKey(), entry.getValue()))
+      .map(entry -> new RecordHeader(entry.getKey(), entry.getValue().getBytes(StandardCharsets.UTF_8)))
       .collect(toList());
 
     var eventString = asJsonString(event);
@@ -652,5 +643,10 @@ class KafkaEventListenerTest extends BaseIT {
   private MediatedRequestEntity getMediatedRequest(UUID id) {
     return executionService.executeSystemUserScoped(TENANT_ID_CONSORTIUM,
       () -> mediatedRequestsRepository.findById(id)).orElseThrow();
+  }
+
+  private void waitForMediatedRequestStatus(UUID mediatedRequestId, MediatedRequest.StatusEnum expectedStatus) {
+    await().atMost(30, SECONDS)
+      .until(() -> expectedStatus.getValue().equals(getMediatedRequest(mediatedRequestId).getStatus()));
   }
 }
