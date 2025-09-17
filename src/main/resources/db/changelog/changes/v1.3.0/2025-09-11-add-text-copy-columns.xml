@@ -1,0 +1,97 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="addTextCopyColumns" author="AlexanderKurash">
+        <addColumn tableName="mediated_request">
+            <column name="id_text" type="text"/>
+        </addColumn>
+        <addColumn tableName="mediated_request">
+            <column name="request_level_text" type="text"/>
+        </addColumn>
+        <addColumn tableName="mediated_request">
+            <column name="request_type_text" type="text"/>
+        </addColumn>
+        <addColumn tableName="mediated_request">
+            <column name="mediated_request_status_text" type="text"/>
+        </addColumn>
+        <addColumn tableName="mediated_request">
+            <column name="fulfillment_preference_text" type="text"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="addTextCopyColumnIndexes" author="AlexanderKurash" runOnChange="true">
+        <sql dbms="postgresql">
+            CREATE INDEX IF NOT EXISTS idx_medreq_id_text
+            ON ${database.defaultSchemaName}.mediated_request(id_text)
+        </sql>
+        <sql dbms="postgresql">
+            CREATE INDEX IF NOT EXISTS idx_medreq_request_level_text
+            ON ${database.defaultSchemaName}.mediated_request(request_level_text)
+        </sql>
+        <sql dbms="postgresql">
+            CREATE INDEX IF NOT EXISTS idx_medreq_request_type_text
+            ON ${database.defaultSchemaName}.mediated_request(request_type_text)
+        </sql>
+        <sql dbms="postgresql">
+            CREATE INDEX IF NOT EXISTS idx_medreq_mediated_request_status_text
+            ON ${database.defaultSchemaName}.mediated_request(mediated_request_status_text)
+        </sql>
+        <sql dbms="postgresql">
+            CREATE INDEX IF NOT EXISTS idx_medreq_fulfillment_preference_text
+            ON ${database.defaultSchemaName}.mediated_request(fulfillment_preference_text)
+        </sql>
+        <rollback>
+            DROP INDEX IF EXISTS idx_medreq_id_text;
+            DROP INDEX IF EXISTS idx_medreq_request_level_text;
+            DROP INDEX IF EXISTS idx_medreq_request_type_text;
+            DROP INDEX IF EXISTS idx_medreq_mediated_request_status_text;
+            DROP INDEX IF EXISTS idx_medreq_fulfillment_preference_text;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="addTextCopyColumnsFunction" author="AlexanderKurash">
+        <createProcedure>
+            CREATE OR REPLACE FUNCTION fn_set_text_copy_columns() RETURNS trigger
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                NEW.id_text := NEW.id::text;
+                NEW.request_level_text := NEW.request_level::text;
+                NEW.request_type_text := NEW.request_type::text;
+                NEW.mediated_request_status_text := NEW.mediated_request_status::text;
+                NEW.fulfillment_preference_text := NEW.fulfillment_preference::text;
+            RETURN NEW;
+            END;
+            $$;
+        </createProcedure>
+        <rollback>
+            DROP FUNCTION fn_set_text_copy_columns();
+        </rollback>
+    </changeSet>
+
+    <changeSet id="addTextCopyColumnsTrigger" author="AlexanderKurash">
+        <sql>
+            DROP TRIGGER IF EXISTS trg_medreq_set_text_copy_columns
+            ON ${database.defaultSchemaName}.mediated_request;
+
+            CREATE TRIGGER trg_medreq_set_text_copy_columns
+            BEFORE INSERT OR UPDATE ON ${database.defaultSchemaName}.mediated_request
+            FOR EACH ROW EXECUTE PROCEDURE fn_set_text_copy_columns();
+        </sql>
+        <rollback>
+            DROP TRIGGER trg_medreq_set_text_copy_columns ON ${database.defaultSchemaName}.mediated_request;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="updateTextCopyColumns" author="AlexanderKurash">
+        <!-- This is just to trigger the update and populate the new text columns for existing rows -->
+        <sql>
+            UPDATE ${database.defaultSchemaName}.mediated_request
+            SET id_text = 'new';
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
