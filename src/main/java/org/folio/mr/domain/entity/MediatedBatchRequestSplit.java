@@ -35,7 +35,7 @@ import org.springframework.data.domain.Persistable;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "batch_request_split")
-public class BatchRequestSplit extends MetadataEntity implements Persistable<UUID>, Identifiable<UUID> {
+public class MediatedBatchRequestSplit extends MetadataEntity implements Persistable<UUID>, Identifiable<UUID> {
 
   @EqualsAndHashCode.Include
   @Id
@@ -45,7 +45,10 @@ public class BatchRequestSplit extends MetadataEntity implements Persistable<UUI
   @ToString.Exclude
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "batch_id", nullable = false)
-  private BatchRequest batchRequest;
+  private MediatedBatchRequest mediatedBatchRequest;
+
+  @Column(name = "request_status")
+  private String requestStatus;
 
   @Column(name = "item_id")
   private UUID itemId;

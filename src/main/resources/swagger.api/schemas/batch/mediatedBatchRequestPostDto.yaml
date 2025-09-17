@@ -1,0 +1,37 @@
+MediatedBatchRequestPostDto:
+  type: object
+  description: DTO for creating Mediated Batch Request
+  properties:
+    batchId:
+      description: ID of the mediated batch request
+      $ref: '../uuid.yaml'
+    requesterId:
+      description: ID of the requesting patron (user)
+      $ref: '../uuid.yaml'
+    patronComments:
+      description: Comments made by the patron
+      type: string
+    mediatedWorkflow:
+      description: Mediated workflow that mediated batch request follows
+      type: string
+    itemRequests:
+      description: Mediated batch request details that represents the info for array of item requests
+      type: array
+      items:
+        type: object
+        properties:
+            itemId:
+                description: ID of the item being requested
+                $ref: '../uuid.yaml'
+            pickupServicePointId:
+                description: ID of the pickup service point
+                $ref: '../uuid.yaml'
+            additionalProperties: false
+            required:
+              - itemId
+              - pickupServicePointId
+    additionalProperties: false
+  required:
+    - requesterId
+    - itemRequests
+

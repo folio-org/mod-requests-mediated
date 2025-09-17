@@ -311,10 +311,85 @@ paths:
           $ref: '#/components/responses/unprocessableEntityResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
+  /requests-mediated/batch-mediated-requests:
+    post:
+      operationId: postBatchMediatedRequests
+      description: Create mediated batch requests
+      tags:
+        - mediatedBatchRequests
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/mediatedBatchRequestPostDto'
+        required: true
+      responses:
+        '201':
+          $ref: '#/components/responses/mediatedBatchRequest'
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '422':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
+    get:
+      description: Retrieve a collection of mediated batch requests
+      operationId: getMediatedBatchRequestCollection
+      tags:
+        - mediatedBatchRequests
+      parameters:
+        - $ref: '#/components/parameters/trait_queryable_query'
+        - $ref: '#/components/parameters/trait_pageable_offset'
+        - $ref: '#/components/parameters/trait_pageable_limit'
+      responses:
+        '200':
+          $ref: '#/components/responses/mediatedBatchRequests'
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
+  /requests-mediated/batch-mediated-requests/{mediatedBatchRequestId}:
+    get:
+      description: Retrieve mediated batch request object by id
+      operationId: getMediatedBatchRequestById
+      tags:
+        - mediatedBatchRequests
+      parameters:
+        - $ref: '#/components/parameters/mediatedBatchRequestId'
+      responses:
+        '200':
+          $ref: '#/components/responses/mediatedBatchRequest'
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
+  /requests-mediated/batch-mediated-requests/{mediatedBatchRequestId}/details:
+    get:
+      description: Retrieve mediated batch request details objects by batch id
+      operationId: getMediatedBatchRequestDetailsByBatchId
+      tags:
+        - mediatedBatchRequests
+      parameters:
+        - $ref: '#/components/parameters/mediatedBatchRequestId'
+        - $ref: '#/components/parameters/trait_pageable_offset'
+        - $ref: '#/components/parameters/trait_pageable_limit'
+      responses:
+        '200':
+          $ref: '#/components/responses/mediatedBatchRequestDetails'
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
 components:
   schemas:
     mediatedRequest:
       $ref: 'schemas/mediatedRequest.yaml#/MediatedRequest'
+    mediatedBatchRequestPostDto:
+      $ref: 'schemas/batch/mediatedBatchRequestPostDto.yaml#/MediatedBatchRequestPostDto'
     confirmItemArrivalRequest:
       $ref: 'schemas/confirmItemArrivalRequest.yaml#/ConfirmItemArrivalRequest'
     sendItemInTransitRequest:
@@ -426,6 +501,13 @@ components:
         minimum: 0
         maximum: 2147483647
         type: integer
+    mediatedBatchRequestId:
+      name: mediatedBatchRequestId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
   responses:
     mediatedRequest:
         description: Mediated request object
@@ -436,6 +518,33 @@ components:
             examples:
               objectExample:
                 externalValue: 'examples/mediatedRequest.json'
+    mediatedBatchRequest:
+      description: Mediated batch request object
+      content:
+        application/json:
+          schema:
+            $ref: 'schemas/batch/mediatedBatchRequestDto.yaml#/MediatedBatchRequestDto'
+          examples:
+            objectExample:
+              externalValue: 'examples/mediatedBatchRequests.json'
+    mediatedBatchRequests:
+      description: A collection of mediated batch request objects
+      content:
+        application/json:
+          schema:
+            $ref: 'schemas/batch/mediatedBatchRequestsDto.yaml#/MediatedBatchRequestsDto'
+          examples:
+            objectExample:
+              externalValue: 'examples/mediatedBatchRequest.json'
+    mediatedBatchRequestDetails:
+      description: A collection of mediated batch request details objects
+      content:
+        application/json:
+          schema:
+            $ref: 'schemas/batch/mediatedBatchRequestDetailsDto.yaml#/MediatedBatchRequestDetailsDto'
+          examples:
+            objectExample:
+              externalValue: 'examples/mediatedBatchRequest.json'
     mediatedRequests:
       description: A collection of mediated request objects
       content:

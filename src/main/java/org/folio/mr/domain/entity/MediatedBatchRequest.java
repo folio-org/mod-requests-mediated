@@ -32,7 +32,7 @@ import org.springframework.data.domain.Persistable;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "batch_request")
-public class BatchRequest extends MetadataEntity implements Persistable<UUID>, Identifiable<UUID> {
+public class MediatedBatchRequest extends MetadataEntity implements Persistable<UUID>, Identifiable<UUID> {
 
   @EqualsAndHashCode.Include
   @Id
