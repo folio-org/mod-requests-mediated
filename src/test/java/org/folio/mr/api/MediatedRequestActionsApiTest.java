@@ -16,6 +16,8 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CO
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_FOR_APPROVAL;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
+import static org.folio.mr.domain.type.ErrorCode.MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON;
+import static org.folio.mr.domain.type.ErrorType.NOT_FOUND_ERROR;
 import static org.folio.mr.support.Constants.INTERIM_SERVICE_POINT_ID;
 import static org.folio.mr.util.TestEntityBuilder.buildMediatedRequestEntity;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -27,10 +29,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
 import org.apache.http.HttpStatus;
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConfirmItemArrivalRequest;
@@ -311,9 +313,8 @@ class MediatedRequestActionsApiTest extends BaseIT {
     confirmMediatedRequest(mediatedRequestId)
       .andExpect(status().isNotFound())
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
-      .andExpect(jsonPath("errors[0].type").value("EntityNotFoundException"))
-      .andExpect(jsonPath("errors[0].message")
-        .value(is("Mediated request was not found: " + mediatedRequestId)));
+      .andExpect(errorTypeMatch(is(NOT_FOUND_ERROR.getValue())))
+      .andExpect(errorMessageMatch(is("Mediated request was not found: " + mediatedRequestId)));
 
     wireMockServer.verify(0, getRequestedFor(urlMatching(INSTANCES_URL)));
     wireMockServer.verify(0, getRequestedFor(urlPathMatching(SEARCH_ITEMS_URL)));
@@ -341,10 +342,8 @@ class MediatedRequestActionsApiTest extends BaseIT {
     confirmMediatedRequest(initialRequest.getId())
       .andExpect(status().isUnprocessableEntity())
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
-      .andExpect(jsonPath("errors[0].code")
-        .value(is("MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON")))
-      .andExpect(jsonPath("errors[0].message")
-        .value(is("Mediated request cannot be confirmed for inactive patron")))
+      .andExpect(errorCodeMatch(is(MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON.getCode())))
+      .andExpect(errorMessageMatch(is(MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON.getMessage())))
       .andExpect(jsonPath("$.errors[0].parameters[0].key", is("requesterId")))
       .andExpect(jsonPath("$.errors[0].parameters[0].value", is(requesterId)));
 
@@ -383,9 +382,9 @@ class MediatedRequestActionsApiTest extends BaseIT {
     declineMediatedRequest(mediatedRequestId)
       .andExpect(status().isNotFound())
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
-      .andExpect(jsonPath("errors[0].type").value("EntityNotFoundException"))
-      .andExpect(jsonPath("errors[0].message")
-        .value(is("Mediated request was not found: " + mediatedRequestId)));
+      .andExpect(errorTypeMatch(is(NOT_FOUND_ERROR.getValue())))
+      .andExpect(errorMessageMatch(is("Mediated request was not found: " + mediatedRequestId)))
+      .andExpect(exceptionMatch(EntityNotFoundException.class));
 
     wireMockServer.verify(0, getRequestedFor(urlMatching(INSTANCES_URL)));
     wireMockServer.verify(0, getRequestedFor(urlPathMatching(SEARCH_ITEMS_URL)));
@@ -467,9 +466,9 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .withItemId(UUID.randomUUID()))
       .andExpect(status().isNotFound())
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
-      .andExpect(jsonPath("errors[0].type").value("EntityNotFoundException"))
-      .andExpect(jsonPath("errors[0].message")
-        .value(is("Mediated request for arrival confirmation of item with barcode 'random-barcode' was not found")));
+      .andExpect(errorTypeMatch(is(NOT_FOUND_ERROR.getValue())))
+      .andExpect(errorMessageMatch(
+        is("Mediated request for arrival confirmation of item with barcode 'random-barcode' was not found")));
   }
 
   @Test
@@ -481,9 +480,9 @@ class MediatedRequestActionsApiTest extends BaseIT {
     confirmItemArrival("A14837334314", mediatedRequest)
       .andExpect(status().isNotFound())
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
-      .andExpect(jsonPath("errors[0].type").value("EntityNotFoundException"))
-      .andExpect(jsonPath("errors[0].message")
-        .value(is("Mediated request for arrival confirmation of item with barcode 'A14837334314' was not found")));
+      .andExpect(errorTypeMatch(is(NOT_FOUND_ERROR.getValue())))
+      .andExpect(errorMessageMatch(
+        is("Mediated request for arrival confirmation of item with barcode 'A14837334314' was not found")));
   }
 
   private MediatedRequestEntity createMediatedRequestEntity() {
@@ -691,9 +690,9 @@ class MediatedRequestActionsApiTest extends BaseIT {
       .withItemId(UUID.randomUUID()))
       .andExpect(status().isNotFound())
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
-      .andExpect(jsonPath("errors[0].type").value("EntityNotFoundException"))
-      .andExpect(jsonPath("errors[0].message")
-        .value(is("Send item in transit: mediated request for item 'random-barcode' was not found")));
+      .andExpect(errorTypeMatch(is(NOT_FOUND_ERROR.getValue())))
+      .andExpect(errorMessageMatch(
+        is("Send item in transit: mediated request for item 'random-barcode' was not found")));
   }
 
   @Test
@@ -705,9 +704,9 @@ class MediatedRequestActionsApiTest extends BaseIT {
     sendItemInTransit("A14837334314", request)
       .andExpect(status().isNotFound())
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
-      .andExpect(jsonPath("errors[0].type").value("EntityNotFoundException"))
-      .andExpect(jsonPath("errors[0].message")
-        .value(is("Send item in transit: mediated request for item 'A14837334314' was not found")));
+      .andExpect(errorTypeMatch(is(NOT_FOUND_ERROR.getValue())))
+      .andExpect(errorMessageMatch(
+        is("Send item in transit: mediated request for item 'A14837334314' was not found")));
   }
 
   @SneakyThrows

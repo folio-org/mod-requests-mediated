@@ -14,7 +14,7 @@ class ServiceUtilsTest {
   void shouldInitIdentifiableEntityId() {
     var randomId = UUID.randomUUID();
     var entity1 = MediatedBatchRequest.builder().id(randomId).build();
-    var entity2 = MediatedBatchRequestSplit.builder().build();
+    var entity2 = new MediatedBatchRequestSplit();
 
     ServiceUtils.initId(entity1);
     ServiceUtils.initId(entity2);

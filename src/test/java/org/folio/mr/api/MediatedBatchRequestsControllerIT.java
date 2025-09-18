@@ -2,6 +2,7 @@ package org.folio.mr.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.mr.domain.dto.MediatedBatchRequestDto.MediatedRequestStatusEnum.PENDING;
+import static org.folio.mr.domain.type.ErrorCode.DUPLICATE_BATCH_REQUEST_ID;
 import static org.hamcrest.Matchers.emptyIterable;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -31,12 +32,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 
 
 @IntegrationTest
-public class MediatedBatchRequestsControllerIT extends BaseIT {
+class MediatedBatchRequestsControllerIT extends BaseIT {
 
   private static final String URL_MEDIATED_BATCH_REQUESTS = "/requests-mediated/batch-mediated-requests";
   private static final String REQUESTER_ID = "9812e24b-0a66-457a-832c-c5e789797e35";
@@ -51,7 +53,7 @@ public class MediatedBatchRequestsControllerIT extends BaseIT {
   private MediatedBatchRequestSplitRepository batchRequestSplitRepository;
 
   @BeforeEach
-  public void clearDatabase() {
+  void clearDatabase() {
     batchRequestSplitRepository.deleteAll();
     batchRequestRepository.deleteAll();
   }
@@ -143,6 +145,24 @@ public class MediatedBatchRequestsControllerIT extends BaseIT {
 
     assertThat(batchRequestRepository.count()).isEqualTo(1L);
     assertThat(batchRequestSplitRepository.count()).isEqualTo(1L);
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowErrorOnCreateMediatedBatchRequest_BatchAlreadyExistsWithSameId() {
+    var postBatchRequestDto1 = sampleBatchRequestPostDto(1)
+      .batchId(BATCH_REQUEST_ID1);
+    var postBatchRequestDto2 = sampleBatchRequestPostDto(2)
+      .batchId(BATCH_REQUEST_ID1);
+    createBatchRequests(postBatchRequestDto1);
+
+    mockMvc.perform(post(URL_MEDIATED_BATCH_REQUESTS)
+        .headers(defaultHeaders())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(asJsonString(postBatchRequestDto2)))
+      .andExpect(status().isUnprocessableEntity())
+      .andExpect(errorMessageMatch(is(DUPLICATE_BATCH_REQUEST_ID.getMessage())))
+      .andExpect(exceptionMatch(DataIntegrityViolationException.class));
   }
 
   @Test

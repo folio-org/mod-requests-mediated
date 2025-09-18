@@ -128,7 +128,7 @@ class MediatedBatchRequestMapperTest {
 
     var detailsList = mapper.toDetailsDtoList(List.of(split1, split2));
 
-    assertThat(detailsList.size()).isEqualTo(2);
+    assertThat(detailsList).hasSize(2);
     assertThat(detailsList)
       .extracting(MediatedBatchRequestDetailDto::getBatchId)
       .containsExactly(batchEntity.getId().toString(), batchEntity.getId().toString());
@@ -144,7 +144,7 @@ class MediatedBatchRequestMapperTest {
 
     var splitEntities = mapper.mapPostDtoToSplitEntities(postDto);
 
-    assertThat(splitEntities.size()).isEqualTo(2);
+    assertThat(splitEntities).hasSize(2);
     assertThat(splitEntities)
       .extracting(MediatedBatchRequestSplit::getItemId)
       .containsExactly(itemId1, itemId2);

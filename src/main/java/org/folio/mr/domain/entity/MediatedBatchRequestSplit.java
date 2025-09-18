@@ -14,7 +14,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,7 +27,6 @@ import org.springframework.data.domain.Persistable;
 
 @Getter
 @Setter
-@Builder
 @ToString(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
@@ -36,6 +34,9 @@ import org.springframework.data.domain.Persistable;
 @Entity
 @Table(name = "batch_request_split")
 public class MediatedBatchRequestSplit extends MetadataEntity implements Persistable<UUID>, Identifiable<UUID> {
+
+  @Transient
+  private boolean isNew = true;
 
   @EqualsAndHashCode.Include
   @Id
@@ -72,9 +73,6 @@ public class MediatedBatchRequestSplit extends MetadataEntity implements Persist
 
   @Column(name = "error_details")
   private String errorDetails;
-
-  @Transient
-  private boolean isNew = true;
 
   @PostLoad
   @PrePersist
