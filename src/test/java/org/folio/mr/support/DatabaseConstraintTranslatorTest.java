@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 
-public class DatabaseConstraintTranslatorTest {
+class DatabaseConstraintTranslatorTest {
 
   @Test
   void translate_knownConstraint_returnsMappedErrorCode() {
