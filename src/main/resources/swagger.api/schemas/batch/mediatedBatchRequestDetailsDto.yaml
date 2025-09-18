@@ -1,0 +1,16 @@
+MediatedBatchRequestDetailsDto:
+  description: Collection of mediated batch request details
+  type: object
+  properties:
+    mediatedBatchRequestDetails:
+      description: A list of batch request details
+      type: array
+      items:
+        $ref: './mediatedBatchRequestDetailDto.yaml#/MediatedBatchRequestDetailDto'
+    totalRecords:
+      description: Total number of requests
+      type: integer
+  additionalProperties: false
+  required:
+    - mediatedBatchRequestDetails
+    - totalRecords

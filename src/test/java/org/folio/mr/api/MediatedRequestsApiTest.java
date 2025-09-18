@@ -10,6 +10,7 @@ import static org.folio.mr.domain.dto.MediatedRequest.RequestLevelEnum.ITEM;
 import static org.folio.mr.domain.dto.MediatedRequest.RequestLevelEnum.TITLE;
 import static org.folio.mr.domain.dto.MediatedRequest.RequestTypeEnum.HOLD;
 import static org.folio.mr.domain.dto.MediatedRequest.RequestTypeEnum.PAGE;
+import static org.folio.mr.domain.type.ErrorCode.MEDIATED_REQUEST_SAVE_NOT_ALLOWED_FOR_INACTIVE_PATRON;
 import static org.folio.mr.util.TestUtils.dateToString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -352,10 +353,8 @@ class MediatedRequestsApiTest extends BaseIT {
     postRequest(request)
       .andExpect(status().isUnprocessableEntity())
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
-      .andExpect(jsonPath("$.errors[0].message",
-        is("Mediated request cannot be saved for inactive patron")))
-      .andExpect(jsonPath("$.errors[0].code",
-        is("MEDIATED_REQUEST_SAVE_NOT_ALLOWED_FOR_INACTIVE_PATRON")))
+      .andExpect(errorMessageMatch(is(MEDIATED_REQUEST_SAVE_NOT_ALLOWED_FOR_INACTIVE_PATRON.getMessage())))
+      .andExpect(errorCodeMatch(is(MEDIATED_REQUEST_SAVE_NOT_ALLOWED_FOR_INACTIVE_PATRON.getCode())))
       .andExpect(jsonPath("$.errors[0].parameters[0].key", is("requesterId")))
       .andExpect(jsonPath("$.errors[0].parameters[0].value", is(REQUESTER_ID)));
   }

@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.UUID;
-import org.folio.mr.domain.entity.BatchRequest;
-import org.folio.mr.domain.entity.BatchRequestSplit;
+import org.folio.mr.domain.entity.MediatedBatchRequest;
+import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.junit.jupiter.api.Test;
 
 class ServiceUtilsTest {
@@ -13,8 +13,8 @@ class ServiceUtilsTest {
   @Test
   void shouldInitIdentifiableEntityId() {
     var randomId = UUID.randomUUID();
-    var entity1 = BatchRequest.builder().id(randomId).build();
-    var entity2 = BatchRequestSplit.builder().build();
+    var entity1 = MediatedBatchRequest.builder().id(randomId).build();
+    var entity2 = new MediatedBatchRequestSplit();
 
     ServiceUtils.initId(entity1);
     ServiceUtils.initId(entity2);

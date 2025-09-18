@@ -1,0 +1,34 @@
+MediatedBatchRequestDto:
+  type: object
+  description: DTO for Mediated Batch Request
+  properties:
+    batchId:
+      description: ID of the mediated batch request
+      $ref: '../uuid.yaml'
+    requesterId:
+      description: ID of the requesting patron (user)
+      $ref: '../uuid.yaml'
+    mediatedRequestStatus:
+      description: Status of the mediated batch request
+      type: string
+      enum: [ 'Pending', 'In progress', 'Completed', 'Failed' ]
+    requestDate:
+      description: Date when the batch request was placed
+      type: string
+      format: date-time
+    patronComments:
+      description: Comments made by the patron
+      type: string
+    mediatedWorkflow:
+      description: Mediated workflow that mediated batch request follows
+      type: string
+    metadata:
+      description: Mediated batch request metadata
+      type: object
+      $ref: '../metadata.json'
+  additionalProperties: false
+  required:
+    - batchId
+    - requesterId
+    - requestDate
+    - mediatedRequestStatus
