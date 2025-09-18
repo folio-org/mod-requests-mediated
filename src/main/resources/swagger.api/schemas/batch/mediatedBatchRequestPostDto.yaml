@@ -20,17 +20,17 @@ MediatedBatchRequestPostDto:
       items:
         type: object
         properties:
-            itemId:
-                description: ID of the item being requested
-                $ref: '../uuid.yaml'
-            pickupServicePointId:
-                description: ID of the pickup service point
-                $ref: '../uuid.yaml'
-            additionalProperties: false
-            required:
-              - itemId
-              - pickupServicePointId
-    additionalProperties: false
+          itemId:
+            description: ID of the item being requested
+            $ref: '../uuid.yaml'
+          pickupServicePointId:
+            description: ID of the pickup service point
+            $ref: '../uuid.yaml'
+        additionalProperties: false
+        required:
+          - itemId
+          - pickupServicePointId
+  additionalProperties: false
   required:
     - requesterId
     - itemRequests
