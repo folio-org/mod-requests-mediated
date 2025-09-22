@@ -184,6 +184,52 @@
       ]
     },
     {
+      "id": "requests-mediated-batch",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/requests-mediated/batch-mediated-requests",
+          "permissionsRequired": ["requests-mediated.batch-mediated-requests.item.post"],
+          "modulePermissions": [
+
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/requests-mediated/batch-mediated-requests",
+          "permissionsRequired": ["requests-mediated.batch-mediated-requests.collection.get"],
+          "modulePermissions": [
+
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/requests-mediated/batch-mediated-requests/{batchId}",
+          "permissionsRequired": ["requests-mediated.batch-mediated-requests.item.get"],
+          "modulePermissions": [
+
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/requests-mediated/batch-mediated-requests/{batchId}/details",
+          "permissionsRequired": ["requests-mediated.batch-mediated-requests.details.collection.get"],
+          "modulePermissions": [
+
+          ]
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "2.0",
       "interfaceType": "system",
@@ -215,6 +261,26 @@
     }
   ],
   "permissionSets" : [
+    {
+      "permissionName": "requests-mediated.batch-mediated-requests.item.post",
+      "displayName": "batch requests-mediated - create mediated batch requests",
+      "description": "Create mediated batch requests"
+    },
+    {
+      "permissionName": "requests-mediated.batch-mediated-requests.collection.get",
+      "displayName": "batch requests-mediated - get mediated batch requests",
+      "description": "Get mediated batch requests"
+    },
+    {
+      "permissionName": "requests-mediated.batch-mediated-requests.item.get",
+      "displayName": "batch requests-mediated - get mediated batch request by ID",
+      "description": "Get mediated batch request by ID"
+    },
+    {
+      "permissionName": "requests-mediated.batch-mediated-requests.details.collection.get",
+      "displayName": "details of batch requests-mediated - get details of mediated batch request by batch request ID",
+      "description": "Get details of mediated batch request by batch request ID"
+    },
     {
       "permissionName": "requests-mediated.mediated-request.collection.get",
       "displayName": "requests-mediated - get mediated requests",

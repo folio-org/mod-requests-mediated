@@ -2,7 +2,9 @@ package org.folio.mr.api;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,6 +28,8 @@ import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.folio.test.extensions.EnablePostgres;
+import org.hamcrest.Matcher;
+import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -47,6 +51,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.TestSocketUtils;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -248,4 +253,19 @@ public class BaseIT {
     return UUID.randomUUID().toString();
   }
 
+  protected <T> ResultMatcher exceptionMatch(Class<T> type) {
+    return result -> MatcherAssert.assertThat(result.getResolvedException(), instanceOf(type));
+  }
+
+  protected ResultMatcher errorMessageMatch(Matcher<String> errorMessageMatcher) {
+    return jsonPath("$.errors.[0].message", errorMessageMatcher);
+  }
+
+  protected ResultMatcher errorTypeMatch(Matcher<String> errorMessageMatcher) {
+    return jsonPath("$.errors.[0].type", errorMessageMatcher);
+  }
+
+  protected ResultMatcher errorCodeMatch(Matcher<String> code) {
+    return jsonPath("$.errors.[0].code", code);
+  }
 }

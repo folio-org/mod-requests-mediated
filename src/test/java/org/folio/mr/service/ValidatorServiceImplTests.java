@@ -1,5 +1,7 @@
 package org.folio.mr.service;
 
+import static org.folio.mr.domain.type.ErrorCode.MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON;
+import static org.folio.mr.domain.type.ErrorCode.MEDIATED_REQUEST_SAVE_NOT_ALLOWED_FOR_INACTIVE_PATRON;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -33,9 +35,7 @@ class ValidatorServiceImplTests {
     when(userService.isInactive(requesterId)).thenReturn(true);
     ValidationException ex = assertThrows(ValidationException.class,
       () -> validatorService.validateRequesterForSave(entity));
-    assertEquals("Mediated request cannot be saved for inactive patron", ex.getMessage());
-    assertEquals("MEDIATED_REQUEST_SAVE_NOT_ALLOWED_FOR_INACTIVE_PATRON",
-      ex.getCode().getValue());
+    assertEquals(MEDIATED_REQUEST_SAVE_NOT_ALLOWED_FOR_INACTIVE_PATRON, ex.getErrorCode());
     assertEquals(1, ex.getParameters().size());
     assertEquals("requesterId", ex.getParameters().get(0).getKey());
     assertEquals(requesterId, ex.getParameters().get(0).getValue());
@@ -61,9 +61,7 @@ class ValidatorServiceImplTests {
     assertEquals(1, ex.getParameters().size());
     assertEquals("requesterId", ex.getParameters().get(0).getKey());
     assertEquals(requesterId.toString(), ex.getParameters().get(0).getValue());
-    assertEquals("Mediated request cannot be confirmed for inactive patron", ex.getMessage());
-    assertEquals("MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON",
-      ex.getCode().getValue());
+    assertEquals(MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON, ex.getErrorCode());
   }
 
   @Test

@@ -10,12 +10,12 @@ import lombok.Getter;
 @Getter
 public class ValidationException extends RuntimeException {
 
-  private final ErrorCode code;
+  private final ErrorCode errorCode;
   private final transient List<Parameter> parameters;
 
-  public ValidationException(String message, ErrorCode code, List<Parameter> parameters) {
-    super(message);
-    this.code = code;
+  public ValidationException(ErrorCode code, List<Parameter> parameters) {
+    super(code.getMessage());
+    this.errorCode = code;
     this.parameters = parameters;
   }
 

@@ -36,9 +36,8 @@ public class ValidatorServiceImpl implements ValidatorService {
     }
 
     if (userService.isInactive(requesterId)) {
-      String message = "Mediated request cannot be saved for inactive patron";
-      log.warn("validateRequesterForSave:: {}", message);
-      throw new ValidationException(message,
+      log.warn("validateRequesterForSave:: {}", MEDIATED_REQUEST_SAVE_NOT_ALLOWED_FOR_INACTIVE_PATRON.getMessage());
+      throw new ValidationException(
         MEDIATED_REQUEST_SAVE_NOT_ALLOWED_FOR_INACTIVE_PATRON,
         List.of(new Parameter().key("requesterId").value(requesterId)));
     }
@@ -58,9 +57,8 @@ public class ValidatorServiceImpl implements ValidatorService {
 
     String requesterId = requesterIdUUID.toString();
     if (userService.isInactive(requesterId)) {
-      String message = "Mediated request cannot be confirmed for inactive patron";
-      log.warn("validateRequesterForConfirm:: {}", message);
-      throw new ValidationException(message,
+      log.warn("validateRequesterForConfirm:: {}", MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON.getMessage());
+      throw new ValidationException(
         MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON,
         List.of(new Parameter().key("requesterId").value(requesterId)));
     }

@@ -66,6 +66,7 @@
       <column name="status" type="BatchRequestSplitStatus">
         <constraints nullable="false"/>
       </column>
+      <column name="request_status" type="text"/>
       <column name="confirmed_request_id" type="uuid"/>
       <column name="patron_comments" type="text"/>
       <column name="error_details" type="text"/>
