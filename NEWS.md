@@ -1,6 +1,7 @@
 ## 1.3.0-SNAPSHOT 2025-XX-XX
 * Add Batch Request DB tables ([MODREQMED-159](https://folio-org.atlassian.net/browse/MODREQMED-159))
-* Add APIs for Mediated Batch Request and Request Details ([MODREQMED-159](https://folio-org.atlassian.net/browse/MODREQMED-158))
+* Add APIs for Mediated Batch Request and Request Details ([MODREQMED-158](https://folio-org.atlassian.net/browse/MODREQMED-158))
+* Fix DB migration scripts run by adding new script for the changes ([MODREQMED-178](https://folio-org.atlassian.net/browse/MODREQMED-178))
 
 ## 1.2.0 2025-03-13
 * Upgrade to Java 21, folio-spring-support 9.0.0 (MODREQMED-97)
