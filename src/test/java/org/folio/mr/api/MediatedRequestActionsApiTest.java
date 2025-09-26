@@ -307,6 +307,54 @@ class MediatedRequestActionsApiTest extends BaseIT {
 
   @Test
   @SneakyThrows
+  void mediatedRequestConfirmationForLocalInstanceAndRemoteItemWhenConsortiumItemsReturnsNull() {
+    MediatedRequestEntity initialRequest = mediatedRequestsRepository.save(
+      buildMediatedRequestEntity(NEW_AWAITING_CONFIRMATION));
+    // using existing instanceId to pass localInstanceExists() and trigger localItemExists()
+    UUID instanceId = initialRequest.getInstanceId();
+
+    wireMockServer.stubFor(WireMock.get(urlMatching(ITEMS_URL + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new Items().items(emptyList()), HttpStatus.SC_OK)));
+
+    String primaryRequestId = UUID.randomUUID().toString();
+    EcsTlr ecsTlr = new EcsTlr().id(randomId())
+      .primaryRequestId(primaryRequestId);
+
+    wireMockServer.stubFor(WireMock.post(urlMatching(ECS_TLR_URL))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
+      .willReturn(jsonResponse(ecsTlr, HttpStatus.SC_OK)));
+
+    // simulate ConsortiumItems API returning null items list
+    wireMockServer.stubFor(WireMock.get(urlPathMatching(SEARCH_ITEMS_URL))
+      .withQueryParam("instanceId", equalTo(instanceId.toString()))
+      .withQueryParam("tenantId", equalTo(TENANT_ID_CONSORTIUM))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
+      .willReturn(jsonResponse(new ConsortiumItems(), HttpStatus.SC_OK)));
+
+    User user = new User().id(UUID.randomUUID().toString());
+    wireMockServer.stubFor(WireMock.post(urlMatching(USERS_URL_TEMPLATE))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CENTRAL))
+      .willReturn(jsonResponse(user, HttpStatus.SC_OK)));
+
+    wireMockServer.stubFor(WireMock.post(urlMatching(USERS_URL_TEMPLATE))
+      .willReturn(jsonResponse(user, HttpStatus.SC_OK)));
+
+    wireMockServer.stubFor(WireMock.get(urlMatching(CIRCULATION_REQUESTS_URL + "/" + primaryRequestId))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new Request().id(primaryRequestId), HttpStatus.SC_OK)));
+
+    wireMockServer.stubFor(WireMock.put(urlMatching(CIRCULATION_REQUESTS_URL + "/" + primaryRequestId))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new Request(), HttpStatus.SC_OK)));
+
+    // confirmation should succeed and return 204 No Content
+    confirmMediatedRequest(initialRequest.getId())
+      .andExpect(status().isNoContent());
+  }
+
+  @Test
+  @SneakyThrows
   void mediatedRequestConfirmationFailsForNonExistentRequest() {
     UUID mediatedRequestId = UUID.randomUUID();
 

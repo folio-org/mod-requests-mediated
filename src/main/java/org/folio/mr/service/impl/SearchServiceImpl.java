@@ -30,11 +30,17 @@ public class SearchServiceImpl implements SearchService {
 
   @Override
   public Collection<ConsortiumItem> searchItems(String instanceId, String tenantId) {
-    log.info("searchItems: searching for items of instance {} in tenant {}", instanceId, tenantId);
+    log.info("searchItems:: searching for items of instance {} in tenant {}", instanceId, tenantId);
     // this search can only be done in central tenant
-    return executionService.executeSystemUserScoped(consortiumService.getCentralTenantId(),
-        () -> searchClient.searchItems(instanceId, tenantId))
-      .getItems();
+    ConsortiumItems searchItems = executionService.executeSystemUserScoped(consortiumService.getCentralTenantId(),
+        () -> searchClient.searchItems(instanceId, tenantId));
+
+    if (searchItems == null || searchItems.getItems() == null) {
+      log.debug("searchItems:: items array is missing, returning empty list");
+      return List.of();
+    }
+
+    return searchItems.getItems();
   }
 
   @Override
