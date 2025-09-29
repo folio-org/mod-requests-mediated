@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.flow.api.FlowEngine;
 import org.folio.mr.domain.dto.MediatedBatchRequestDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestPostDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestsDto;
@@ -15,6 +16,7 @@ import org.folio.mr.domain.entity.MediatedBatchRequest;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.folio.mr.domain.mapper.MediatedBatchRequestMapper;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
+import org.folio.mr.service.MediatedBatchRequestFlowProvider;
 import org.folio.mr.service.MediatedBatchRequestSplitService;
 import org.folio.mr.service.MediatedBatchRequestsService;
 import org.folio.spring.data.OffsetRequest;
@@ -31,6 +33,8 @@ public class MediatedBatchRequestsServiceImpl implements MediatedBatchRequestsSe
   private final MediatedBatchRequestRepository repository;
   private final MediatedBatchRequestMapper mapper;
   private final MediatedBatchRequestSplitService requestSplitService;
+  private final FlowEngine flowEngine;
+  private final MediatedBatchRequestFlowProvider flowProvider;
 
   @Override
   @Transactional
@@ -45,6 +49,9 @@ public class MediatedBatchRequestsServiceImpl implements MediatedBatchRequestsSe
 
     updateRequestSplitEntities(saved, requestSplits);
     requestSplitService.create(requestSplits);
+
+    var flow = flowProvider.createFlow(saved.getId());
+    flowEngine.executeAsync(flow);
 
     return mapper.toDto(saved);
   }

@@ -1,5 +1,6 @@
 package org.folio.mr.repository;
 
+import java.util.List;
 import java.util.UUID;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.folio.spring.cql.JpaCqlRepository;
@@ -13,4 +14,7 @@ public interface MediatedBatchRequestSplitRepository extends JpaCqlRepository<Me
 
   @Query("select a from MediatedBatchRequestSplit a where a.mediatedBatchRequest.id = ?1")
   Page<MediatedBatchRequestSplit> findAllByBatchId(UUID batchId, Pageable pageable);
+
+  @Query("select a from MediatedBatchRequestSplit a where a.mediatedBatchRequest.id = ?1")
+  List<MediatedBatchRequestSplit> findAllByBatchId(UUID batchId);
 }

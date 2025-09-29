@@ -14,6 +14,7 @@ MediatedBatchRequestPostDto:
     mediatedWorkflow:
       description: Mediated workflow that mediated batch request follows
       type: string
+      enum: [ 'Batch request' ]
     itemRequests:
       description: Mediated batch request details that represents the info for array of item requests
       type: array
@@ -34,4 +35,5 @@ MediatedBatchRequestPostDto:
   required:
     - requesterId
     - itemRequests
+    - mediatedWorkflow
 

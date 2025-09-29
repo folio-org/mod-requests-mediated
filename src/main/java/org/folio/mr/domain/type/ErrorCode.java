@@ -11,7 +11,8 @@ public enum ErrorCode {
     "Mediated request cannot be saved for inactive patron"),
   MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON("102",
     "Mediated request cannot be confirmed for inactive patron"),
-  DUPLICATE_BATCH_REQUEST_ID("103", "Mediated batch request with the given 'id' already exists.");
+  DUPLICATE_BATCH_REQUEST_ID("103", "Mediated batch request with the given 'id' already exists."),
+  INVALID_BATCH_REQUEST_INITIAL_STATUS("104", "Invalid initial status for mediated batch request.");
 
   private final String code;
   private final String message;

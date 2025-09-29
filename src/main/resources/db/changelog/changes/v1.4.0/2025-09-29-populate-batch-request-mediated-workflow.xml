@@ -1,0 +1,18 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+  <changeSet id="populate-initial-batch-request-mediated-workflow" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <tableIsEmpty tableName="mediated_workflow"/>
+    </preConditions>
+
+    <sqlFile dbms="postgresql"
+             path="2025-09-29-populate-initial-mediated-workflows.sql"
+             relativeToChangelogFile="true"
+             splitStatements="false"/>
+  </changeSet>
+
+</databaseChangeLog>

@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.folio.flow.api.FlowEngine;
 import org.folio.mr.domain.dto.MediatedBatchRequestDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestPostDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestsDto;
@@ -37,6 +38,10 @@ class MediatedBatchRequestsServiceTest {
   private MediatedBatchRequestMapper mapper;
   @Mock
   private MediatedBatchRequestSplitService requestSplitService;
+  @Mock
+  private FlowEngine flowEngine;
+  @Mock
+  private MediatedBatchRequestFlowProvider flowProvider;
 
   @InjectMocks
   private MediatedBatchRequestsServiceImpl service;
@@ -63,6 +68,8 @@ class MediatedBatchRequestsServiceTest {
 
     assertEquals(dto, result);
     verify(requestSplitService).create(splitEntities);
+    verify(flowProvider).createFlow(savedEntity.getId());
+    verify(flowEngine).executeAsync(any());
   }
 
   @Test
