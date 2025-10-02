@@ -1,6 +1,7 @@
 package org.folio.mr.domain.mapper;
 
 import java.util.List;
+import java.util.Optional;
 import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.BatchRequestStatus;
 import org.folio.mr.domain.dto.MediatedBatchRequestDetailDto;
@@ -14,6 +15,7 @@ import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
+import org.mapstruct.Named;
 import org.mapstruct.NullValueCheckStrategy;
 import org.springframework.data.domain.Page;
 
@@ -24,6 +26,7 @@ public interface MediatedBatchRequestMapper {
   @Mapping(target = "id", source = "batchId")
   @Mapping(target = "status", expression = "java(org.folio.mr.domain.BatchRequestStatus.PENDING)")
   @Mapping(target = "requestDate", expression = "java(java.sql.Timestamp.from(java.time.Instant.now()))")
+  @Mapping(target = "mediatedWorkflow", qualifiedByName = "toMediatedWorkflow")
   MediatedBatchRequest mapPostDtoToEntity(MediatedBatchRequestPostDto dto);
 
   @Mapping(target = "status", expression = "java(org.folio.mr.domain.BatchRequestSplitStatus.PENDING)")
@@ -37,6 +40,7 @@ public interface MediatedBatchRequestMapper {
   @Mapping(target = "metadata.updatedDate", source = "updatedDate")
   @Mapping(target = "metadata.updatedByUserId", source="updatedByUserId")
   @Mapping(target = "metadata.updatedByUsername", source = "updatedByUsername")
+  @Mapping(target = "mediatedWorkflow", qualifiedByName = "toMediatedWorkflowEnum")
   MediatedBatchRequestDto toDto(MediatedBatchRequest entity);
 
   @Mapping(target = "batchId", source = "mediatedBatchRequest.id")
@@ -77,5 +81,17 @@ public interface MediatedBatchRequestMapper {
 
   default MediatedBatchRequestDetailDto.MediatedRequestStatusEnum toDetailMediatedRequestStatus(BatchRequestSplitStatus status) {
     return MediatedBatchRequestDetailDto.MediatedRequestStatusEnum.fromValue(status.getValue());
+  }
+
+  @Named("toMediatedWorkflowEnum")
+  default MediatedBatchRequestDto.MediatedWorkflowEnum toMediatedWorkflowEnum(String workflow) {
+    return MediatedBatchRequestDto.MediatedWorkflowEnum.fromValue(workflow);
+  }
+
+  @Named("toMediatedWorkflow")
+  default String toMediatedWorkflow(MediatedBatchRequestPostDto.MediatedWorkflowEnum  workflow) {
+    return Optional.ofNullable(workflow)
+      .map(MediatedBatchRequestPostDto.MediatedWorkflowEnum::getValue)
+      .orElse(null);
   }
 }

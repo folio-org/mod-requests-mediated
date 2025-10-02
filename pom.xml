@@ -37,6 +37,7 @@
 
     <!-- runtime dependencies -->
     <folio-spring-support.version>9.0.1</folio-spring-support.version>
+    <folio-flow-engine.version>3.1.0-SNAPSHOT</folio-flow-engine.version>
     <openapi-generator.version>7.3.0</openapi-generator.version>
     <mapstruct.version>1.5.3.Final</mapstruct.version>
 
@@ -61,6 +62,13 @@
       <artifactId>folio-spring-system-user</artifactId>
       <version>${folio-spring-support.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-flow-engine</artifactId>
+      <version>${folio-flow-engine.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>

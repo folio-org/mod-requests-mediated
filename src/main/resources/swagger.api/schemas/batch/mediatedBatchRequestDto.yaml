@@ -22,6 +22,7 @@ MediatedBatchRequestDto:
     mediatedWorkflow:
       description: Mediated workflow that mediated batch request follows
       type: string
+      enum: [ 'Multi-Item request' ]
     metadata:
       description: Mediated batch request metadata
       type: object
@@ -32,3 +33,4 @@ MediatedBatchRequestDto:
     - requesterId
     - requestDate
     - mediatedRequestStatus
+    - mediatedWorkflow

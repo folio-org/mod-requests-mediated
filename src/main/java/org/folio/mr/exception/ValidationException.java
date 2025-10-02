@@ -19,4 +19,10 @@ public class ValidationException extends RuntimeException {
     this.parameters = parameters;
   }
 
+  public ValidationException(ErrorCode code, Parameter... parameters) {
+    super(code.getMessage());
+    this.errorCode = code;
+    this.parameters = parameters != null ? List.of(parameters) : null;
+  }
+
 }
