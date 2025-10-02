@@ -6,7 +6,7 @@
 
   <changeSet id="populate-initial-batch-request-mediated-workflow" author="Mukhiddin_Yusupov">
     <preConditions onFail="MARK_RAN">
-      <tableIsEmpty tableName="mediated_workflow"/>
+      <tableExists tableName="mediated_workflow"/>
     </preConditions>
 
     <sqlFile dbms="postgresql"
