@@ -323,7 +323,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   private MediatedBatchRequestPostDto sampleBatchRequestPostDto(int itemsCount) {
     var postDto = new MediatedBatchRequestPostDto()
       .requesterId(REQUESTER_ID)
-      .mediatedWorkflow(MediatedBatchRequestPostDto.MediatedWorkflowEnum.BATCH_REQUEST)
+      .mediatedWorkflow(MediatedBatchRequestPostDto.MediatedWorkflowEnum.MULTI_ITEM_REQUEST)
       .patronComments("batch patron comments");
     for (int i = 0; i < itemsCount; i++) {
       var randomUUID = UUID.randomUUID().toString();

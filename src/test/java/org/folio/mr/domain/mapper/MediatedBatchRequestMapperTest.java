@@ -30,7 +30,7 @@ class MediatedBatchRequestMapperTest {
     var batchId = UUID.randomUUID();
     var postDto = new MediatedBatchRequestPostDto()
       .batchId(batchId.toString())
-      .mediatedWorkflow(MediatedBatchRequestPostDto.MediatedWorkflowEnum.BATCH_REQUEST);
+      .mediatedWorkflow(MediatedBatchRequestPostDto.MediatedWorkflowEnum.MULTI_ITEM_REQUEST);
     var entity = mapper.mapPostDtoToEntity(postDto);
 
     assertEquals(batchId, entity.getId());
@@ -62,7 +62,7 @@ class MediatedBatchRequestMapperTest {
     entity.setUpdatedDate(Timestamp.from(Instant.now()));
     entity.setUpdatedByUserId(userId);
     entity.setUpdatedByUsername(username);
-    entity.setMediatedWorkflow("Batch request");
+    entity.setMediatedWorkflow("Multi-Item request");
 
     var dto = mapper.toDto(entity);
 
