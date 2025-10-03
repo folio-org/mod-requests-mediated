@@ -61,7 +61,7 @@ class MediatedBatchRequestsServiceTest {
 
     when(mapper.mapPostDtoToEntity(postDto)).thenReturn(batchEntity);
     when(mapper.mapPostDtoToSplitEntities(postDto)).thenReturn(splitEntities);
-    when(repository.save(any(MediatedBatchRequest.class))).thenReturn(savedEntity);
+    when(repository.saveAndFlush(any(MediatedBatchRequest.class))).thenReturn(savedEntity);
     when(mapper.toDto(savedEntity)).thenReturn(dto);
 
     var result = service.create(postDto);

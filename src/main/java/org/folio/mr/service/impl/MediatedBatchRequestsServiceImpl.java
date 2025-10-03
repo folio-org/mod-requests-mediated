@@ -45,7 +45,7 @@ public class MediatedBatchRequestsServiceImpl implements MediatedBatchRequestsSe
     var requestSplits = mapper.mapPostDtoToSplitEntities(batchRequestPostDto);
     initId(batchEntity);
 
-    var saved = repository.save(batchEntity);
+    var saved = repository.saveAndFlush(batchEntity);
 
     updateRequestSplitEntities(saved, requestSplits);
     requestSplitService.create(requestSplits);
