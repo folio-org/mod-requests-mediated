@@ -123,6 +123,6 @@ class MediatedBatchRequestsServiceTest {
     when(repository.findById(id)).thenReturn(Optional.empty());
 
     var ex = assertThrows(RuntimeException.class, () -> service.getById(id));
-    assertTrue(ex.getMessage().contains("Mediated Batch Request not found by ID"));
+    assertTrue(ex.getMessage().contains("Mediated Batch Request with ID [%s] was not found".formatted(id)));
   }
 }

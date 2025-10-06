@@ -19,6 +19,7 @@ import org.folio.mr.domain.BatchRequestStatus;
 import org.folio.mr.domain.BatchContext;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
+import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.exception.ValidationException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
@@ -52,6 +53,7 @@ class BatchFlowInitializerTest {
     entity.setStatus(BatchRequestStatus.PENDING);
 
     when(context.getBatchRequestId()).thenReturn(batchId);
+    when(context.getDeploymentEnvType()).thenReturn(EnvironmentType.ECS);
     when(repository.findById(batchId)).thenReturn(Optional.of(entity));
 
     initializer.onStart(context);
@@ -80,8 +82,22 @@ class BatchFlowInitializerTest {
     when(context.getBatchRequestId()).thenReturn(batchId);
     when(repository.findById(batchId)).thenReturn(Optional.empty());
 
-    var ex = assertThrows(RuntimeException.class, () -> initializer.onStart(context));
-    assertTrue(ex.getMessage().contains("Mediated Batch Request not found by ID: " + batchId));
+    var ex = assertThrows(MediatedBatchRequestNotFoundException.class, () -> initializer.onStart(context));
+    assertTrue(ex.getMessage().contains("Mediated Batch Request with ID [" + batchId + "] was not found"));
+  }
+
+  @Test
+  void onStart_shouldThrowIllegalStateException_whenNotEnvTypeProvided() {
+    var batchId = UUID.randomUUID();
+    var entity = new MediatedBatchRequest();
+    entity.setId(batchId);
+    entity.setStatus(BatchRequestStatus.PENDING);
+    when(context.getBatchRequestId()).thenReturn(batchId);
+    when(context.getDeploymentEnvType()).thenReturn(null);
+    when(repository.findById(batchId)).thenReturn(Optional.of(entity));
+
+    var ex = assertThrows(IllegalStateException.class, () -> initializer.onStart(context));
+    assertTrue(ex.getMessage().contains("No Batch Flow Context parameter for deployment environment type was provided"));
   }
 
   @Test

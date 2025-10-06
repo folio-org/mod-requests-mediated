@@ -1,7 +1,6 @@
 package org.folio.mr.service.impl;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.folio.mr.exception.ExceptionFactory.notFound;
 import static org.folio.mr.support.ServiceUtils.initId;
 
 import java.util.List;
@@ -15,6 +14,7 @@ import org.folio.mr.domain.dto.MediatedBatchRequestsDto;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.folio.mr.domain.mapper.MediatedBatchRequestMapper;
+import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.service.MediatedBatchRequestFlowProvider;
 import org.folio.mr.service.MediatedBatchRequestSplitService;
@@ -71,7 +71,7 @@ public class MediatedBatchRequestsServiceImpl implements MediatedBatchRequestsSe
 
     return repository.findById(id)
       .map(mapper::toDto)
-      .orElseThrow(() -> notFound("Mediated Batch Request not found by ID: " + id));
+      .orElseThrow(() -> new MediatedBatchRequestNotFoundException(id));
   }
 
   private void updateRequestSplitEntities(MediatedBatchRequest batchRequest, List<MediatedBatchRequestSplit> requestSplits) {

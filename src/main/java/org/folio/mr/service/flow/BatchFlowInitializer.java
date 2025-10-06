@@ -3,7 +3,6 @@ package org.folio.mr.service.flow;
 import static org.folio.mr.domain.BatchRequestStatus.IN_PROGRESS;
 import static org.folio.mr.domain.BatchRequestStatus.PENDING;
 import static org.folio.mr.domain.type.ErrorCode.INVALID_BATCH_REQUEST_INITIAL_STATUS;
-import static org.folio.mr.exception.ExceptionFactory.notFound;
 
 import java.util.Collection;
 import java.util.function.Function;
@@ -15,6 +14,7 @@ import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.BatchContext;
 import org.folio.mr.domain.dto.Parameter;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
+import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.exception.ValidationException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
@@ -34,7 +34,7 @@ public class BatchFlowInitializer implements Stage<BatchContext> {
   public void onStart(BatchContext context) {
     var batchId = context.getBatchRequestId();
     var batchEntity = repository.findById(batchId)
-      .orElseThrow(() -> notFound("Mediated Batch Request not found by ID: " + batchId));
+      .orElseThrow(() -> new MediatedBatchRequestNotFoundException(batchId));
 
     if (batchEntity.getStatus() != PENDING) {
       log.error("Batch entity with id: {} has invalid initial status: {}",
@@ -44,9 +44,12 @@ public class BatchFlowInitializer implements Stage<BatchContext> {
         new Parameter().key("status").value(batchEntity.getStatus().getValue()),
         new Parameter().key("batchId").value(batchEntity.getId().toString()));
     }
-
     batchEntity.setStatus(IN_PROGRESS);
     repository.save(batchEntity);
+
+    if (context.getDeploymentEnvType() == null) {
+       throw new IllegalStateException("No Batch Flow Context parameter for deployment environment type was provided");
+    }
   }
 
   @Override

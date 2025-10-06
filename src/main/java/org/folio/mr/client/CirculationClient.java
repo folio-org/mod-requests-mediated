@@ -18,6 +18,9 @@ public interface CirculationClient {
   @PostMapping("/requests")
   Request createRequest(Request request);
 
+  @PostMapping("/requests/items")
+  Request createItemRequest(Request request);
+
   @PutMapping("/requests/{id}")
   Request updateRequest(@PathVariable String id, Request request);
 

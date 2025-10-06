@@ -37,12 +37,14 @@ import org.folio.mr.domain.dto.MediatedBatchRequestPostDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestPostDtoItemRequestsInner;
 import org.folio.mr.domain.dto.MediatedBatchRequestsDto;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
+import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
 import org.folio.mr.service.flow.BatchFailedFlowFinalizer;
 import org.folio.mr.service.flow.BatchFlowFinalizer;
 import org.folio.mr.service.flow.BatchFlowInitializer;
 import org.folio.mr.service.flow.BatchSplitProcessor;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.test.types.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -85,6 +87,9 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   @MockitoSpyBean
   private BatchFailedFlowFinalizer failedFlowFinalizer;
 
+  @MockitoSpyBean
+  private FolioExecutionContext executionContext;
+
   @BeforeEach
   void clearDatabase() {
     batchRequestSplitRepository.deleteAll();
@@ -121,7 +126,8 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
         get(URL_MEDIATED_BATCH_REQUESTS + "/" + UUID.randomUUID())
           .headers(defaultHeaders())
           .contentType(MediaType.APPLICATION_JSON))
-      .andExpect(status().isNotFound());
+      .andExpect(status().isNotFound())
+      .andExpect(exceptionMatch(MediatedBatchRequestNotFoundException.class));
   }
 
   @MethodSource("cqlQueryProvider")
@@ -282,7 +288,8 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
         get(URL_MEDIATED_BATCH_REQUESTS + "/" + UUID.randomUUID() + "/details")
           .headers(defaultHeaders())
           .contentType(MediaType.APPLICATION_JSON))
-      .andExpect(status().isNotFound());
+      .andExpect(status().isNotFound())
+      .andExpect(exceptionMatch(MediatedBatchRequestNotFoundException.class));
   }
 
   @SneakyThrows

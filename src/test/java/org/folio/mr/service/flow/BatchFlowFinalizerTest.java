@@ -113,6 +113,6 @@ class BatchFlowFinalizerTest {
     when(repository.findById(batchId)).thenReturn(Optional.empty());
 
     var ex = assertThrows(RuntimeException.class, () -> finalizer.execute(context));
-    assertTrue(ex.getMessage().contains("Mediated Batch Request not found by ID: " + batchId));
+    assertTrue(ex.getMessage().contains("Mediated Batch Request with ID [%s] was not found".formatted(batchId)));
   }
 }
