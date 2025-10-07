@@ -12,6 +12,7 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.flow.api.Stage;
 import org.folio.mr.client.EcsTlrClient;
 import org.folio.mr.client.ItemClient;
+import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.BatchSplitContext;
 import org.folio.mr.domain.dto.EcsRequestExternal;
 import org.folio.mr.domain.dto.Request;
@@ -149,6 +150,7 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
     if (request.getStatus() != null) {
       splitEntity.setRequestStatus(request.getStatus().getValue());
     }
+    splitEntity.setStatus(BatchRequestSplitStatus.COMPLETED);
     batchRequestSplitRepository.save(splitEntity);
   }
 }
