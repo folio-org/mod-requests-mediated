@@ -1,3 +1,6 @@
+## 1.2.8 2025-10-08
+* Ignore x-okapi-user-id Kafka message header (MODREQMED-133)
+
 ## 1.2.7 2025-09-09
 * Declare item missing API (MODREQMED-152)
 
