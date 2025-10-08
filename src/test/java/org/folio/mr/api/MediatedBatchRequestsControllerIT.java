@@ -386,21 +386,8 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
       .tenantId(TENANT_ID_CONSORTIUM)
       .instanceId(UUID.randomUUID().toString())
       .holdingsRecordId(UUID.randomUUID().toString());
-//    var userTenants = new UserTenantsResponse().userTenants(List.of(
-//      new UserTenant()
-//        .id(UUID.randomUUID())
-//        .userId(UUID.fromString("788fef93-43d1-4377-a7ba-24651cb0ee5c"))
-//        .username("consortia-system-user")
-//        .tenantId("consortium")
-//        .centralTenantId("consortium")
-//        .consortiumId(UUID.fromString("261a6ad9-0cab-47b5-ac83-a93b100d47b5"))
-//    )).totalRecords(1);
 
     var ecsTrl = new EcsTlr().primaryRequestId(expectedRequestId.toString());
-
-//    wireMockServer.stubFor(WireMock.get(urlPathMatching( "/user-tenants"))
-//      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
-//      .willReturn(jsonResponse(userTenants, HttpStatus.SC_OK)));
 
     wireMockServer.stubFor(WireMock.get(urlEqualTo(SEARCH_ITEM_URL + "/" + ITEM_IDS[0]))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
