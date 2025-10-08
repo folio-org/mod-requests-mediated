@@ -1,3 +1,7 @@
+# mod-requests-mediated Self-Evaluation Checklist
+
+## Based on FOLIO Module Acceptance Values and Criteria version 3.0
+
 ## Administrative
 * [ ] Listed by the Product Council on [Functionality Evaluated by the PC](https://wiki.folio.org/display/PC/Functionality+Evaluated+by+the+PC) with a positive evaluation result.
 
