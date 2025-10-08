@@ -1,6 +1,6 @@
-# mod-requests-mediated Self-Evaluation Checklist
+## Module 'mod-requests-mediated' Self-Evaluation Checklist
 
-## Based on FOLIO Module Acceptance Values and Criteria version 3.0
+Based on [FOLIO Module Acceptance Values and Criteria version 3.0](https://github.com/folio-org/tech-council/blob/master/MODULE_ACCEPTANCE_CRITERIA.MD)
 
 ## Administrative
 * [ ] Listed by the Product Council on [Functionality Evaluated by the PC](https://wiki.folio.org/display/PC/Functionality+Evaluated+by+the+PC) with a positive evaluation result.
@@ -27,7 +27,7 @@
 * [ ] Must not depend on a FOLIO library that has not been approved through the TCR process
 * [ ] Gracefully handles the absence of third party systems or related configuration. (3, 5, 12)
 * [ ] Sonarqube hasn't identified any security issues, any high or greater severity issues, or excessive (>3%) duplication (6); and any disabled or intentionally ignored rules/recommendations are reasonably justified.
-  * See [Rule Customization](https://dev.folio.org/guides/code-analysis/#rule-customization) details. 
+  * See [Rule Customization](https://dev.folio.org/guides/code-analysis/#rule-customization) details.
 * [ ] Uses [officially supported](https://wiki.folio.org/display/TC/Officially+Supported+Technologies) build tools (3, 5, 13)
 * [ ] Unit tests have 80% coverage or greater, and are based on [officially supported technologies](https://wiki.folio.org/display/TC/Officially+Supported+Technologies)[^1] (3, 4)
 * [ ] Assigned to exactly one application descriptor within the FOLIO Community LSP Platform, specified in the Jira task for this module evaluation (3, 5)
