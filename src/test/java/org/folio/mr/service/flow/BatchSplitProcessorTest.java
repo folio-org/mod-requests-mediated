@@ -107,6 +107,36 @@ class BatchSplitProcessorTest {
   }
 
   @Test
+  void execute_shouldCreateSingleTenantRequest_whenEnvTypeIsSecureTenant() {
+    var batch = new MediatedBatchRequest();
+    batch.setId(UUID.randomUUID());
+    var split = new MediatedBatchRequestSplit();
+    split.setItemId(UUID.randomUUID());
+    split.setPickupServicePointId(UUID.randomUUID());
+    split.setRequesterId(UUID.randomUUID());
+
+    var requestId = UUID.randomUUID().toString();
+    var expectedRequest = new Request().id(requestId).status(Request.StatusEnum.OPEN_AWAITING_PICKUP);
+
+    var item = new org.folio.mr.domain.dto.Item();
+    item.setInstanceId(UUID.randomUUID().toString());
+    item.setHoldingsRecordId(UUID.randomUUID().toString());
+
+    when(context.getBatchSplitEntity()).thenReturn(split);
+    when(context.getDeploymentEnvType()).thenReturn(EnvironmentType.SECURE_TENANT);
+    when(context.getBatchRequestId()).thenReturn(batch.getId());
+    when(batchRequestRepository.findById(any(UUID.class))).thenReturn(Optional.of(batch));
+    when(itemClient.get(any(String.class))).thenReturn(Optional.of(item));
+    when(circulationRequestService.createItemRequest(any(Request.class))).thenReturn(expectedRequest);
+
+    processor.execute(context);
+
+    verify(splitRepository).save(split);
+    assertEquals(Request.StatusEnum.OPEN_AWAITING_PICKUP.getValue(), split.getRequestStatus());
+    assertEquals(requestId, split.getConfirmedRequestId().toString());
+  }
+
+  @Test
   void onStart_shouldSetStatusToInProgress_andSaveEntity() {
     var split = new MediatedBatchRequestSplit();
     split.setStatus(BatchRequestSplitStatus.PENDING);
