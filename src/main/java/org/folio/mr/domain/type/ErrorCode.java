@@ -12,7 +12,8 @@ public enum ErrorCode {
   MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON("102",
     "Mediated request cannot be confirmed for inactive patron"),
   DUPLICATE_BATCH_REQUEST_ID("103", "Mediated batch request with the given 'id' already exists."),
-  INVALID_BATCH_REQUEST_INITIAL_STATUS("104", "Invalid initial status for mediated batch request.");
+  INVALID_BATCH_REQUEST_INITIAL_STATUS("104", "Invalid initial status for mediated batch request."),
+  INVALID_SERVICE_POINT_FOR_BATCH_REQUEST_ENTITY("105", "Not allowed to create Request for the given service point id.");
 
   private final String code;
   private final String message;

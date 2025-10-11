@@ -37,7 +37,7 @@ class BatchFlowFinalizerTest {
   private BatchFlowFinalizer finalizer;
 
   @Test
-  void execute_shouldSetStatusToFailed_whenAtLeastOneSplitIsFailed() {
+  void execute_positive_shouldSetStatusToFailedWhenAtLeastOneSplitIsFailed() {
     var batchId = UUID.randomUUID();
     var splitId1 = UUID.randomUUID();
     var splitId2 = UUID.randomUUID();
@@ -60,7 +60,7 @@ class BatchFlowFinalizerTest {
   }
 
   @Test
-  void execute_shouldSetStatusToCompleted_whenAllSplitsAreCompleted() {
+  void execute_positive_shouldSetStatusToCompletedWhenAllSplitsAreCompleted() {
     var batchId = UUID.randomUUID();
     var splitId1 = UUID.randomUUID();
     var splitId2 = UUID.randomUUID();
@@ -83,7 +83,7 @@ class BatchFlowFinalizerTest {
   }
 
   @Test
-  void execute_shouldNotChangeStatus_whenSplitsAreNotAllCompletedOrFailed() {
+  void execute_positive_shouldNotChangeStatusWhenSplitsAreNotAllCompletedOrFailed() {
     var batchId = UUID.randomUUID();
     var splitId1 = UUID.randomUUID();
     var splitId2 = UUID.randomUUID();
@@ -107,7 +107,7 @@ class BatchFlowFinalizerTest {
   }
 
   @Test
-  void execute_shouldThrowException_whenBatchEntityNotFound() {
+  void execute_negative_shouldThrowExceptionWhenBatchEntityNotFound() {
     var batchId = UUID.randomUUID();
     when(context.getBatchRequestId()).thenReturn(batchId);
     when(repository.findById(batchId)).thenReturn(Optional.empty());

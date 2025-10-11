@@ -2,20 +2,24 @@ package org.folio.mr.service.flow;
 
 import static org.folio.mr.domain.BatchRequestSplitStatus.FAILED;
 import static org.folio.mr.domain.BatchRequestSplitStatus.IN_PROGRESS;
-import static org.folio.mr.domain.FulfillmentPreference.HOLD_SHELF;
 import static org.folio.mr.domain.RequestLevel.ITEM;
+import static org.folio.mr.exception.MediatedBatchRequestValidationException.invalidPickupServicePoint;
 
+import java.util.Date;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections4.CollectionUtils;
 import org.folio.flow.api.Stage;
 import org.folio.mr.client.EcsTlrClient;
-import org.folio.mr.client.ItemClient;
 import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.BatchSplitContext;
+import org.folio.mr.domain.FulfillmentPreference;
 import org.folio.mr.domain.dto.EcsRequestExternal;
 import org.folio.mr.domain.dto.Request;
+import org.folio.mr.domain.dto.ServicePoint;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.folio.mr.exception.ItemNotFoundException;
@@ -34,6 +38,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BatchSplitProcessor implements Stage<BatchSplitContext> {
 
+  private static final String DEFAULT_FULFILLMENT_PREFERENCE = "Hold Shelf";
+
   private final MediatedBatchRequestSplitRepository batchRequestSplitRepository;
   private final MediatedBatchRequestRepository batchRequestRepository;
   private final SearchService searchService;
@@ -41,7 +47,6 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
   private final EcsTlrClient ecsTlrClient;
   private final SystemUserScopedExecutionService executionService;
   private final CirculationRequestService circulationRequestService;
-  private final ItemClient itemClient;
 
   @Override
   @Transactional
@@ -59,10 +64,6 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
     var batchEntity = batchRequestRepository.findById(batchId)
       .orElseThrow(() -> new MediatedBatchRequestNotFoundException(batchId));
     var envType = context.getDeploymentEnvType();
-
-    if (splitEntity.getItemId() == null || splitEntity.getPickupServicePointId() == null) {
-      throw new IllegalArgumentException("Item ID or Pickup Service Point ID is null. Skipping Item Request Creation");
-    }
 
     log.debug("Start processing batch split entity: {}", splitEntity);
     log.info("execute:: Creating request for item with id: {} at service point with id: {}",
@@ -90,22 +91,29 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
   private void createRequest(MediatedBatchRequest batchRequest, MediatedBatchRequestSplit splitEntity,
                              EnvironmentType envType) {
     if (envType == EnvironmentType.ECS) {
+      log.info("createRequest:: creating ECS request");
       createEcsRequest(batchRequest, splitEntity);
+      return;
+    } else if (envType == EnvironmentType.SINGLE_TENANT) {
+      log.info("createRequest:: creating Single Tenant request");
+      createSingleTenantRequest(batchRequest, splitEntity);
       return;
     }
 
-    createSingleTenantRequest(batchRequest, splitEntity);
+    // secure tenant case
+    log.info("createRequest:: creating Secure Tenant Mediated Request");
+    createMediatedRequests(batchRequest, splitEntity);
   }
 
   private void createEcsRequest(MediatedBatchRequest batchEntity, MediatedBatchRequestSplit splitEntity) {
     var ecsPostDto = buildEcsRequestPostDto(batchEntity, splitEntity);
     var ecsTlr = executionService.executeSystemUserScoped(executionContext.getTenantId(),
       () -> ecsTlrClient.createEcsExternalRequest(ecsPostDto));
-    var request = circulationRequestService.get(ecsTlr.getPrimaryRequestId());
-    updateBatchRequestSplit(splitEntity, request);
+    var requestCreated = circulationRequestService.get(ecsTlr.getPrimaryRequestId());
+    updateBatchRequestSplit(splitEntity, requestCreated);
 
-    log.info("createEcsRequest:: Created ECS request {}, for batch split entity {}",
-      request.getId(), splitEntity.getId());
+    log.info("createEcsRequest:: Created ECS request with id {}, for batch split entity {}",
+      requestCreated.getId(), splitEntity.getId());
   }
 
   private EcsRequestExternal buildEcsRequestPostDto(MediatedBatchRequest batch, MediatedBatchRequestSplit split) {
@@ -113,7 +121,8 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
     var consortiumItem = searchService.searchItem(itemId)
       .orElseThrow(() -> new ItemNotFoundException(split.getItemId()));
 
-    return new EcsRequestExternal(consortiumItem.getInstanceId(), split.getRequesterId().toString(), ITEM, HOLD_SHELF, batch.getRequestDate())
+    return new EcsRequestExternal(consortiumItem.getInstanceId(), split.getRequesterId().toString(), ITEM,
+      FulfillmentPreference.fromValue(DEFAULT_FULFILLMENT_PREFERENCE), batch.getRequestDate())
       .withItemId(itemId)
       .withHoldingsRecordId(consortiumItem.getHoldingsRecordId())
       .withPatronComments(split.getPatronComments())
@@ -123,33 +132,73 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
   }
 
   private void createSingleTenantRequest(MediatedBatchRequest batch, MediatedBatchRequestSplit splitEntity) {
-    var requestPostDto = buildLocalRequestPostDto(batch, splitEntity);
-    var request = circulationRequestService.createItemRequest(requestPostDto);
-    updateBatchRequestSplit(splitEntity, request);
+    var requestType = findMatchingRequestType(splitEntity)
+      .orElseThrow(() -> invalidPickupServicePoint(batch.getId(), splitEntity.getPickupServicePointId(), splitEntity.getItemId()));
+    var requestPostDto = buildLocalRequestPostDto(splitEntity, batch.getRequestDate(), requestType);
+    var requestCreated = circulationRequestService.create(requestPostDto);
+    updateBatchRequestSplit(splitEntity, requestCreated);
+
+    log.info("createSingleTenantRequest:: Created Single Tenant request with id {}, for batch split entity {}",
+      requestCreated.getId(), splitEntity.getId());
   }
 
-  private Request buildLocalRequestPostDto(MediatedBatchRequest batch, MediatedBatchRequestSplit splitEntity) {
-    var itemId = splitEntity.getItemId().toString();
-    var item = itemClient.get(itemId)
-      .orElseThrow(() -> new ItemNotFoundException(splitEntity.getItemId()));
+  Optional<Request.RequestTypeEnum> findMatchingRequestType(MediatedBatchRequestSplit splitEntity) {
+    var allowedServicePoints = circulationRequestService
+      .getItemRequestAllowedServicePoints(splitEntity.getRequesterId(), splitEntity.getItemId());
 
+    var pickupServicePointId = splitEntity.getPickupServicePointId();
+    if (containsServicePoint(allowedServicePoints.page(), pickupServicePointId)) {
+      return Optional.of(Request.RequestTypeEnum.PAGE);
+    }
+
+    if (containsServicePoint(allowedServicePoints.hold(), pickupServicePointId)) {
+      return Optional.of(Request.RequestTypeEnum.HOLD);
+    }
+
+    if (containsServicePoint(allowedServicePoints.recall(), pickupServicePointId)) {
+      return Optional.of(Request.RequestTypeEnum.RECALL);
+    }
+
+    log.warn("findMatchingRequestType:: Pickup Service point id [{}] is not allowed for item id: [{}] and " +
+        "requester id: [{}]", pickupServicePointId, splitEntity.getItemId(), splitEntity.getRequesterId());
+    return Optional.empty();
+  }
+
+  private boolean containsServicePoint(Set<ServicePoint> servicePoints, UUID servicePointId) {
+    if (CollectionUtils.isEmpty(servicePoints) || servicePointId == null) {
+      return false;
+    }
+
+    var servicePointIdStr = servicePointId.toString();
+    return servicePoints.stream()
+      .map(ServicePoint::getId)
+      .anyMatch(servicePointIdStr::equals);
+  }
+
+  private Request buildLocalRequestPostDto(MediatedBatchRequestSplit splitEntity, Date requestDate,
+                                           Request.RequestTypeEnum requestType) {
     return new Request()
-      .requestLevel(Request.RequestLevelEnum.TITLE)
-      .instanceId(item.getInstanceId())
-      .holdingsRecordId(item.getHoldingsRecordId())
-      .itemId(itemId)
+      .requestLevel(Request.RequestLevelEnum.ITEM)
+      .requestType(requestType)
+      .itemId(splitEntity.getItemId().toString())
       .requesterId(splitEntity.getRequesterId().toString())
-      .fulfillmentPreference(Request.FulfillmentPreferenceEnum.HOLD_SHELF)
+      .fulfillmentPreference(Request.FulfillmentPreferenceEnum.fromValue(DEFAULT_FULFILLMENT_PREFERENCE))
       .pickupServicePointId(splitEntity.getPickupServicePointId().toString())
-      .requestDate(batch.getRequestDate())
+      .requestDate(requestDate)
       .patronComments(splitEntity.getPatronComments());
+  }
+
+  private void createMediatedRequests(MediatedBatchRequest batchRequest, MediatedBatchRequestSplit splitEntity) {
+
   }
 
   private void updateBatchRequestSplit(MediatedBatchRequestSplit splitEntity, Request request) {
     splitEntity.setConfirmedRequestId(UUID.fromString(request.getId()));
-    if (request.getStatus() != null) {
-      splitEntity.setRequestStatus(request.getStatus().getValue());
+    if (request.getStatus() == null) {
+      log.warn("updateBatchRequestSplit:: Request status is null for created request with id: {}",
+        request.getId());
     }
+    splitEntity.setRequestStatus(request.getStatus().getValue());
     splitEntity.setStatus(BatchRequestSplitStatus.COMPLETED);
     batchRequestSplitRepository.save(splitEntity);
   }

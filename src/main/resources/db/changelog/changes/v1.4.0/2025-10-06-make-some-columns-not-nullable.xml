@@ -1,0 +1,23 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+  <changeSet id="make-batch_request_split-item_id-and-pickup_service_point_id-not-nullable" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="batch_request_split"/>
+    </preConditions>
+
+    <addNotNullConstraint
+      tableName="batch_request_split"
+      columnName="item_id"
+      columnDataType="uuid"/>
+
+    <addNotNullConstraint
+      tableName="batch_request_split"
+      columnName="pickup_service_point_id"
+      columnDataType="uuid"/>
+  </changeSet>
+
+</databaseChangeLog>

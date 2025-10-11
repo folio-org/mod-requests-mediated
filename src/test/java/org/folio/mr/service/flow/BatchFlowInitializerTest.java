@@ -46,7 +46,7 @@ class BatchFlowInitializerTest {
   private BatchFlowInitializer initializer;
 
   @Test
-  void onStart_shouldSetStatusToInProgress_andSaveEntity() {
+  void onStart_positive_shouldSetStatusToInProgressAndSaveEntity() {
     var batchId = UUID.randomUUID();
     var entity = new MediatedBatchRequest();
     entity.setId(batchId);
@@ -63,7 +63,7 @@ class BatchFlowInitializerTest {
   }
 
   @Test
-  void onStart_shouldThrowValidationException_whenStatusIsNotPending() {
+  void onStart_negative_shouldThrowValidationExceptionWhenStatusIsNotPending() {
     var batchId = UUID.randomUUID();
     var entity = new MediatedBatchRequest();
     entity.setId(batchId);
@@ -77,7 +77,7 @@ class BatchFlowInitializerTest {
   }
 
   @Test
-  void onStart_shouldThrowNotFoundException_whenEntityNotFound() {
+  void onStart_negative_shouldThrowNotFoundExceptionWhenEntityNotFound() {
     var batchId = UUID.randomUUID();
     when(context.getBatchRequestId()).thenReturn(batchId);
     when(repository.findById(batchId)).thenReturn(Optional.empty());
@@ -87,11 +87,12 @@ class BatchFlowInitializerTest {
   }
 
   @Test
-  void onStart_shouldThrowIllegalStateException_whenNotEnvTypeProvided() {
+  void onStart_negative_shouldThrowIllegalStateExceptionWhenNotEnvTypeProvided() {
     var batchId = UUID.randomUUID();
     var entity = new MediatedBatchRequest();
     entity.setId(batchId);
     entity.setStatus(BatchRequestStatus.PENDING);
+
     when(context.getBatchRequestId()).thenReturn(batchId);
     when(context.getDeploymentEnvType()).thenReturn(null);
     when(repository.findById(batchId)).thenReturn(Optional.of(entity));
@@ -101,7 +102,7 @@ class BatchFlowInitializerTest {
   }
 
   @Test
-  void execute_shouldSetBatchSplitEntities_andValidateStatuses() {
+  void execute_positive_shouldSetBatchSplitEntitiesAndValidateStatuses() {
     var batchId = UUID.randomUUID();
     var split1 = new MediatedBatchRequestSplit();
     split1.setId(UUID.randomUUID());
@@ -120,7 +121,7 @@ class BatchFlowInitializerTest {
   }
 
   @Test
-  void execute_shouldThrowValidationException_whenSplitStatusIsNotPending() {
+  void execute_negative_shouldThrowValidationExceptionWhenSplitStatusIsNotPending() {
     var batchId = UUID.randomUUID();
     var split = new MediatedBatchRequestSplit();
     split.setId(UUID.randomUUID());

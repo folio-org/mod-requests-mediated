@@ -71,4 +71,34 @@ public class EcsRequestExternal {
     this.primaryRequestTenantId = primaryRequestTenantId;
     return this;
   }
+
+  public EcsRequestExternal withRequestExpirationDate(Date requestExpirationDate) {
+    this.requestExpirationDate = requestExpirationDate;
+    return this;
+  }
+
+  public EcsRequestExternal withPrimaryRequestId(String primaryRequestId) {
+    this.primaryRequestId = primaryRequestId;
+    return this;
+  }
+
+  public EcsRequestExternal withPrimaryRequestDcbTransactionId(String primaryRequestDcbTransactionId) {
+    this.primaryRequestDcbTransactionId = primaryRequestDcbTransactionId;
+    return this;
+  }
+
+  public EcsRequestExternal withSecondaryRequestId(String secondaryRequestId) {
+    this.secondaryRequestId = secondaryRequestId;
+    return this;
+  }
+
+  public EcsRequestExternal withSecondaryRequestDcbTransactionId(String secondaryRequestDcbTransactionId) {
+    this.secondaryRequestDcbTransactionId = secondaryRequestDcbTransactionId;
+    return this;
+  }
+
+  public EcsRequestExternal withSecondaryRequestTenantId(String secondaryRequestTenantId) {
+    this.secondaryRequestTenantId = secondaryRequestTenantId;
+    return this;
+  }
 }

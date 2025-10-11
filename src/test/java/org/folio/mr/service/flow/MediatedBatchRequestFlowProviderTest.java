@@ -43,7 +43,7 @@ class MediatedBatchRequestFlowProviderTest {
   }
 
   @Test
-  void createFlow_shouldBuildFlowWithCorrectStagesAndParameters() {
+  void createFlow_positive_shouldBuildFlowWithCorrectStagesAndParameters() {
     var batchId = UUID.randomUUID();
     when(executionContext.getTenantId()).thenReturn("tenantId");
     when(tenantSupportService.isSecureTenant(any(String.class))).thenReturn(false);
@@ -61,7 +61,7 @@ class MediatedBatchRequestFlowProviderTest {
   }
 
   @Test
-  void createFlowForSecureTenant_shouldThrowNotSupportedError() {
+  void createFlow_negative_shouldThrowNotSupportedErrorForSecureTenant() {
     var batchId = UUID.randomUUID();
     when(executionContext.getTenantId()).thenReturn("secureTenant");
     when(tenantSupportService.isSecureTenant(any(String.class))).thenReturn(true);
