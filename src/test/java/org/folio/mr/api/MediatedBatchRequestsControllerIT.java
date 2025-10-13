@@ -1,11 +1,12 @@
 package org.folio.mr.api;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
 import static org.awaitility.Durations.ONE_SECOND;
 import static org.folio.mr.api.BaseIT.TENANT_ID_SECURE;
 import static org.folio.mr.domain.dto.MediatedBatchRequestDto.MediatedRequestStatusEnum.IN_PROGRESS;
@@ -31,7 +32,6 @@ import java.util.UUID;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.apache.http.HttpStatus;
-import org.assertj.core.groups.Tuple;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.folio.mr.domain.BatchRequestSplitStatus;
@@ -46,7 +46,6 @@ import org.folio.mr.domain.dto.MediatedBatchRequestDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestPostDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestPostDtoItemRequestsInner;
 import org.folio.mr.domain.dto.MediatedBatchRequestsDto;
-import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.UserTenant;
 import org.folio.mr.domain.dto.UserTenantsResponse;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
@@ -83,8 +82,9 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   private static final String BATCH_REQUEST_ID2 = UUID.randomUUID().toString();
   private static final UUID[] ITEM_IDS = {UUID.randomUUID(), UUID.randomUUID()};
   private static final String SEARCH_ITEM_URL = "/search/consortium/item";
-  private static final String ECS_TLR_EXTERNAL_URL = "/tlr/ecs-tlr/create-ecs-request-external";
-  private static final String CIRCULATION_REQUEST_URL = "/circulation/requests";
+  private static final String ECS_TLR_EXTERNAL_URL = "/tlr/create-ecs-request-external";
+  private static final UUID EXPECTED_CREATED_REQUEST_ID1 = UUID.fromString("9a326225-6530-41cc-9399-a61987bfab3c");
+  private static final UUID EXPECTED_CREATED_REQUEST_ID2 = UUID.fromString("16f40c4e-235d-4912-a683-2ad919cc8b07");
 
   @Autowired
   private MediatedBatchRequestRepository batchRequestRepository;
@@ -205,8 +205,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
     var postBatchRequestDto = sampleBatchRequestPostDto(2)
       .batchId(BATCH_REQUEST_ID1);
 
-    var expectedRequestId = UUID.randomUUID();
-    addStubsForEcsRequestCreation(expectedRequestId);
+    addStubsForEcsRequestCreation();
 
     createBatchRequests(postBatchRequestDto)
       .andExpect(jsonPath("mediatedRequestStatus",
@@ -228,8 +227,14 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
         verify(flowFinalizer).execute(any(BatchContext.class));
 
         assertThat(batchRequestSplitRepository.findAll())
-          .extracting(MediatedBatchRequestSplit::getStatus, MediatedBatchRequestSplit::getConfirmedRequestId)
-          .containsOnly(Tuple.tuple(BatchRequestSplitStatus.COMPLETED, expectedRequestId));
+          .extracting(
+            MediatedBatchRequestSplit::getStatus,
+            MediatedBatchRequestSplit::getConfirmedRequestId,
+            MediatedBatchRequestSplit::getRequestStatus)
+          .containsExactlyInAnyOrder(
+            tuple(BatchRequestSplitStatus.COMPLETED, EXPECTED_CREATED_REQUEST_ID1, "Open - Not yet filled"),
+            tuple(BatchRequestSplitStatus.COMPLETED, EXPECTED_CREATED_REQUEST_ID2, "Open - Not yet filled")
+          );
         assertEquals(BatchRequestStatus.COMPLETED, batchRequestRepository.findAll().getFirst().getStatus());
       });
   }
@@ -312,8 +317,8 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
     assertThat(collectionDto.getMediatedBatchRequestDetails())
       .extracting(MediatedBatchRequestDetailDto::getBatchId, MediatedBatchRequestDetailDto::getItemId)
       .containsAll(List.of(
-        Tuple.tuple(BATCH_REQUEST_ID1, ITEM_IDS[0].toString()),
-        Tuple.tuple(BATCH_REQUEST_ID1, ITEM_IDS[1].toString())));
+        tuple(BATCH_REQUEST_ID1, ITEM_IDS[0].toString()),
+        tuple(BATCH_REQUEST_ID1, ITEM_IDS[1].toString())));
   }
 
   @Test
@@ -375,7 +380,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
     return postDto;
   }
 
-  private void addStubsForEcsRequestCreation(UUID expectedRequestId) {
+  private void addStubsForEcsRequestCreation() {
     var item1 = new ConsortiumItem()
       .id(ITEM_IDS[0].toString())
       .tenantId(TENANT_ID_CONSORTIUM)
@@ -387,22 +392,25 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
       .instanceId(UUID.randomUUID().toString())
       .holdingsRecordId(UUID.randomUUID().toString());
 
-    var ecsTrl = new EcsTlr().primaryRequestId(expectedRequestId.toString());
+    var ecsTrl1 = new EcsTlr().primaryRequestId(EXPECTED_CREATED_REQUEST_ID1.toString());
+    var ecsTrl2 = new EcsTlr().primaryRequestId(EXPECTED_CREATED_REQUEST_ID2.toString());
 
-    wireMockServer.stubFor(WireMock.get(urlEqualTo(SEARCH_ITEM_URL + "/" + ITEM_IDS[0]))
+    wireMockServer.stubFor(WireMock.get(urlPathEqualTo(SEARCH_ITEM_URL + "/" + ITEM_IDS[0]))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(jsonResponse(item1, HttpStatus.SC_OK)));
 
-    wireMockServer.stubFor(WireMock.get(urlEqualTo(SEARCH_ITEM_URL + "/" + ITEM_IDS[1]))
+    wireMockServer.stubFor(WireMock.get(urlPathEqualTo(SEARCH_ITEM_URL + "/" + ITEM_IDS[1]))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(jsonResponse(item2, HttpStatus.SC_OK)));
 
     wireMockServer.stubFor(WireMock.post(ECS_TLR_EXTERNAL_URL)
+      .withRequestBody(containing(ITEM_IDS[0].toString()))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
-      .willReturn(jsonResponse(ecsTrl, HttpStatus.SC_CREATED)));
+      .willReturn(jsonResponse(ecsTrl1, HttpStatus.SC_CREATED)));
 
-    wireMockServer.stubFor(WireMock.get(urlMatching(CIRCULATION_REQUEST_URL + "/" + expectedRequestId))
+    wireMockServer.stubFor(WireMock.post(ECS_TLR_EXTERNAL_URL)
+      .withRequestBody(containing(ITEM_IDS[1].toString()))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
-      .willReturn(jsonResponse(new Request().id(expectedRequestId.toString()), HttpStatus.SC_OK)));
+      .willReturn(jsonResponse(ecsTrl2, HttpStatus.SC_CREATED)));
   }
 }

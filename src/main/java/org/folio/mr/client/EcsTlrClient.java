@@ -1,6 +1,5 @@
 package org.folio.mr.client;
 
-import org.folio.mr.domain.dto.EcsRequestExternal;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.spring.config.FeignClientConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -12,8 +11,4 @@ public interface EcsTlrClient {
 
   @PostMapping
   EcsTlr post(@RequestBody EcsTlr ecsTlr);
-
-  @PostMapping("/create-ecs-request-external")
-  EcsTlr createEcsExternalRequest(@RequestBody EcsRequestExternal request);
-
 }

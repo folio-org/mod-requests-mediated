@@ -1,5 +1,6 @@
 package org.folio.mr.api;
 
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -87,7 +89,8 @@ public class BaseIT {
   protected static final String HEADER_TENANT = "x-okapi-tenant";
   private static final String FOLIO_ENVIRONMENT = "folio";
   private static final int WIRE_MOCK_PORT = TestSocketUtils.findAvailableTcpPort();
-  protected static WireMockServer wireMockServer = new WireMockServer(WIRE_MOCK_PORT);
+  protected static WireMockServer wireMockServer =
+    new WireMockServer(wireMockConfig().port(WIRE_MOCK_PORT).notifier(new Slf4jNotifier(true)));
   protected static final String REQUEST_KAFKA_TOPIC_NAME = buildTopicName("circulation", "request");
   protected static final String ITEM_KAFKA_TOPIC_NAME = buildTopicName("inventory", "item");
   private static final String[] KAFKA_TOPICS = {REQUEST_KAFKA_TOPIC_NAME, ITEM_KAFKA_TOPIC_NAME};
@@ -136,7 +139,6 @@ public class BaseIT {
 
   @BeforeAll
   static void setUp() {
-    wireMockServer = new WireMockServer(WIRE_MOCK_PORT);
     wireMockServer.start();
     mockHelper = new MockHelper(wireMockServer);
 

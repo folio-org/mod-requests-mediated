@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.folio.mr.client.CirculationClient;
-import org.folio.mr.client.EcsTlrClient;
+import org.folio.mr.client.EcsExternalTlrClient;
 import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.BatchSplitContext;
 import org.folio.mr.domain.dto.ConsortiumItem;
@@ -52,7 +52,7 @@ class BatchSplitProcessorTest {
   @Mock
   private FolioExecutionContext executionContext;
   @Mock
-  private EcsTlrClient ecsTlrClient;
+  private EcsExternalTlrClient ecsTlrClient;
   @Mock
   private SystemUserScopedExecutionService executionService;
   @Mock
@@ -149,6 +149,22 @@ class BatchSplitProcessorTest {
 
     assertThrows(MediatedBatchRequestValidationException.class, () -> processor.execute(context),
       "Not allowed to create Request for the given service point id.");
+
+    verifyNoInteractions(splitRepository);
+  }
+
+  @Test
+  void execute_negative_shouldThrowUnsupportedOperationErrorInSecureTenantEnv() {
+    var batch = new MediatedBatchRequest();
+    batch.setId(UUID.randomUUID());
+    var split = new MediatedBatchRequestSplit();
+
+    when(context.getBatchSplitEntity()).thenReturn(split);
+    when(context.getDeploymentEnvType()).thenReturn(EnvironmentType.SECURE_TENANT);
+    when(context.getBatchRequestId()).thenReturn(batch.getId());
+    when(batchRequestRepository.findById(any(UUID.class))).thenReturn(Optional.of(batch));
+
+    assertThrows(UnsupportedOperationException.class, () -> processor.execute(context));
 
     verifyNoInteractions(splitRepository);
   }

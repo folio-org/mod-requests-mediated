@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
 import org.folio.flow.api.Stage;
-import org.folio.mr.client.EcsTlrClient;
+import org.folio.mr.client.EcsExternalTlrClient;
 import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.BatchSplitContext;
 import org.folio.mr.domain.FulfillmentPreference;
@@ -44,7 +44,7 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
   private final MediatedBatchRequestRepository batchRequestRepository;
   private final SearchService searchService;
   private final FolioExecutionContext executionContext;
-  private final EcsTlrClient ecsTlrClient;
+  private final EcsExternalTlrClient ecsTlrClient;
   private final SystemUserScopedExecutionService executionService;
   private final CirculationRequestService circulationRequestService;
 
@@ -102,7 +102,7 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
 
     // secure tenant case
     log.info("createRequest:: creating Secure Tenant Mediated Request");
-    createMediatedRequests(batchRequest, splitEntity);
+    createMediatedRequests();
   }
 
   private void createEcsRequest(MediatedBatchRequest batchEntity, MediatedBatchRequestSplit splitEntity) {
@@ -188,8 +188,9 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
       .patronComments(splitEntity.getPatronComments());
   }
 
-  private void createMediatedRequests(MediatedBatchRequest batchRequest, MediatedBatchRequestSplit splitEntity) {
-
+  private void createMediatedRequests() {
+    throw new UnsupportedOperationException(
+      "Multi-Item Request is not supported in Secure Tenant environment");
   }
 
   private void updateBatchRequestSplit(MediatedBatchRequestSplit splitEntity, Request request) {
