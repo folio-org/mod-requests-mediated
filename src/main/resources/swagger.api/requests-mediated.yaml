@@ -410,14 +410,20 @@ components:
       $ref: 'schemas/inventory/instances.json'
     servicePoint:
       $ref: 'schemas/inventory/servicePoint.json'
+    servicePoints:
+      $ref: 'schemas/inventory/servicePoints.json'
     item:
       $ref: 'schemas/inventory/item.json'
     items:
       $ref: 'schemas/inventory/items.json'
     location:
       $ref: 'schemas/inventory/location.json'
+    locations:
+      $ref: 'schemas/inventory/locations.json'
     library:
       $ref: 'schemas/inventory/library.json'
+    libraries:
+      $ref: 'schemas/inventory/libraries.json'
     campus:
       $ref: 'schemas/inventory/loccamp.json'
     institution:

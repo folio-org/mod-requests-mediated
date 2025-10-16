@@ -1,20 +1,41 @@
 package org.folio.mr.service.impl;
 
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toSet;
 import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.DELIVERY;
 import static org.folio.mr.domain.dto.MediatedRequest.FulfillmentPreferenceEnum.HOLD_SHELF;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.NEW_AWAITING_CONFIRMATION;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.folio.mr.client.InstanceClient;
+import org.folio.mr.client.ItemClient;
+import org.folio.mr.client.LibraryClient;
+import org.folio.mr.client.LocationClient;
 import org.folio.mr.client.SearchClient;
+import org.folio.mr.client.SearchInstancesClient;
+import org.folio.mr.client.ServicePointClient;
+import org.folio.mr.client.UserClient;
+import org.folio.mr.client.UserGroupClient;
 import org.folio.mr.domain.dto.Instance;
+import org.folio.mr.domain.dto.Instances;
 import org.folio.mr.domain.dto.Item;
+import org.folio.mr.domain.dto.Items;
+import org.folio.mr.domain.dto.Libraries;
 import org.folio.mr.domain.dto.Library;
 import org.folio.mr.domain.dto.Location;
+import org.folio.mr.domain.dto.Locations;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.MediatedRequestDeliveryAddress;
 import org.folio.mr.domain.dto.MediatedRequestInstance;
@@ -32,11 +53,16 @@ import org.folio.mr.domain.dto.MediatedRequestRequesterPatronGroup;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndex;
 import org.folio.mr.domain.dto.MediatedRequestSearchIndexCallNumberComponents;
 import org.folio.mr.domain.dto.SearchInstance;
+import org.folio.mr.domain.dto.SearchInstancesResponse;
 import org.folio.mr.domain.dto.SearchItem;
 import org.folio.mr.domain.dto.ServicePoint;
+import org.folio.mr.domain.dto.ServicePoints;
 import org.folio.mr.domain.dto.User;
 import org.folio.mr.domain.dto.UserGroup;
+import org.folio.mr.domain.dto.UserGroups;
 import org.folio.mr.domain.dto.UserPersonal;
+import org.folio.mr.domain.dto.Users;
+import org.folio.mr.service.BulkFetchingService;
 import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestDetailsService;
 import org.folio.mr.service.MetadataService;
@@ -62,6 +88,15 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private final MetadataService metadataService;
   private final SystemUserScopedExecutionService executionService;
   private final SearchClient searchClient;
+  private final SearchInstancesClient searchInstancesClient;
+  private final UserClient userClient;
+  private final UserGroupClient userGroupClient;
+  private final InstanceClient instanceClient;
+  private final ItemClient itemClient;
+  private final LocationClient locationClient;
+  private final LibraryClient libraryClient;
+  private final ServicePointClient servicePointClient;
+  private final BulkFetchingService fetchingService;
 
   @Override
   public MediatedRequest addRequestDetailsForCreate(MediatedRequest request) {
@@ -91,8 +126,8 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   public MediatedRequest addRequestDetailsForUpdate(MediatedRequest request) {
     removeExistingRequestDetails(request);
     processRequestStatus(request);
-    MediatedRequestContext context = buildRequestContext(request);
 
+    MediatedRequestContext context = buildRequestContext(request);
     addRequester(context);
     addRequesterGroup(context);
     addProxy(context);
@@ -109,7 +144,34 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   @Override
   public MediatedRequest addRequestDetailsForGet(MediatedRequest request) {
     MediatedRequestContext context = buildRequestContext(request);
+    addRequestDetailsForGet(context);
+    return request;
+  }
 
+  private List<MediatedRequest> addRequestMultiPageBatchDetailsForGet(
+    List<MediatedRequest> requests) {
+
+    // TODO: implement multi-page batch processing
+    return null;
+  }
+
+  @Override
+  public List<MediatedRequest> addRequestBatchDetailsForGet(List<MediatedRequest> requests) {
+    var batchContext = buildRequestBatchContext(requests);
+    return requests.stream()
+      .map(request -> addRequestDetailsForGet(request, batchContext))
+      .toList();
+  }
+
+  private MediatedRequest addRequestDetailsForGet(MediatedRequest request,
+    MediatedRequestBatchContext batchContext) {
+
+    var context = extractRequestContextFromBatchContext(request, batchContext);
+    addRequestDetailsForGet(context);
+    return request;
+  }
+
+  private void addRequestDetailsForGet(MediatedRequestContext context) {
     extendRequester(context);
     addRequesterGroup(context);
     extendProxy(context);
@@ -117,21 +179,25 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     extendInstance(context);
     extendItem(context);
     addFulfillmentDetails(context);
-
-    return request;
   }
 
   private MediatedRequestContext buildRequestContext(MediatedRequest request) {
     log.info("buildRequestContext:: building request context");
     var contextBuilder = MediatedRequestContext.builder().request(request);
 
+    // #HTTP_CALL #1-user
     User requester = fetchRequester(request);
     contextBuilder.requester(requester);
+    // #HTTP_CALL #2-user_group
     contextBuilder.requesterGroup(userService.fetchUserGroup(requester.getPatronGroup()));
 
+    // #HTTP_CALL #3-search_instance
     var searchInstances = searchClient.searchInstance(request.getInstanceId()).getInstances();
+    // #HIDDEN_HTTP_CALL #4-inventory_instance #5-inventory_item #6-location #7-library
     handleSearchInstances(searchInstances, contextBuilder, request);
+    // #HIDDEN_HTTP_CALL #8-user #9-user_group
     fetchProxyUser(request, contextBuilder);
+    // #HIDDEN_HTTP_CALL #10-service_point
     fetchPickupServicePoint(request, contextBuilder);
 
     log.info("buildRequestContext:: request context is built");
@@ -151,22 +217,15 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       return;
     }
 
+    // #HIDDEN_HTTP_CALL #4-inventory_instance #5-inventory_item #6-location #7-library CONDITION:search_instance_tenant
     fetchInventoryInstance(searchInstances.get(0), ctxBuilder, request);
-  }
-
-  private Instance createFallbackInstance(MediatedRequest request) {
-    log.info("createFallbackInstance:: instance: {}", request.getInstance());
-    MediatedRequestInstance requestInstance = request.getInstance();
-
-    return new Instance()
-      .hrid(requestInstance.getHrid())
-      .title(requestInstance.getTitle());
   }
 
   private void fetchInventoryInstance(SearchInstance searchInstance,
     MediatedRequestContextBuilder ctxBuilder, MediatedRequest request) {
 
     executionService.executeAsyncSystemUserScoped(searchInstance.getTenantId(),
+      // #HTTP_CALL #4-inventory_instance CONDITION:search_instance_tenant
       () -> ctxBuilder.instance(inventoryService.fetchInstance(searchInstance.getId())));
 
     if (request.getItemId() == null) {
@@ -178,8 +237,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
       .findFirst()
       .ifPresentOrElse(
+        // #HIDDEN_HTTP_CALL #5-inventory_item #6-location #7-library CONDITION:search_instance_tenant
         searchItem -> fetchInventoryItem(searchItem, ctxBuilder, request),
-        () -> ctxBuilder.item(new Item().barcode(request.getItem().getBarcode()))
+        () -> ctxBuilder.item(createFallbackItem(request))
       );
   }
 
@@ -188,15 +248,18 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
     log.info("fetchInventoryItem:: fetching inventory item {}", searchItem.getId());
     executionService.executeAsyncSystemUserScoped(searchItem.getTenantId(), () -> {
+      // #HTTP_CALL #5-inventory_item CONDITION:search_instance_tenant
       Item inventoryItem = inventoryService.fetchItem(searchItem.getId());
       if (inventoryItem != null) {
         log.info("fetchInventoryItem:: inventoryItem {} found", searchItem.getId());
+        // #HTTP_CALL #6-location CONDITION:search_instance_tenant
         var location = inventoryService.fetchLocation(inventoryItem.getEffectiveLocationId());
+        // #HTTP_CALL #7-library CONDITION:search_instance_tenant
         var library = inventoryService.fetchLibrary(location.getLibraryId());
         ctxBuilder.item(inventoryItem).location(location).library(library);
       } else {
         log.info("fetchInventoryItem:: inventoryItem {} not found", searchItem.getId());
-        ctxBuilder.item(new Item().barcode(request.getItem().getBarcode()));
+        ctxBuilder.item(createFallbackItem(request));
       }
     });
   }
@@ -206,8 +269,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       log.info("fetchProxyUser:: proxyUserId is null");
       return;
     }
+    // #HTTP_CALL #8-user (combine with #1?)
     User proxy = userService.fetchUser(request.getProxyUserId());
     if (proxy != null) {
+      // #HTTP_CALL #9-user_group (combine with #2?)
       UserGroup proxyGroup = userService.fetchUserGroup(proxy.getPatronGroup());
       ctxBuilder.proxy(proxy).proxyGroup(proxyGroup);
     } else {
@@ -229,8 +294,187 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       return;
     }
 
+    // #HTTP_CALL #10-service_point
     ctxBuilder.pickupServicePoint(inventoryService.fetchServicePoint(
       request.getPickupServicePointId()));
+  }
+
+  private MediatedRequestBatchContext buildRequestBatchContext(List<MediatedRequest> requests) {
+    var contextBuilder = MediatedRequestBatchContext.builder().requests(requests);
+
+    var users = fetchRequestersAndProxies(requests);
+    contextBuilder.users(toMap(users, User::getId));
+    contextBuilder.userGroups(toMap(fetchUserGroups(users), UserGroup::getId));
+
+    var searchInstances = fetchSearchInstances(requests);
+
+    var inventoryInstances = fetchInventoryInstances(searchInstances);
+    contextBuilder.instances(toMap(inventoryInstances, Instance::getId));
+
+    var itemsAndRelatedRecords = fetchItemsAndRelatedRecords(searchInstances);
+    contextBuilder.items(toMap(itemsAndRelatedRecords.items, Item::getId));
+    contextBuilder.locations(toMap(itemsAndRelatedRecords.locations, Location::getId));
+    contextBuilder.libraries(toMap(itemsAndRelatedRecords.libraries, Library::getId));
+
+    var pickupServicePoints = fetchPickupServicePoints(requests);
+    contextBuilder.pickupServicePoints(toMap(pickupServicePoints, ServicePoint::getId));
+
+    return contextBuilder.build();
+  }
+
+  private Collection<User> fetchRequestersAndProxies(List<MediatedRequest> requests) {
+    log.info("fetchRequesters:: fetching requesters and proxies for {} requests", requests::size);
+
+    var userIds = requests.stream()
+      .flatMap(request -> Stream.of(request.getRequesterId(), request.getProxyUserId()))
+      .filter(Objects::nonNull)
+      .distinct()
+      .toList();
+
+    if (userIds.isEmpty()) {
+      log.info("fetchRequesters:: no users found");
+      return Collections.emptyList();
+    }
+
+    return fetchingService.fetchByIds(userClient, userIds, Users::getUsers);
+  }
+
+  private Collection<UserGroup> fetchUserGroups(Collection<User> requesters) {
+    log.info("fetchUserGroups:: fetching user groups for {} requesters", requesters::size);
+
+    var requesterGroupIds = requesters.stream()
+      .map(User::getPatronGroup)
+      .filter(Objects::nonNull)
+      .distinct()
+      .toList();
+
+    if (requesterGroupIds.isEmpty()) {
+      log.info("fetchUserGroups:: no requesterGroupIds found");
+      return Collections.emptyList();
+    }
+
+    return fetchingService.fetchByIds(userGroupClient, requesterGroupIds,
+      UserGroups::getUsergroups);
+  }
+
+  private Collection<SearchInstance> fetchSearchInstances(Collection<MediatedRequest> requests) {
+    log.info("fetchSearchInstances:: fetching search instances for {} requests", requests::size);
+
+    var instanceIds = requests.stream()
+      .map(MediatedRequest::getInstanceId)
+      .filter(Objects::nonNull)
+      .distinct()
+      .toList();
+
+    if (instanceIds.isEmpty()) {
+      log.info("fetchSearchInstances:: no instanceIds found");
+      return Collections.emptyList();
+    }
+
+    return fetchingService.fetchByUuidIndex(searchInstancesClient, "id", instanceIds,
+      Map.of("expandAll", "true"), SearchInstancesResponse::getInstances);
+  }
+
+  private Collection<Instance> fetchInventoryInstances(Collection<SearchInstance> searchInstances) {
+    log.info("fetchInventoryInstances:: fetching inventory instances for {} instances",
+      searchInstances::size);
+
+    var instanceIdsByTenant = searchInstances.stream()
+        .collect(groupingBy(SearchInstance::getTenantId, mapping(SearchInstance::getId, toSet())));
+
+    return instanceIdsByTenant.keySet().stream()
+      .map(tenantId -> executionService.executeSystemUserScoped(tenantId,
+        () -> fetchingService.fetchByIds(
+          instanceClient, instanceIdsByTenant.get(tenantId), Instances::getInstances)))
+      .flatMap(Collection::stream)
+      .toList();
+  }
+
+  private ItemsAndRelatedRecords fetchItemsAndRelatedRecords(
+    Collection<SearchInstance> searchInstances) {
+
+    log.info("fetchItemsAndRelatedRecords:: fetching items and related records for {} instances",
+      searchInstances::size);
+
+    var itemsByTenant = searchInstances.stream()
+      .map(SearchInstance::getItems)
+      .flatMap(Collection::stream)
+      .filter(Objects::nonNull)
+      .collect(groupingBy(SearchItem::getTenantId, toSet()));
+
+    return itemsByTenant.keySet().stream()
+      .map(tenantId -> executionService.executeSystemUserScoped(tenantId,
+        () -> fetchItemsAndRelatedRecordsForTenant(tenantId, itemsByTenant.get(tenantId))))
+      .reduce(ItemsAndRelatedRecords::combine)
+      .orElse(ItemsAndRelatedRecords.empty());
+  }
+
+  private ItemsAndRelatedRecords fetchItemsAndRelatedRecordsForTenant(String tenantId,
+    Collection<SearchItem> searchItems) {
+
+    log.info("fetchItemsAndRelatedRecordsForTenant:: fetching items and related records for " +
+        "tenant {} and {} search items", () -> tenantId, searchItems::size);
+
+    var itemIds = searchItems.stream()
+      .map(SearchItem::getId)
+      .filter(Objects::nonNull)
+      .collect(Collectors.toSet());
+    var effectiveLocationIds = searchItems.stream()
+      .map(SearchItem::getEffectiveLocationId)
+      .filter(Objects::nonNull)
+      .collect(Collectors.toSet());
+
+    var items = fetchingService.fetchByIds(itemClient, itemIds, Items::getItems);
+    var locations = fetchingService.fetchByIds(locationClient, effectiveLocationIds,
+      Locations::getLocations);
+    var libraries = fetchingService.fetchByIds(libraryClient, locations.stream()
+      .map(Location::getLibraryId)
+      .filter(Objects::nonNull)
+      .collect(Collectors.toSet()), Libraries::getLoclibs);
+
+    return ItemsAndRelatedRecords.builder()
+      .items(items)
+      .locations(locations)
+      .libraries(libraries)
+      .build();
+  }
+
+  private Collection<ServicePoint> fetchPickupServicePoints(Collection<MediatedRequest> requests) {
+    log.info("fetchServicePoints:: fetching service points for {} requests", requests::size);
+
+    var pickupServicePointIds = requests.stream()
+      .map(MediatedRequest::getPickupServicePointId)
+      .filter(Objects::nonNull)
+      .distinct()
+      .toList();
+
+    if (pickupServicePointIds.isEmpty()) {
+      log.info("fetchServicePoints:: no pickupServicePointIds found");
+      return Collections.emptyList();
+    }
+
+    return fetchingService.fetchByIds(servicePointClient, pickupServicePointIds,
+      ServicePoints::getServicepoints);
+  }
+
+  private Instance createFallbackInstance(MediatedRequest request) {
+    log.info("createFallbackInstance:: instance: {}", request::getInstance);
+    MediatedRequestInstance requestInstance = request.getInstance();
+
+    return new Instance()
+      .hrid(requestInstance.getHrid())
+      .title(requestInstance.getTitle());
+  }
+
+  private Item createFallbackItem(MediatedRequest request) {
+    if (request.getItem() == null) {
+      log.info("createFallbackItem:: item is null");
+      return new Item();
+    }
+
+    log.info("createFallbackItem:: item: {}", request::getItem);
+
+    return new Item().barcode(request.getItem().getBarcode());
   }
 
   private User createFallbackUser(MediatedRequestRequester mediatedRequestRequester) {
@@ -549,10 +793,88 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     log.warn("processRequestStatus:: invalid status: {}", mediatedRequest.getStatus());
   }
 
+  private MediatedRequestContext extractRequestContextFromBatchContext(MediatedRequest request,
+    MediatedRequestBatchContext batchContext) {
+
+    log.info("extractRequestContextFromBatchContext:: mediated request {}", request::getId);
+
+    var contextBuilder = MediatedRequestContext.builder().request(request);
+
+    var requester = batchContext.users.get(request.getRequesterId());
+    contextBuilder.requester(requester);
+    contextBuilder.requesterGroup(batchContext.userGroups.get(requester.getPatronGroup()));
+
+    var instance = batchContext.instances.get(request.getInstanceId());
+    if (instance == null) {
+      contextBuilder.instance(createFallbackInstance(request));
+    } else {
+      contextBuilder.instance(instance);
+    }
+
+    var item = batchContext.items.get(request.getItemId());
+    if (item != null) {
+      var location = batchContext.locations.get(item.getEffectiveLocationId());
+      var library = batchContext.libraries.get(location.getLibraryId());
+      contextBuilder.item(item).location(location).library(library);
+    } else {
+      contextBuilder.item(createFallbackItem(request));
+    }
+
+    if (request.getProxyUserId() != null) {
+      contextBuilder.proxy(batchContext.users.get(request.getProxyUserId()));
+    }
+
+    if (request.getPickupServicePointId() != null) {
+      contextBuilder.pickupServicePoint(
+        batchContext.pickupServicePoints.get(request.getPickupServicePointId()));
+    }
+
+    log.info("extractRequestContextFromBatchContext:: extracted context for {}", request::getId);
+
+    return contextBuilder.build();
+  }
+
+  private <T> Map<String, T> toMap(Collection<T> collection, Function<T, String> keyMapper) {
+    return collection.stream().collect(Collectors.toMap(keyMapper, identity()));
+  }
+
   @Builder
   public record MediatedRequestContext(MediatedRequest request, User requester,
     UserGroup requesterGroup, User proxy, UserGroup proxyGroup, Item item,
     Instance instance, ServicePoint pickupServicePoint, Location location, Library library) {
+  }
+
+  @Builder
+  public record MediatedRequestBatchContext(
+    List<MediatedRequest> requests,
+    Map<String, User> users,
+    Map<String, UserGroup> userGroups,
+    Map<String, Instance> instances,
+    Map<String, Item> items,
+    Map<String, ServicePoint> pickupServicePoints,
+    Map<String, Location> locations,
+    Map<String, Library> libraries) {
+  }
+
+  @Builder
+  public record ItemsAndRelatedRecords(Collection<Item> items, Collection<Location> locations,
+    Collection<Library> libraries) {
+
+    public static ItemsAndRelatedRecords empty() {
+      return ItemsAndRelatedRecords.builder()
+        .items(Collections.emptyList())
+        .locations(Collections.emptyList())
+        .libraries(Collections.emptyList())
+        .build();
+    }
+
+    public static ItemsAndRelatedRecords combine(ItemsAndRelatedRecords a, ItemsAndRelatedRecords b) {
+      return ItemsAndRelatedRecords.builder()
+        .items(Stream.of(a.items, b.items).flatMap(Collection::stream).toList())
+        .locations(Stream.of(a.locations, b.locations).flatMap(Collection::stream).toList())
+        .libraries(Stream.of(a.libraries, b.libraries).flatMap(Collection::stream).toList())
+        .build();
+    }
   }
 
 }

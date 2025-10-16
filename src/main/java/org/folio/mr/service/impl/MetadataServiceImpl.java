@@ -2,6 +2,7 @@ package org.folio.mr.service.impl;
 
 import java.lang.reflect.Method;
 import java.util.Date;
+import java.util.List;
 
 import org.folio.mr.domain.dto.Metadata;
 import org.folio.mr.exception.ExceptionFactory;
@@ -47,4 +48,8 @@ public class MetadataServiceImpl implements MetadataService {
     return obj;
   }
 
+  @Override
+  public <T> void updateMetadata(List<T> objects) {
+    objects.forEach(this::updateMetadata);
+  }
 }
