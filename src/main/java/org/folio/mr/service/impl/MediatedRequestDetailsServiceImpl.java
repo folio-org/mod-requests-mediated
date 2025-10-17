@@ -801,6 +801,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     var contextBuilder = MediatedRequestContext.builder().request(request);
 
     var requester = batchContext.users.get(request.getRequesterId());
+    if (requester == null) {
+      requester = createFallbackUser(request.getRequester());
+    }
     contextBuilder.requester(requester);
     contextBuilder.requesterGroup(batchContext.userGroups.get(requester.getPatronGroup()));
 
