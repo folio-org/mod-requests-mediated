@@ -46,7 +46,7 @@ class BatchFlowInitializerTest {
   private BatchFlowInitializer initializer;
 
   @Test
-  void onStart_positive_shouldSetStatusToInProgressAndSaveEntity() {
+  void onExecute_positive_shouldInitExecutionByModifyingEntityStatus() {
     var batchId = UUID.randomUUID();
     var entity = new MediatedBatchRequest();
     entity.setId(batchId);
@@ -56,14 +56,14 @@ class BatchFlowInitializerTest {
     when(context.getDeploymentEnvType()).thenReturn(EnvironmentType.ECS);
     when(repository.findById(batchId)).thenReturn(Optional.of(entity));
 
-    initializer.onStart(context);
+    initializer.execute(context);
 
     assertEquals(BatchRequestStatus.IN_PROGRESS, entity.getStatus());
     verify(repository).save(entity);
   }
 
   @Test
-  void onStart_negative_shouldThrowValidationExceptionWhenStatusIsNotPending() {
+  void onExecute_negative_shouldThrowValidationExceptionWhenEntityStatusValidationFails() {
     var batchId = UUID.randomUUID();
     var entity = new MediatedBatchRequest();
     entity.setId(batchId);
@@ -72,22 +72,22 @@ class BatchFlowInitializerTest {
     when(context.getBatchRequestId()).thenReturn(batchId);
     when(repository.findById(batchId)).thenReturn(Optional.of(entity));
 
-    assertThrows(ValidationException.class, () -> initializer.onStart(context));
+    assertThrows(ValidationException.class, () -> initializer.execute(context));
     verify(repository, never()).save(any());
   }
 
   @Test
-  void onStart_negative_shouldThrowNotFoundExceptionWhenEntityNotFound() {
+  void onExecute_negative_shouldThrowNotFoundExceptionWhenEntityNotFound() {
     var batchId = UUID.randomUUID();
     when(context.getBatchRequestId()).thenReturn(batchId);
     when(repository.findById(batchId)).thenReturn(Optional.empty());
 
-    var ex = assertThrows(MediatedBatchRequestNotFoundException.class, () -> initializer.onStart(context));
+    var ex = assertThrows(MediatedBatchRequestNotFoundException.class, () -> initializer.execute(context));
     assertTrue(ex.getMessage().contains("Mediated Batch Request with ID [" + batchId + "] was not found"));
   }
 
   @Test
-  void onStart_negative_shouldThrowIllegalStateExceptionWhenNotEnvTypeProvided() {
+  void onExecute_negative_shouldThrowIllegalStateExceptionWhenNoEnvTypeProvided() {
     var batchId = UUID.randomUUID();
     var entity = new MediatedBatchRequest();
     entity.setId(batchId);
@@ -97,13 +97,16 @@ class BatchFlowInitializerTest {
     when(context.getDeploymentEnvType()).thenReturn(null);
     when(repository.findById(batchId)).thenReturn(Optional.of(entity));
 
-    var ex = assertThrows(IllegalStateException.class, () -> initializer.onStart(context));
+    var ex = assertThrows(IllegalStateException.class, () -> initializer.execute(context));
     assertTrue(ex.getMessage().contains("No Batch Flow Context parameter for deployment environment type was provided"));
   }
 
   @Test
   void execute_positive_shouldSetBatchSplitEntitiesAndValidateStatuses() {
     var batchId = UUID.randomUUID();
+    var entity = new MediatedBatchRequest();
+    entity.setId(batchId);
+    entity.setStatus(BatchRequestStatus.PENDING);
     var split1 = new MediatedBatchRequestSplit();
     split1.setId(UUID.randomUUID());
     split1.setStatus(BatchRequestSplitStatus.PENDING);
@@ -112,6 +115,8 @@ class BatchFlowInitializerTest {
     split2.setId(UUID.randomUUID());
     split2.setStatus(BatchRequestSplitStatus.PENDING);
 
+    when(context.getDeploymentEnvType()).thenReturn(EnvironmentType.ECS);
+    when(repository.findById(batchId)).thenReturn(Optional.of(entity));
     when(context.getBatchRequestId()).thenReturn(batchId);
     when(splitRepository.findAllByBatchId(batchId)).thenReturn(List.of(split1, split2));
     when(context.withBatchSplitEntities(any(Map.class))).thenReturn(context);
@@ -123,10 +128,15 @@ class BatchFlowInitializerTest {
   @Test
   void execute_negative_shouldThrowValidationExceptionWhenSplitStatusIsNotPending() {
     var batchId = UUID.randomUUID();
+    var entity = new MediatedBatchRequest();
+    entity.setId(batchId);
+    entity.setStatus(BatchRequestStatus.PENDING);
     var split = new MediatedBatchRequestSplit();
     split.setId(UUID.randomUUID());
     split.setStatus(BatchRequestSplitStatus.FAILED);
 
+    when(context.getDeploymentEnvType()).thenReturn(EnvironmentType.ECS);
+    when(repository.findById(batchId)).thenReturn(Optional.of(entity));
     when(context.getBatchRequestId()).thenReturn(batchId);
     when(splitRepository.findAllByBatchId(batchId)).thenReturn(List.of(split));
     when(context.withBatchSplitEntities(any(Map.class))).thenReturn(context);

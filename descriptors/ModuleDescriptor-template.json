@@ -194,7 +194,12 @@
           "pathPattern": "/requests-mediated/batch-mediated-requests",
           "permissionsRequired": ["requests-mediated.batch-mediated-requests.item.post"],
           "modulePermissions": [
-
+            "user-tenants.collection.get",
+            "consortium-search.items.item.get",
+            "tlr.ecs-request-external.post",
+            "circulation.requests.item.get",
+            "circulation.requests.item.post",
+            "circulation.requests.allowed-service-points.get"
           ]
         },
         {
@@ -465,7 +470,11 @@
         "circulation-storage.requests.item.get",
         "tlr.loans.declare-item-lost.execute",
         "tlr.loans.claim-item-returned.execute",
-        "tlr.loans.declare-claimed-returned-item-as-missing.execute"
+        "tlr.loans.declare-claimed-returned-item-as-missing.execute",
+        "tlr.ecs-request-external.post",
+        "circulation.requests.item.get",
+        "circulation.requests.item.post",
+        "circulation.requests.allowed-service-points.get"
       ]
     }
   },

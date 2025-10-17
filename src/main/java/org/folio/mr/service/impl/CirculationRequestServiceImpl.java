@@ -38,7 +38,7 @@ public class CirculationRequestServiceImpl implements CirculationRequestService 
   @Override
   public CirculationClient.AllowedServicePoints getItemRequestAllowedServicePoints(UUID requesterId, UUID itemId) {
     if (requesterId == null || itemId == null) {
-      throw new IllegalArgumentException("requesterId and itemId should not be null");
+      throw new IllegalArgumentException("requesterId or itemId should not be null");
     }
 
     log.info("getAllowedServicePointsByItem:: get allowed service points for item id [{}] and requester id [{}]",

@@ -17,7 +17,6 @@ import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Log4j2
 @Component
@@ -28,8 +27,19 @@ public class BatchFlowInitializer implements Stage<BatchContext> {
   private final MediatedBatchRequestSplitRepository batchRequestSplitRepository;
 
   @Override
-  @Transactional
-  public void onStart(BatchContext context) {
+  public void execute(BatchContext batchContext) {
+    validateAndInitBatchExecution(batchContext);
+
+    var batchId = batchContext.getBatchRequestId();
+    var batchEntitiesById = batchRequestSplitRepository.findAllByBatchId(batchId).stream()
+      .collect(Collectors.toMap(MediatedBatchRequestSplit::getId, Function.identity()));
+
+    batchContext.withBatchSplitEntities(batchEntitiesById);
+    validateBatchSplitStatuses(batchEntitiesById.values());
+  }
+
+  private void validateAndInitBatchExecution(BatchContext context) {
+    // validate batch entity status
     var batchId = context.getBatchRequestId();
     var batchEntity = repository.findById(batchId)
       .orElseThrow(() -> new MediatedBatchRequestNotFoundException(batchId));
@@ -39,22 +49,14 @@ public class BatchFlowInitializer implements Stage<BatchContext> {
         batchEntity.getId(), batchEntity.getStatus().getValue());
       throw invalidInitialStatus(batchEntity.getStatus().getValue(), batchId);
     }
-    batchEntity.setStatus(IN_PROGRESS);
-    repository.save(batchEntity);
 
     if (context.getDeploymentEnvType() == null) {
-       throw new IllegalStateException("No Batch Flow Context parameter for deployment environment type was provided");
+      throw new IllegalStateException("No Batch Flow Context parameter for deployment environment type was provided");
     }
-  }
 
-  @Override
-  public void execute(BatchContext batchContext) {
-    var batchId = batchContext.getBatchRequestId();
-    var batchEntitiesById = batchRequestSplitRepository.findAllByBatchId(batchId).stream()
-      .collect(Collectors.toMap(MediatedBatchRequestSplit::getId, Function.identity()));
-
-    batchContext.withBatchSplitEntities(batchEntitiesById);
-    validateBatchSplitStatuses(batchEntitiesById.values());
+    // initialize batch execution
+    batchEntity.setStatus(IN_PROGRESS);
+    repository.save(batchEntity);
   }
 
   private void validateBatchSplitStatuses(Collection<MediatedBatchRequestSplit> batchRequestSplitList) {

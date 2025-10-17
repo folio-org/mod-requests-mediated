@@ -85,7 +85,7 @@ public class ApiExceptionHandler {
   }
 
   private static ResponseEntity<ErrorResponse> buildResponseEntity(HttpStatusCode httpStatusCode, ErrorType type,
-                                                                   Exception e) {
+    Exception e) {
 
     return ResponseEntity.status(httpStatusCode).body(buildErrorResponse(e, type));
   }
