@@ -2,12 +2,13 @@ package org.folio.mr.controller;
 
 import static org.folio.mr.domain.type.ErrorType.INTEGRATION_ERROR;
 import static org.folio.mr.domain.type.ErrorType.NOT_FOUND_ERROR;
+import static org.folio.mr.domain.type.ErrorType.SERVICE_ERROR;
 import static org.folio.mr.domain.type.ErrorType.VALIDATION_ERROR;
 import static org.folio.mr.support.DatabaseConstraintTranslator.translate;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import feign.FeignException;
 import org.folio.mr.domain.dto.Error;
@@ -15,6 +16,7 @@ import org.folio.mr.domain.dto.ErrorResponse;
 import org.folio.mr.domain.dto.Errors;
 import org.folio.mr.domain.type.ErrorCode;
 import org.folio.mr.domain.type.ErrorType;
+import org.folio.mr.exception.EntityNotFoundException;
 import org.folio.mr.exception.ValidationException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -32,15 +34,32 @@ import lombok.extern.log4j.Log4j2;
 public class ApiExceptionHandler {
 
   @ExceptionHandler
-  public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException e) {
+  public ResponseEntity<ErrorResponse> handleEntityNotFoundException(jakarta.persistence.EntityNotFoundException e) {
     logException(e);
     return buildResponseEntity(HttpStatus.NOT_FOUND, NOT_FOUND_ERROR, e);
+  }
+
+  @ExceptionHandler(EntityNotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleNotFoundException(EntityNotFoundException e) {
+    return buildResponseEntity(NOT_FOUND, NOT_FOUND_ERROR, e);
   }
 
   @ExceptionHandler
   public ResponseEntity<ErrorResponse> handleFeignException(FeignException e) {
     logException(e);
     return buildResponseEntity(HttpStatus.valueOf(e.status()), INTEGRATION_ERROR, e);
+  }
+
+  /**
+   * Catches and handles all {@link UnsupportedOperationException} objects during code execution.
+   *
+   * @param exception {@link UnsupportedOperationException} to process
+   * @return {@link ResponseEntity} with {@link ErrorResponse} body
+   */
+  @ExceptionHandler(UnsupportedOperationException.class)
+  public ResponseEntity<ErrorResponse> handleUnsupportedOperationException(UnsupportedOperationException exception) {
+    logException(exception);
+    return buildResponseEntity(BAD_REQUEST, SERVICE_ERROR, exception);
   }
 
   @ExceptionHandler(ValidationException.class)
@@ -68,8 +87,7 @@ public class ApiExceptionHandler {
   private static ResponseEntity<ErrorResponse> buildResponseEntity(HttpStatusCode httpStatusCode, ErrorType type,
     Exception e) {
 
-    return ResponseEntity.status(httpStatusCode)
-      .body(buildErrorResponse(e, type));
+    return ResponseEntity.status(httpStatusCode).body(buildErrorResponse(e, type));
   }
 
   private static ResponseEntity<ErrorResponse> buildResponseEntity(ErrorCode errorCode, ErrorType type, HttpStatusCode status) {

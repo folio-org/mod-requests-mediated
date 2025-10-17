@@ -13,8 +13,11 @@ spring:
     show-sql: false
 folio:
   tenant:
+    secure-tenant-id: consortium
     validation:
       enabled: false
+  batch-requests:
+    print-result: ${BATCH_REQUEST_PRINT_RESULTS:true}
 management:
   endpoints:
     enabled-by-default: false

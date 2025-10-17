@@ -15,6 +15,9 @@ inventory-storage.locations.collection.get
 inventory-storage.location-units.libraries.item.get
 inventory-storage.location-units.libraries.collection.get
 circulation.check-out-by-barcode-dry-run.post
+circulation.requests.item.get
+circulation.requests.item.post
+circulation.requests.allowed-service-points.get
 circulation-storage.loan-policies.collection.get
 circulation-storage.loan-policies.item.get
 circulation-storage.requests.collection.get
@@ -22,3 +25,4 @@ circulation-storage.requests.item.get
 tlr.loans.declare-item-lost.execute
 tlr.loans.claim-item-returned.execute
 tlr.loans.declare-claimed-returned-item-as-missing.execute
+tlr.ecs-request-external.post

@@ -34,7 +34,7 @@ class BatchFailedFlowFinalizerTest {
   private BatchFailedFlowFinalizer finalizer;
 
   @Test
-  void execute_shouldSetStatusToFailed_andSaveEntity() {
+  void execute_positive_shouldSetStatusToFailedAndSaveEntity() {
     var batchId = UUID.randomUUID();
     var entity = new MediatedBatchRequest();
     entity.setId(batchId);
@@ -49,7 +49,7 @@ class BatchFailedFlowFinalizerTest {
   }
 
   @Test
-  void execute_shouldThrowException_whenEntityNotFound() {
+  void execute_negative_shouldThrowExceptionWhenEntityNotFound() {
     var batchId = UUID.randomUUID();
     when(context.getBatchRequestId()).thenReturn(batchId);
     when(repository.findById(batchId)).thenReturn(Optional.empty());

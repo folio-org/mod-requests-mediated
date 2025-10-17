@@ -51,13 +51,13 @@ public class MediatedBatchRequestSplit extends MetadataEntity implements Persist
   @Column(name = "request_status")
   private String requestStatus;
 
-  @Column(name = "item_id")
+  @Column(name = "item_id", nullable = false)
   private UUID itemId;
 
   @Column(name = "requester_id", nullable = false)
   private UUID requesterId;
 
-  @Column(name = "pickup_service_point_id")
+  @Column(name = "pickup_service_point_id", nullable = false)
   private UUID pickupServicePointId;
 
   @Enumerated(EnumType.STRING)

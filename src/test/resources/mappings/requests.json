@@ -1,0 +1,36 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "GET",
+        "urlPath": "/circulation/requests/9a326225-6530-41cc-9399-a61987bfab3c"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "id": "9a326225-6530-41cc-9399-a61987bfab3c",
+          "status": "Open - Not yet filled"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "urlPath": "/circulation/requests/16f40c4e-235d-4912-a683-2ad919cc8b07"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "id": "16f40c4e-235d-4912-a683-2ad919cc8b07",
+          "status": "Open - Not yet filled"
+        }
+      }
+    }
+  ]
+}
