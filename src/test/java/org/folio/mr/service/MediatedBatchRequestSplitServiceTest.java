@@ -74,6 +74,6 @@ class MediatedBatchRequestSplitServiceTest {
     when(batchRequestRepository.findById(batchId)).thenReturn(Optional.empty());
 
     var ex = assertThrows(RuntimeException.class, () -> service.getAllByBatchId(batchId, 0, 10));
-    assertTrue(ex.getMessage().contains("Batch request not found by ID"));
+    assertTrue(ex.getMessage().contains("Mediated Batch Request with ID [%s] was not found".formatted(batchId)));
   }
 }

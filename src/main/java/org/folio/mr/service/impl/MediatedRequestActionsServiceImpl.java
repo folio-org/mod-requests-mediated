@@ -11,6 +11,7 @@ import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT;
 import static org.folio.mr.domain.dto.MediatedRequest.StatusEnum.OPEN_ITEM_ARRIVED;
 import static org.folio.mr.domain.dto.Request.StatusEnum.OPEN_NOT_YET_FILLED;
+import static org.folio.mr.support.Constants.INTERIM_SERVICE_POINT_ID;
 import static org.folio.mr.support.ConversionUtils.asString;
 
 import java.util.Collection;
@@ -87,7 +88,8 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private Request createLocalRequest(MediatedRequestEntity mediatedRequest) {
-    return circulationRequestService.create(mediatedRequest);
+    log.info("createLocalRequest:: creating circulation request for mediated request {}", mediatedRequest.getId());
+    return circulationRequestService.create(buildRequest(mediatedRequest));
   }
 
   private Request createEcsTlr(MediatedRequestEntity mediatedRequest) {
@@ -162,6 +164,20 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
     return (itemId != null && localItemIds.contains(itemId))
       || (itemId == null && !localItemIds.isEmpty());
+  }
+
+  private static Request buildRequest(MediatedRequestEntity mediatedRequest) {
+    return new Request()
+      .requestLevel(Request.RequestLevelEnum.fromValue(mediatedRequest.getRequestLevel().getValue()))
+      .requestType(Request.RequestTypeEnum.fromValue(mediatedRequest.getRequestType().getValue()))
+      .instanceId(asString(mediatedRequest.getInstanceId()))
+      .holdingsRecordId(asString(mediatedRequest.getHoldingsRecordId()))
+      .itemId(asString(mediatedRequest.getItemId()))
+      .requesterId(asString(mediatedRequest.getRequesterId()))
+      .fulfillmentPreference(Request.FulfillmentPreferenceEnum.HOLD_SHELF)
+      .pickupServicePointId(INTERIM_SERVICE_POINT_ID)
+      .requestDate(mediatedRequest.getRequestDate())
+      .patronComments(mediatedRequest.getPatronComments());
   }
 
   @Override

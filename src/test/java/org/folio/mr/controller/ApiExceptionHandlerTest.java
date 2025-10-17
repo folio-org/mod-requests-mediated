@@ -4,11 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.UUID;
 import org.folio.mr.domain.dto.Parameter;
 import org.folio.mr.domain.type.ErrorCode;
 import org.folio.mr.domain.type.ErrorType;
+import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.exception.ValidationException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +31,7 @@ class ApiExceptionHandlerTest {
 
   @Test
   void handleEntityNotFoundException_returnsNotFound() {
-    var ex = new EntityNotFoundException("Entity not found");
+    var ex = new jakarta.persistence.EntityNotFoundException("Entity not found");
     var response = handler.handleEntityNotFoundException(ex);
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -89,5 +90,28 @@ class ApiExceptionHandlerTest {
     var error = response.getBody().getErrors().getFirst();
     assertEquals(ErrorType.VALIDATION_ERROR.getValue(), error.getType());
     assertEquals("Invalid usage", error.getMessage());
+  }
+
+  @Test
+  void handleUnsupportedOperationException_returnsBadRequest() {
+    var ex = new UnsupportedOperationException("Not supported");
+    var response = handler.handleUnsupportedOperationException(ex);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    var error = response.getBody().getErrors().getFirst();
+    assertEquals("Not supported", error.getMessage());
+    assertEquals(ErrorType.SERVICE_ERROR.getValue(), error.getType());
+  }
+
+  @Test
+  void handleNotFoundException_returnsNotFound() {
+    var id = UUID.randomUUID();
+    var ex = new MediatedBatchRequestNotFoundException(id);
+    var response = handler.handleNotFoundException(ex);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    var error = response.getBody().getErrors().getFirst();
+    assertEquals("Mediated Batch Request with ID [%s] was not found".formatted(id.toString()), error.getMessage());
+    assertEquals(ErrorType.NOT_FOUND_ERROR.getValue(), error.getType());
   }
 }
