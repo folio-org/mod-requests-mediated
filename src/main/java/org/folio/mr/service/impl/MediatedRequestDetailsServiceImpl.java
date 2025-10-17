@@ -148,13 +148,6 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     return request;
   }
 
-  private List<MediatedRequest> addRequestMultiPageBatchDetailsForGet(
-    List<MediatedRequest> requests) {
-
-    // TODO: implement multi-page batch processing
-    return null;
-  }
-
   @Override
   public List<MediatedRequest> addRequestBatchDetailsForGet(List<MediatedRequest> requests) {
     var batchContext = buildRequestBatchContext(requests);

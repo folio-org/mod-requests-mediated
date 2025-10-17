@@ -1,7 +1,6 @@
 package org.folio.mr.service.impl;
 
 import static java.util.function.UnaryOperator.identity;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 import java.util.ArrayList;
@@ -76,7 +75,7 @@ public class BulkFetchingServiceImpl implements BulkFetchingService {
       .map(batch -> fetchByUuidIndex(batch, index, additionalQueryParams, client))
       .map(collectionExtractor)
       .flatMap(Collection::stream)
-      .collect(toList());
+      .toList();
 
     log.info("fetchByUuidIndex:: fetched {} object(s)", result::size);
     return result;
