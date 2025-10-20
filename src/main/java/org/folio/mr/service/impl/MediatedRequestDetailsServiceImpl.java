@@ -178,19 +178,13 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     log.info("buildRequestContext:: building request context");
     var contextBuilder = MediatedRequestContext.builder().request(request);
 
-    // #HTTP_CALL #1-user
     User requester = fetchRequester(request);
     contextBuilder.requester(requester);
-    // #HTTP_CALL #2-user_group
     contextBuilder.requesterGroup(userService.fetchUserGroup(requester.getPatronGroup()));
 
-    // #HTTP_CALL #3-search_instance
     var searchInstances = searchClient.searchInstance(request.getInstanceId()).getInstances();
-    // #HIDDEN_HTTP_CALL #4-inventory_instance #5-inventory_item #6-location #7-library
     handleSearchInstances(searchInstances, contextBuilder, request);
-    // #HIDDEN_HTTP_CALL #8-user #9-user_group
     fetchProxyUser(request, contextBuilder);
-    // #HIDDEN_HTTP_CALL #10-service_point
     fetchPickupServicePoint(request, contextBuilder);
 
     log.info("buildRequestContext:: request context is built");
@@ -210,7 +204,6 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       return;
     }
 
-    // #HIDDEN_HTTP_CALL #4-inventory_instance #5-inventory_item #6-location #7-library CONDITION:search_instance_tenant
     fetchInventoryInstance(searchInstances.get(0), ctxBuilder, request);
   }
 
@@ -218,7 +211,6 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     MediatedRequestContextBuilder ctxBuilder, MediatedRequest request) {
 
     executionService.executeAsyncSystemUserScoped(searchInstance.getTenantId(),
-      // #HTTP_CALL #4-inventory_instance CONDITION:search_instance_tenant
       () -> ctxBuilder.instance(inventoryService.fetchInstance(searchInstance.getId())));
 
     if (request.getItemId() == null) {
@@ -230,7 +222,6 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .filter(searchItem -> searchItem.getId().equals(request.getItemId()))
       .findFirst()
       .ifPresentOrElse(
-        // #HIDDEN_HTTP_CALL #5-inventory_item #6-location #7-library CONDITION:search_instance_tenant
         searchItem -> fetchInventoryItem(searchItem, ctxBuilder, request),
         () -> ctxBuilder.item(createFallbackItem(request))
       );
@@ -241,13 +232,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
     log.info("fetchInventoryItem:: fetching inventory item {}", searchItem.getId());
     executionService.executeAsyncSystemUserScoped(searchItem.getTenantId(), () -> {
-      // #HTTP_CALL #5-inventory_item CONDITION:search_instance_tenant
       Item inventoryItem = inventoryService.fetchItem(searchItem.getId());
       if (inventoryItem != null) {
         log.info("fetchInventoryItem:: inventoryItem {} found", searchItem.getId());
-        // #HTTP_CALL #6-location CONDITION:search_instance_tenant
         var location = inventoryService.fetchLocation(inventoryItem.getEffectiveLocationId());
-        // #HTTP_CALL #7-library CONDITION:search_instance_tenant
         var library = inventoryService.fetchLibrary(location.getLibraryId());
         ctxBuilder.item(inventoryItem).location(location).library(library);
       } else {
@@ -262,10 +250,8 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       log.info("fetchProxyUser:: proxyUserId is null");
       return;
     }
-    // #HTTP_CALL #8-user (combine with #1?)
     User proxy = userService.fetchUser(request.getProxyUserId());
     if (proxy != null) {
-      // #HTTP_CALL #9-user_group (combine with #2?)
       UserGroup proxyGroup = userService.fetchUserGroup(proxy.getPatronGroup());
       ctxBuilder.proxy(proxy).proxyGroup(proxyGroup);
     } else {
@@ -287,7 +273,6 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       return;
     }
 
-    // #HTTP_CALL #10-service_point
     ctxBuilder.pickupServicePoint(inventoryService.fetchServicePoint(
       request.getPickupServicePointId()));
   }
@@ -325,7 +310,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .toList();
 
     if (userIds.isEmpty()) {
-      log.info("fetchRequesters:: no users found");
+      log.info("fetchRequesters:: no user IDs to fetch");
       return Collections.emptyList();
     }
 
@@ -399,7 +384,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .map(tenantId -> executionService.executeSystemUserScoped(tenantId,
         () -> fetchItemsAndRelatedRecordsForTenant(tenantId, itemsByTenant.get(tenantId))))
       .reduce(ItemsAndRelatedRecords::combine)
-      .orElse(ItemsAndRelatedRecords.empty());
+      .orElseGet(ItemsAndRelatedRecords::empty);
   }
 
   private ItemsAndRelatedRecords fetchItemsAndRelatedRecordsForTenant(String tenantId,
@@ -451,23 +436,27 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private Instance createFallbackInstance(MediatedRequest request) {
-    log.info("createFallbackInstance:: instance: {}", request::getInstance);
-    MediatedRequestInstance requestInstance = request.getInstance();
+    var instance = request.getInstance();
+    if (instance == null) {
+      log.info("createFallbackInstance:: instance is null");
+      return new Instance();
+    }
 
+    log.info("createFallbackInstance:: instance hrid: {}", instance::getHrid);
     return new Instance()
-      .hrid(requestInstance.getHrid())
-      .title(requestInstance.getTitle());
+      .hrid(instance.getHrid())
+      .title(instance.getTitle());
   }
 
   private Item createFallbackItem(MediatedRequest request) {
-    if (request.getItem() == null) {
+    var item = request.getItem();
+    if (item == null) {
       log.info("createFallbackItem:: item is null");
       return new Item();
     }
 
-    log.info("createFallbackItem:: item: {}", request::getItem);
-
-    return new Item().barcode(request.getItem().getBarcode());
+    log.info("createFallbackItem:: item barcode: {}", item::getBarcode);
+    return new Item().barcode(item.getBarcode());
   }
 
   private User createFallbackUser(MediatedRequestRequester mediatedRequestRequester) {
