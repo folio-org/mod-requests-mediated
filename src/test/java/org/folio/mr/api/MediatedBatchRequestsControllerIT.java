@@ -1,7 +1,14 @@
 package org.folio.mr.api;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
 import static org.awaitility.Durations.ONE_SECOND;
+import static org.folio.mr.api.BaseIT.TENANT_ID_SECURE;
 import static org.folio.mr.domain.dto.MediatedBatchRequestDto.MediatedRequestStatusEnum.IN_PROGRESS;
 import static org.folio.mr.domain.dto.MediatedBatchRequestDto.MediatedRequestStatusEnum.PENDING;
 import static org.folio.mr.domain.type.ErrorCode.DUPLICATE_BATCH_REQUEST_ID;
@@ -19,24 +26,30 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
-import org.assertj.core.groups.Tuple;
+import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.BatchRequestStatus;
 import org.folio.mr.domain.BatchSplitContext;
 import org.folio.mr.domain.BatchContext;
+import org.folio.mr.domain.dto.ConsortiumItem;
+import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.MediatedBatchRequestDetailDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestDetailsDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestPostDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestPostDtoItemRequestsInner;
 import org.folio.mr.domain.dto.MediatedBatchRequestsDto;
+import org.folio.mr.domain.dto.UserTenant;
+import org.folio.mr.domain.dto.UserTenantsResponse;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
+import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
 import org.folio.mr.service.flow.BatchFailedFlowFinalizer;
@@ -52,6 +65,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -59,6 +73,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 
 @IntegrationTest
+@SpringBootTest(properties = {"folio.tenant.secure-tenant-id=" + TENANT_ID_SECURE})
 class MediatedBatchRequestsControllerIT extends BaseIT {
 
   private static final String URL_MEDIATED_BATCH_REQUESTS = "/requests-mediated/batch-mediated-requests";
@@ -66,6 +81,10 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   private static final String BATCH_REQUEST_ID1 = UUID.randomUUID().toString();
   private static final String BATCH_REQUEST_ID2 = UUID.randomUUID().toString();
   private static final UUID[] ITEM_IDS = {UUID.randomUUID(), UUID.randomUUID()};
+  private static final String SEARCH_ITEM_URL = "/search/consortium/item";
+  private static final String ECS_TLR_EXTERNAL_URL = "/tlr/create-ecs-request-external";
+  private static final UUID EXPECTED_CREATED_REQUEST_ID1 = UUID.fromString("9a326225-6530-41cc-9399-a61987bfab3c");
+  private static final UUID EXPECTED_CREATED_REQUEST_ID2 = UUID.fromString("16f40c4e-235d-4912-a683-2ad919cc8b07");
 
   @Autowired
   private MediatedBatchRequestRepository batchRequestRepository;
@@ -89,6 +108,19 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   void clearDatabase() {
     batchRequestSplitRepository.deleteAll();
     batchRequestRepository.deleteAll();
+
+    var userTenants = new UserTenantsResponse().userTenants(List.of(
+      new UserTenant()
+        .id(UUID.randomUUID())
+        .userId(UUID.fromString("788fef93-43d1-4377-a7ba-24651cb0ee5c"))
+        .username("consortia-system-user")
+        .tenantId("consortium")
+        .centralTenantId("consortium")
+        .consortiumId(UUID.fromString("261a6ad9-0cab-47b5-ac83-a93b100d47b5"))
+    )).totalRecords(1);
+    wireMockServer.stubFor(WireMock.get(urlPathMatching( "/user-tenants"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(userTenants, HttpStatus.SC_OK)));
   }
 
   @Test
@@ -121,7 +153,8 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
         get(URL_MEDIATED_BATCH_REQUESTS + "/" + UUID.randomUUID())
           .headers(defaultHeaders())
           .contentType(MediaType.APPLICATION_JSON))
-      .andExpect(status().isNotFound());
+      .andExpect(status().isNotFound())
+      .andExpect(exceptionMatch(MediatedBatchRequestNotFoundException.class));
   }
 
   @MethodSource("cqlQueryProvider")
@@ -142,7 +175,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
 
     assertThat(collectionDto.getMediatedBatchRequests())
       .extracting(MediatedBatchRequestDto::getBatchId)
-      .containsExactly(ids.toArray(new String[0]));
+      .containsExactlyInAnyOrder(ids.toArray(new String[0]));
   }
 
   @Test
@@ -172,6 +205,8 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
     var postBatchRequestDto = sampleBatchRequestPostDto(2)
       .batchId(BATCH_REQUEST_ID1);
 
+    addStubsForEcsRequestCreation();
+
     createBatchRequests(postBatchRequestDto)
       .andExpect(jsonPath("mediatedRequestStatus",
         oneOf(PENDING.getValue(), IN_PROGRESS.getValue())))
@@ -190,6 +225,17 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
 
         verify(batchSplitProcessor, times(2)).execute(any(BatchSplitContext.class));
         verify(flowFinalizer).execute(any(BatchContext.class));
+
+        assertThat(batchRequestSplitRepository.findAll())
+          .extracting(
+            MediatedBatchRequestSplit::getStatus,
+            MediatedBatchRequestSplit::getConfirmedRequestId,
+            MediatedBatchRequestSplit::getRequestStatus)
+          .containsExactlyInAnyOrder(
+            tuple(BatchRequestSplitStatus.COMPLETED, EXPECTED_CREATED_REQUEST_ID1, "Open - Not yet filled"),
+            tuple(BatchRequestSplitStatus.COMPLETED, EXPECTED_CREATED_REQUEST_ID2, "Open - Not yet filled")
+          );
+        assertEquals(BatchRequestStatus.COMPLETED, batchRequestRepository.findAll().getFirst().getStatus());
       });
   }
 
@@ -271,8 +317,8 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
     assertThat(collectionDto.getMediatedBatchRequestDetails())
       .extracting(MediatedBatchRequestDetailDto::getBatchId, MediatedBatchRequestDetailDto::getItemId)
       .containsAll(List.of(
-        Tuple.tuple(BATCH_REQUEST_ID1, ITEM_IDS[0].toString()),
-        Tuple.tuple(BATCH_REQUEST_ID1, ITEM_IDS[1].toString())));
+        tuple(BATCH_REQUEST_ID1, ITEM_IDS[0].toString()),
+        tuple(BATCH_REQUEST_ID1, ITEM_IDS[1].toString())));
   }
 
   @Test
@@ -282,7 +328,8 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
         get(URL_MEDIATED_BATCH_REQUESTS + "/" + UUID.randomUUID() + "/details")
           .headers(defaultHeaders())
           .contentType(MediaType.APPLICATION_JSON))
-      .andExpect(status().isNotFound());
+      .andExpect(status().isNotFound())
+      .andExpect(exceptionMatch(MediatedBatchRequestNotFoundException.class));
   }
 
   @SneakyThrows
@@ -331,5 +378,39 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
         new MediatedBatchRequestPostDtoItemRequestsInner().itemId(ITEM_IDS[i].toString()).pickupServicePointId(randomUUID));
     }
     return postDto;
+  }
+
+  private void addStubsForEcsRequestCreation() {
+    var item1 = new ConsortiumItem()
+      .id(ITEM_IDS[0].toString())
+      .tenantId(TENANT_ID_CONSORTIUM)
+      .instanceId(UUID.randomUUID().toString())
+      .holdingsRecordId(UUID.randomUUID().toString());
+    var item2 = new ConsortiumItem()
+      .id(ITEM_IDS[1].toString())
+      .tenantId(TENANT_ID_CONSORTIUM)
+      .instanceId(UUID.randomUUID().toString())
+      .holdingsRecordId(UUID.randomUUID().toString());
+
+    var ecsTrl1 = new EcsTlr().primaryRequestId(EXPECTED_CREATED_REQUEST_ID1.toString());
+    var ecsTrl2 = new EcsTlr().primaryRequestId(EXPECTED_CREATED_REQUEST_ID2.toString());
+
+    wireMockServer.stubFor(WireMock.get(urlPathEqualTo(SEARCH_ITEM_URL + "/" + ITEM_IDS[0]))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(item1, HttpStatus.SC_OK)));
+
+    wireMockServer.stubFor(WireMock.get(urlPathEqualTo(SEARCH_ITEM_URL + "/" + ITEM_IDS[1]))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(item2, HttpStatus.SC_OK)));
+
+    wireMockServer.stubFor(WireMock.post(ECS_TLR_EXTERNAL_URL)
+      .withRequestBody(containing(ITEM_IDS[0].toString()))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(ecsTrl1, HttpStatus.SC_CREATED)));
+
+    wireMockServer.stubFor(WireMock.post(ECS_TLR_EXTERNAL_URL)
+      .withRequestBody(containing(ITEM_IDS[1].toString()))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(ecsTrl2, HttpStatus.SC_CREATED)));
   }
 }

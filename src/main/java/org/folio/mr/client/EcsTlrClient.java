@@ -11,5 +11,4 @@ public interface EcsTlrClient {
 
   @PostMapping
   EcsTlr post(@RequestBody EcsTlr ecsTlr);
-
 }

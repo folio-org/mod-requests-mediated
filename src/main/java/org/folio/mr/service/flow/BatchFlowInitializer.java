@@ -2,8 +2,7 @@ package org.folio.mr.service.flow;
 
 import static org.folio.mr.domain.BatchRequestStatus.IN_PROGRESS;
 import static org.folio.mr.domain.BatchRequestStatus.PENDING;
-import static org.folio.mr.domain.type.ErrorCode.INVALID_BATCH_REQUEST_INITIAL_STATUS;
-import static org.folio.mr.exception.ExceptionFactory.notFound;
+import static org.folio.mr.exception.MediatedBatchRequestValidationException.invalidInitialStatus;
 
 import java.util.Collection;
 import java.util.function.Function;
@@ -13,13 +12,11 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.flow.api.Stage;
 import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.BatchContext;
-import org.folio.mr.domain.dto.Parameter;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
-import org.folio.mr.exception.ValidationException;
+import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Log4j2
 @Component
@@ -30,33 +27,36 @@ public class BatchFlowInitializer implements Stage<BatchContext> {
   private final MediatedBatchRequestSplitRepository batchRequestSplitRepository;
 
   @Override
-  @Transactional
-  public void onStart(BatchContext context) {
-    var batchId = context.getBatchRequestId();
-    var batchEntity = repository.findById(batchId)
-      .orElseThrow(() -> notFound("Mediated Batch Request not found by ID: " + batchId));
-
-    if (batchEntity.getStatus() != PENDING) {
-      log.error("Batch entity with id: {} has invalid initial status: {}",
-        batchEntity.getId(), batchEntity.getStatus().getValue());
-
-      throw new ValidationException(INVALID_BATCH_REQUEST_INITIAL_STATUS,
-        new Parameter().key("status").value(batchEntity.getStatus().getValue()),
-        new Parameter().key("batchId").value(batchEntity.getId().toString()));
-    }
-
-    batchEntity.setStatus(IN_PROGRESS);
-    repository.save(batchEntity);
-  }
-
-  @Override
   public void execute(BatchContext batchContext) {
+    validateAndInitBatchExecution(batchContext);
+
     var batchId = batchContext.getBatchRequestId();
     var batchEntitiesById = batchRequestSplitRepository.findAllByBatchId(batchId).stream()
       .collect(Collectors.toMap(MediatedBatchRequestSplit::getId, Function.identity()));
 
     batchContext.withBatchSplitEntities(batchEntitiesById);
     validateBatchSplitStatuses(batchEntitiesById.values());
+  }
+
+  private void validateAndInitBatchExecution(BatchContext context) {
+    // validate batch entity status
+    var batchId = context.getBatchRequestId();
+    var batchEntity = repository.findById(batchId)
+      .orElseThrow(() -> new MediatedBatchRequestNotFoundException(batchId));
+
+    if (batchEntity.getStatus() != PENDING) {
+      log.error("Batch entity with id: {} has invalid initial status: {}",
+        batchEntity.getId(), batchEntity.getStatus().getValue());
+      throw invalidInitialStatus(batchEntity.getStatus().getValue(), batchId);
+    }
+
+    if (context.getDeploymentEnvType() == null) {
+      throw new IllegalStateException("No Batch Flow Context parameter for deployment environment type was provided");
+    }
+
+    // initialize batch execution
+    batchEntity.setStatus(IN_PROGRESS);
+    repository.save(batchEntity);
   }
 
   private void validateBatchSplitStatuses(Collection<MediatedBatchRequestSplit> batchRequestSplitList) {
@@ -69,9 +69,7 @@ public class BatchFlowInitializer implements Stage<BatchContext> {
       log.error("Batch split entity with id: {} has invalid initial status: {}",
         splitEntity.getId(), splitEntity.getStatus().getValue());
 
-      throw new ValidationException(INVALID_BATCH_REQUEST_INITIAL_STATUS,
-        new Parameter().key("status").value(splitEntity.getStatus().getValue()),
-        new Parameter().key("batchSplitId").value(splitEntity.getId().toString()));
+      throw invalidInitialStatus(splitEntity.getStatus().getValue(), splitEntity.getId());
     }
   }
 }
