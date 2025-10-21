@@ -91,6 +91,7 @@ class BatchSplitProcessorTest {
     when(searchService.searchItem(any(String.class))).thenReturn(Optional.of(new ConsortiumItem()));
     lenient().when(executionService.executeSystemUserScoped(eq(tenant), any()))
       .thenAnswer(invocation -> invocation.<Callable<?>>getArgument(1).call());
+    var ecsRequestCaptor = ArgumentCaptor.forClass(EcsRequestExternal.class);
 
     processor.execute(context);
 
@@ -99,6 +100,10 @@ class BatchSplitProcessorTest {
     assertEquals(Request.StatusEnum.OPEN_NOT_YET_FILLED.getValue(), savedSplit.getRequestStatus());
     assertEquals(expectedRequest.getId(), savedSplit.getConfirmedRequestId().toString());
     assertEquals(BatchRequestSplitStatus.COMPLETED, savedSplit.getStatus());
+    verify(ecsTlrClient).createEcsExternalRequest(ecsRequestCaptor.capture());
+    var ecsRequest = ecsRequestCaptor.getValue();
+    assertEquals("Item", ecsRequest.getRequestLevel().getValue());
+    assertEquals("Hold Shelf", ecsRequest.getFulfillmentPreference().getValue());
   }
 
   @Test
