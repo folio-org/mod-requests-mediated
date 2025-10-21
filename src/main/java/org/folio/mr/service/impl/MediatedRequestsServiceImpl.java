@@ -56,7 +56,9 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
     var mediatedRequests = mediatedRequestsRepository.findAll(OffsetRequest.of(offset, limit))
       .stream()
       .map(requestsMapper::mapEntityToDto)
-      .map(requestDetailsService::addRequestDetailsForGet)
+      .toList();
+
+    mediatedRequests = requestDetailsService.addRequestBatchDetailsForGet(mediatedRequests).stream()
       .map(MediatedRequestsServiceImpl::removeSearchIndex)
       .toList();
 
