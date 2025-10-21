@@ -136,6 +136,90 @@
     },
     {
       "request": {
+        "method": "GET",
+        "urlPath": "/users"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+            "users": [
+              {
+                "username": "medreq",
+                "id": "9812e24b-0a66-457a-832c-c5e789797e35",
+                "barcode": "111",
+                "active": true,
+                "type": "staff",
+                "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
+                "departments": [],
+                "proxyFor": [],
+                "personal": {
+                  "lastName": "Mediated",
+                  "firstName": "Requester",
+                  "middleName": "X",
+                  "email": "a@a.a",
+                  "addresses" : [ {
+                    "countryId" : "US",
+                    "addressLine1" : "2311 North",
+                    "addressLine2" : "Los Robles Avenue",
+                    "city" : "Pasadena",
+                    "region" : "California",
+                    "postalCode" : "91101",
+                    "addressTypeId" : "93d3d88d-499b-45d0-9bc7-ac73c3a19880"
+                  } ],
+                  "preferredContactTypeId": "002"
+                },
+                "createdDate": "2024-08-13T09:20:44.183+00:00",
+                "updatedDate": "2024-08-13T09:20:44.183+00:00",
+                "metadata": {
+                  "createdDate": "2024-08-13T09:20:44.152+00:00",
+                  "createdByUserId": "731c4da7-2aac-40ea-9104-393003dcc6a8",
+                  "updatedDate": "2024-08-13T09:20:44.152+00:00",
+                  "updatedByUserId": "731c4da7-2aac-40ea-9104-393003dcc6a8"
+                },
+                "preferredEmailCommunication": []
+              },
+              {
+                "username": "proxy_user",
+                "id": "7b89ee8c-6524-432e-8c57-82bc860af38f",
+                "barcode": "proxy",
+                "active": true,
+                "type": "staff",
+                "patronGroup": "503a81cd-6c26-400f-b620-14c08943697c",
+                "departments": [],
+                "proxyFor": [],
+                "personal": {
+                  "lastName": "Proxy",
+                  "firstName": "User",
+                  "middleName": "M",
+                  "email": "p@p.p",
+                  "addresses": [],
+                  "preferredContactTypeId": "002"
+                },
+                "createdDate": "2024-08-13T11:32:40.188+00:00",
+                "updatedDate": "2024-08-13T11:32:40.188+00:00",
+                "metadata": {
+                  "createdDate": "2024-08-13T11:32:40.179+00:00",
+                  "createdByUserId": "731c4da7-2aac-40ea-9104-393003dcc6a8",
+                  "updatedDate": "2024-08-13T11:32:40.179+00:00",
+                  "updatedByUserId": "731c4da7-2aac-40ea-9104-393003dcc6a8"
+                },
+                "preferredEmailCommunication": []
+              }
+            ],
+            "totalRecords": 2,
+            "resultInfo": {
+                "totalRecords": 2,
+                "facets": [],
+                "diagnostics": []
+            }
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "request": {
         "method": "POST",
         "url": "/users"
       },

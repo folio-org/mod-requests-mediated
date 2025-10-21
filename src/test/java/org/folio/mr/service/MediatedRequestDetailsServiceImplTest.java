@@ -110,5 +110,13 @@ class MediatedRequestDetailsServiceImplTest {
     assertThat(returnedRequest.getRequester().getBarcode(), is(originalRequest.getRequester().getBarcode()));
     assertThat(returnedRequest.getRequester().getFirstName(), is(originalRequest.getRequester().getFirstName()));
     assertThat(returnedRequest.getRequester().getLastName(), is(originalRequest.getRequester().getLastName()));
+
+    // Same test for batch execution
+    var returnedRequests = service.addRequestBatchDetailsForGet(List.of(originalRequest));
+    assertThat(returnedRequests.get(0).getItem().getBarcode(), is(originalRequest.getItem().getBarcode()));
+
+    assertThat(returnedRequests.get(0).getRequester().getBarcode(), is(originalRequest.getRequester().getBarcode()));
+    assertThat(returnedRequests.get(0).getRequester().getFirstName(), is(originalRequest.getRequester().getFirstName()));
+    assertThat(returnedRequests.get(0).getRequester().getLastName(), is(originalRequest.getRequester().getLastName()));
   }
 }
