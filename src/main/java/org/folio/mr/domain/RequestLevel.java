@@ -1,5 +1,8 @@
 package org.folio.mr.domain;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum RequestLevel {
   ITEM("Item"),
   TITLE("Title");
@@ -10,6 +13,7 @@ public enum RequestLevel {
     this.value = value;
   }
 
+  @JsonValue
   public String getValue() {
     return value;
   }
@@ -19,6 +23,7 @@ public enum RequestLevel {
     return value;
   }
 
+  @JsonCreator
   public static RequestLevel fromValue(String value) {
     for (RequestLevel requestLevel : RequestLevel.values()) {
       if (requestLevel.value.equals(value)) {
