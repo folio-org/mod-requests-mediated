@@ -22,7 +22,6 @@ import org.folio.mr.service.MediatedBatchRequestSplitService;
 import org.folio.mr.service.MediatedBatchRequestsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -71,23 +70,13 @@ class BatchRequestsServiceDelegateTest {
     var expectedDto = mock(MediatedBatchRequestDto.class);
     when(mapper.mapPostDtoToEntity(postDto)).thenReturn(batchEntity);
     when(mapper.mapPostDtoToSplitEntities(postDto)).thenReturn(batchSplits);
-    when(batchRequestsService.create(batchEntity)).thenReturn(createdEntity);
+    when(batchRequestsService.create(batchEntity, batchSplits)).thenReturn(createdEntity);
     when(flowProvider.createFlow(any())).thenReturn(flow);
     when(mapper.toDto(createdEntity)).thenReturn(expectedDto);
-    when(createdEntity.getId()).thenReturn(UUID.randomUUID());
-    when(createdEntity.getPatronComments()).thenReturn("comment");
-    when(createdEntity.getRequesterId()).thenReturn(UUID.randomUUID());
-    var splitsCaptor = ArgumentCaptor.forClass(List.class);
 
     var result = delegate.createBatchRequest(postDto);
 
     assertEquals(expectedDto, result);
-    verify(requestSplitService).create(splitsCaptor.capture());
-    var splitsPassed = splitsCaptor.getValue();
-    assertEquals(splitsPassed.size(), batchSplits.size());
-    var split = (MediatedBatchRequestSplit)splitsPassed.getFirst();
-    assertEquals("comment\n\n\nBatch request ID: " + createdEntity.getId(), split.getPatronComments());
-    assertEquals(split.getRequesterId(), createdEntity.getRequesterId());
     verify(flowEngine).executeAsync(flow);
   }
 

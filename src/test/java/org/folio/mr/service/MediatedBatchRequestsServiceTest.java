@@ -10,9 +10,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
+import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.service.impl.MediatedBatchRequestsServiceImpl;
@@ -30,6 +32,8 @@ class MediatedBatchRequestsServiceTest {
 
   @Mock
   private MediatedBatchRequestRepository repository;
+  @Mock
+  private MediatedBatchRequestSplitService requestSplitService;
 
   @InjectMocks
   private MediatedBatchRequestsServiceImpl service;
@@ -43,15 +47,25 @@ class MediatedBatchRequestsServiceTest {
   void shouldCreateBatchRequest() {
     var batchEntity = new MediatedBatchRequest();
     var savedEntity = new MediatedBatchRequest();
-
+    savedEntity.setPatronComments("comment");
+    savedEntity.setRequesterId(UUID.randomUUID());
+    var batchSplits = List.of(new MediatedBatchRequestSplit());
     when(repository.save(any(MediatedBatchRequest.class))).thenReturn(savedEntity);
     var captor = ArgumentCaptor.forClass(MediatedBatchRequest.class);
+    var splitsCaptor = ArgumentCaptor.forClass(List.class);
 
-    var result = service.create(batchEntity);
+    var result = service.create(batchEntity, batchSplits);
 
     assertEquals(savedEntity, result);
     verify(repository).save(captor.capture());
     assertNotNull(captor.getValue().getId());
+
+    verify(requestSplitService).create(splitsCaptor.capture());
+    var splitsPassed = splitsCaptor.getValue();
+    assertEquals(splitsPassed.size(), batchSplits.size());
+    var split = (MediatedBatchRequestSplit)splitsPassed.getFirst();
+    assertEquals("comment\n\n\nBatch request ID: " + savedEntity.getId(), split.getPatronComments());
+    assertEquals(split.getRequesterId(), savedEntity.getRequesterId());
   }
 
   @Test

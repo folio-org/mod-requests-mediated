@@ -1,8 +1,5 @@
 package org.folio.mr.controller.delegate;
 
-import static org.folio.mr.support.ServiceUtils.initId;
-
-import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +8,6 @@ import org.folio.mr.domain.dto.MediatedBatchRequestDetailsDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestPostDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestsDto;
-import org.folio.mr.domain.entity.MediatedBatchRequest;
-import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.folio.mr.domain.mapper.MediatedBatchRequestMapper;
 import org.folio.mr.service.MediatedBatchRequestFlowProvider;
 import org.folio.mr.service.MediatedBatchRequestSplitService;
@@ -43,10 +38,7 @@ public class BatchRequestsServiceDelegate {
     var batchEntity = mapper.mapPostDtoToEntity(batchRequestDto);
     var batchSplits = mapper.mapPostDtoToSplitEntities(batchRequestDto);
 
-    var createdEntity = batchRequestsService.create(batchEntity);
-
-    updateRequestSplitEntities(createdEntity, batchSplits);
-    requestSplitService.create(batchSplits);
+    var createdEntity = batchRequestsService.create(batchEntity, batchSplits);
 
     var flow = flowProvider.createFlow(createdEntity.getId());
     flowEngine.executeAsync(flow);
@@ -67,16 +59,5 @@ public class BatchRequestsServiceDelegate {
 
     var batchSplitEntities = requestSplitService.getAllByBatchId(batchId, offset, limit);
     return mapper.toMediatedBatchRequestDetailsCollection(batchSplitEntities);
-  }
-
-  private void updateRequestSplitEntities(MediatedBatchRequest batchRequest, List<MediatedBatchRequestSplit> requestSplits) {
-    var patronComments = "%s\n\n\nBatch request ID: %s"
-      .formatted(batchRequest.getPatronComments(), batchRequest.getId());
-    for (var splitEntity : requestSplits) {
-      initId(splitEntity);
-      splitEntity.setMediatedBatchRequest(batchRequest);
-      splitEntity.setRequesterId(batchRequest.getRequesterId());
-      splitEntity.setPatronComments(patronComments);
-    }
   }
 }
