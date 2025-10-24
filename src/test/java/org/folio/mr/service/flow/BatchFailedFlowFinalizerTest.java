@@ -4,16 +4,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.folio.mr.domain.BatchRequestStatus;
 import org.folio.mr.domain.BatchContext;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
+import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
+import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
+import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,6 +31,8 @@ class BatchFailedFlowFinalizerTest {
 
   @Mock
   private MediatedBatchRequestRepository repository;
+  @Mock
+  private MediatedBatchRequestSplitRepository batchRequestSplitRepository;
 
   @Mock
   private BatchContext context;
@@ -41,11 +48,13 @@ class BatchFailedFlowFinalizerTest {
 
     when(context.getBatchRequestId()).thenReturn(batchId);
     when(repository.findById(batchId)).thenReturn(Optional.of(entity));
+    when(batchRequestSplitRepository.findAllByBatchId(batchId)).thenReturn(List.of(new MediatedBatchRequestSplit()));
 
     finalizer.execute(context);
 
     assertEquals(BatchRequestStatus.FAILED, entity.getStatus());
     verify(repository).save(entity);
+    verify(batchRequestSplitRepository).saveAll(anyList());
   }
 
   @Test
@@ -54,8 +63,8 @@ class BatchFailedFlowFinalizerTest {
     when(context.getBatchRequestId()).thenReturn(batchId);
     when(repository.findById(batchId)).thenReturn(Optional.empty());
 
-    var ex = assertThrows(RuntimeException.class, () -> finalizer.execute(context));
-    assertTrue(ex.getMessage().contains("Mediated Batch Request not found by ID: " + batchId));
+    var ex = assertThrows(MediatedBatchRequestNotFoundException.class, () -> finalizer.execute(context));
+    assertTrue(ex.getMessage().contains("Mediated Batch Request with ID [%s] was not found".formatted(batchId)));
     verify(repository, never()).save(any());
   }
 }

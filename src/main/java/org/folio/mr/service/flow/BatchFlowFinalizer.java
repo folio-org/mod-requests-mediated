@@ -6,7 +6,6 @@ import static org.folio.mr.domain.BatchRequestSplitStatus.FAILED;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.MapUtils;
-import org.folio.flow.api.Stage;
 import org.folio.mr.domain.BatchRequestStatus;
 import org.folio.mr.domain.BatchContext;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
@@ -18,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Log4j2
 @Component
 @RequiredArgsConstructor
-public class BatchFlowFinalizer implements Stage<BatchContext> {
+public class BatchFlowFinalizer extends AbstractBatchRequestStage {
 
   private final MediatedBatchRequestRepository repository;
 
@@ -38,6 +37,7 @@ public class BatchFlowFinalizer implements Stage<BatchContext> {
     } else {
       return;
     }
+
     repository.save(batchEntity);
   }
 
