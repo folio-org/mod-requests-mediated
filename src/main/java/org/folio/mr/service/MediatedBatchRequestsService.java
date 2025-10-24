@@ -1,15 +1,14 @@
 package org.folio.mr.service;
 
 import java.util.UUID;
-import org.folio.mr.domain.dto.MediatedBatchRequestDto;
-import org.folio.mr.domain.dto.MediatedBatchRequestPostDto;
-import org.folio.mr.domain.dto.MediatedBatchRequestsDto;
+import org.folio.mr.domain.entity.MediatedBatchRequest;
+import org.springframework.data.domain.Page;
 
 public interface MediatedBatchRequestsService {
 
-  MediatedBatchRequestDto create(MediatedBatchRequestPostDto batchRequestPostDto);
+  MediatedBatchRequest create(MediatedBatchRequest batchRequestPostDto);
 
-  MediatedBatchRequestsDto getAll(String query, Integer offset, Integer limit);
+  Page<MediatedBatchRequest> getAll(String query, Integer offset, Integer limit);
 
-  MediatedBatchRequestDto getById(UUID id);
+  MediatedBatchRequest getById(UUID id);
 }
