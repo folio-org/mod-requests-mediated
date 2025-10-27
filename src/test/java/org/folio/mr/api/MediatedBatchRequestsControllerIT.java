@@ -241,6 +241,55 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
 
   @Test
   @SneakyThrows
+  void shouldHandleInitializerFlowErrorAndSetFailedStatuses() {
+    var postBatchRequestDto = sampleBatchRequestPostDto(1).batchId(BATCH_REQUEST_ID1);
+
+    doThrow(new MediatedBatchRequestNotFoundException(UUID.fromString(BATCH_REQUEST_ID1)))
+      .when(flowInitializer).execute(any(BatchContext.class));
+
+    createBatchRequests(postBatchRequestDto);
+
+    assertThat(batchRequestRepository.count()).isEqualTo(1L);
+    assertThat(batchRequestSplitRepository.count()).isEqualTo(1L);
+    Awaitility.await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE)
+      .untilAsserted(() -> {
+        assertThat(batchRequestSplitRepository.findAll())
+          .extracting(
+            MediatedBatchRequestSplit::getStatus,
+            MediatedBatchRequestSplit::getErrorDetails)
+          .containsExactlyInAnyOrder(
+            tuple(BatchRequestSplitStatus.FAILED, "Mediated Batch Request with ID [%s] was not found"
+              .formatted(BATCH_REQUEST_ID1)));
+        assertEquals(BatchRequestStatus.FAILED, batchRequestRepository.findAll().getFirst().getStatus());
+      });
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldHandleFinalizerFlowErrorAndSetFailedStatuses() {
+    var postBatchRequestDto = sampleBatchRequestPostDto(1).batchId(BATCH_REQUEST_ID1);
+    var errorMessage = "Batch request with id %s has failed".formatted(BATCH_REQUEST_ID1);
+
+    addStubsForEcsRequestCreation();
+    doThrow(new RuntimeException(errorMessage)).when(flowFinalizer).execute(any(BatchContext.class));
+
+    createBatchRequests(postBatchRequestDto);
+
+    assertThat(batchRequestRepository.count()).isEqualTo(1L);
+    assertThat(batchRequestSplitRepository.count()).isEqualTo(1L);
+    Awaitility.await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE)
+      .untilAsserted(() -> {
+        assertThat(batchRequestSplitRepository.findAll())
+          .extracting(
+            MediatedBatchRequestSplit::getStatus,
+            MediatedBatchRequestSplit::getErrorDetails)
+          .containsExactlyInAnyOrder(tuple(BatchRequestSplitStatus.FAILED, errorMessage));
+        assertEquals(BatchRequestStatus.FAILED, batchRequestRepository.findAll().getFirst().getStatus());
+      });
+  }
+
+  @Test
+  @SneakyThrows
   void shouldHandleBatchSplitProcessingFailureAndMarkBatchSplitFailed() {
     var postBatchRequestDto = sampleBatchRequestPostDto(2)
       .batchId(BATCH_REQUEST_ID1);
@@ -323,7 +372,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
 
   @Test
   @SneakyThrows
-  void shouldReturnsNotFoundForGetDetailsByBatchId() {
+  void shouldReturnNotFoundForGetDetailsByBatchId() {
     mockMvc.perform(
         get(URL_MEDIATED_BATCH_REQUESTS + "/" + UUID.randomUUID() + "/details")
           .headers(defaultHeaders())

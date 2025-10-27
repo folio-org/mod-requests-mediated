@@ -9,7 +9,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.flow.api.Stage;
 import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.BatchContext;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
@@ -21,13 +20,14 @@ import org.springframework.stereotype.Component;
 @Log4j2
 @Component
 @RequiredArgsConstructor
-public class BatchFlowInitializer implements Stage<BatchContext> {
+public class BatchFlowInitializer extends AbstractBatchRequestStage {
 
   private final MediatedBatchRequestRepository repository;
   private final MediatedBatchRequestSplitRepository batchRequestSplitRepository;
 
   @Override
   public void execute(BatchContext batchContext) {
+    log.info("Initializing batch request processing for batchId: {}", batchContext.getBatchRequestId());
     validateAndInitBatchExecution(batchContext);
 
     var batchId = batchContext.getBatchRequestId();
@@ -42,7 +42,10 @@ public class BatchFlowInitializer implements Stage<BatchContext> {
     // validate batch entity status
     var batchId = context.getBatchRequestId();
     var batchEntity = repository.findById(batchId)
-      .orElseThrow(() -> new MediatedBatchRequestNotFoundException(batchId));
+      .orElseThrow(() -> {
+        log.error("Batch entity with id: {} was not found", batchId);
+        return new MediatedBatchRequestNotFoundException(batchId);
+      });
 
     if (batchEntity.getStatus() != PENDING) {
       log.error("Batch entity with id: {} has invalid initial status: {}",
@@ -51,6 +54,7 @@ public class BatchFlowInitializer implements Stage<BatchContext> {
     }
 
     if (context.getDeploymentEnvType() == null) {
+      log.error("Environment type is not provided for processing batch request");
       throw new IllegalStateException("No Batch Flow Context parameter for deployment environment type was provided");
     }
 

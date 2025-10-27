@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.folio.flow.api.DynamicStage;
 import org.folio.flow.api.Flow;
 import org.folio.flow.api.ParallelStage;
@@ -20,6 +21,7 @@ import org.folio.mr.service.TenantSupportService;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MediatedBatchRequestFlowProviderImpl implements MediatedBatchRequestFlowProvider {
@@ -35,6 +37,8 @@ public class MediatedBatchRequestFlowProviderImpl implements MediatedBatchReques
   public Flow createFlow(UUID batchId) {
     var batchFlowId = "BatchRequestFlow/" + batchId;
     var envType = getEnvironmentType();
+
+    log.info("Creating batch request processing flow for batchId: {} and {} environment", batchId, envType.name());
 
     return Flow.builder()
       .id(batchFlowId)
