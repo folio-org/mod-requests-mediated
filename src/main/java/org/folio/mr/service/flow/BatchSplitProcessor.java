@@ -12,6 +12,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.flow.api.Stage;
 import org.folio.mr.client.EcsExternalTlrClient;
 import org.folio.mr.domain.BatchRequestSplitStatus;
@@ -80,6 +81,9 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
       .map(cause -> exception.getMessage() + ", cause: " + cause.getMessage())
       .orElse(exception.getMessage());
 
+    if (StringUtils.isBlank(errorMessage)) {
+      errorMessage = "Failed to create request for item %s".formatted(splitEntity.getItemId());
+    }
     log.error("onError:: Batch split entity with id: {} has failed with error: {}",
       splitEntity.getId(), errorMessage);
 

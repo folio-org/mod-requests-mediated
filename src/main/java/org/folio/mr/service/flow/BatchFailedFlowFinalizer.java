@@ -4,6 +4,7 @@ import static org.folio.mr.domain.BatchRequestStatus.FAILED;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.mr.domain.BatchContext;
 import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
@@ -30,8 +31,15 @@ public class BatchFailedFlowFinalizer extends AbstractBatchRequestStage {
     repository.save(batchEntity);
 
     var errorMessage = context.getBatchRequestFailedMessage();
+    if (StringUtils.isBlank(errorMessage)) {
+      return;
+    }
+
     var splitEntities = batchRequestSplitRepository.findAllByBatchId(batchId);
-    splitEntities.forEach(requestSplit -> {
+    splitEntities.stream()
+      .filter(split -> split.getStatus() != BatchRequestSplitStatus.COMPLETED)
+      .filter(split -> split.getConfirmedRequestId() == null)
+      .forEach(requestSplit -> {
         requestSplit.setStatus(BatchRequestSplitStatus.FAILED);
         requestSplit.setErrorDetails(errorMessage);
     });
