@@ -217,4 +217,20 @@ class BatchSplitProcessorTest {
     assertEquals("Simple error", split.getErrorDetails());
     verify(splitRepository).save(split);
   }
+
+  @Test
+  void onError_positive_shouldSetDefaultErrorDetailsWhenNoErrorMessage() {
+    var split = new MediatedBatchRequestSplit();
+    split.setId(UUID.randomUUID());
+    split.setItemId(UUID.randomUUID());
+    when(context.getBatchSplitEntity()).thenReturn(split);
+
+    var ex = new Exception();
+
+    processor.onError(context, ex);
+
+    assertEquals(BatchRequestSplitStatus.FAILED, split.getStatus());
+    assertEquals("Failed to create request for item %s".formatted(split.getItemId()), split.getErrorDetails());
+    verify(splitRepository).save(split);
+  }
 }

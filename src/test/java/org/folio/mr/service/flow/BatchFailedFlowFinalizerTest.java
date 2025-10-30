@@ -4,14 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.BatchRequestStatus;
 import org.folio.mr.domain.BatchContext;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
@@ -21,6 +22,7 @@ import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -45,16 +47,43 @@ class BatchFailedFlowFinalizerTest {
     var batchId = UUID.randomUUID();
     var entity = new MediatedBatchRequest();
     entity.setId(batchId);
+    var split1 = new MediatedBatchRequestSplit();
+    var split2 = new MediatedBatchRequestSplit();
+    split2.setStatus(BatchRequestSplitStatus.COMPLETED);
+    split2.setConfirmedRequestId(UUID.randomUUID());
 
     when(context.getBatchRequestId()).thenReturn(batchId);
+    when(context.getBatchRequestFailedMessage()).thenReturn("batch request failed");
     when(repository.findById(batchId)).thenReturn(Optional.of(entity));
-    when(batchRequestSplitRepository.findAllByBatchId(batchId)).thenReturn(List.of(new MediatedBatchRequestSplit()));
+    when(batchRequestSplitRepository.findAllByBatchId(batchId)).thenReturn(List.of(split1, split2));
+    var captor = ArgumentCaptor.forClass(List.class);
 
     finalizer.execute(context);
 
     assertEquals(BatchRequestStatus.FAILED, entity.getStatus());
     verify(repository).save(entity);
-    verify(batchRequestSplitRepository).saveAll(anyList());
+    verify(batchRequestSplitRepository).saveAll(captor.capture());
+    var savedSplits = captor.getValue();
+    assertEquals(2, savedSplits.size());
+    assertEquals(BatchRequestSplitStatus.FAILED, ((MediatedBatchRequestSplit) savedSplits.getFirst()).getStatus());
+    assertEquals("batch request failed", ((MediatedBatchRequestSplit) savedSplits.getFirst()).getErrorDetails());
+  }
+
+  @Test
+  void execute_positive_shouldSetStatusToFailedForBatchEntityOnly() {
+    var batchId = UUID.randomUUID();
+    var entity = new MediatedBatchRequest();
+    entity.setId(batchId);
+
+    when(context.getBatchRequestId()).thenReturn(batchId);
+    when(context.getBatchRequestFailedMessage()).thenReturn("");
+    when(repository.findById(batchId)).thenReturn(Optional.of(entity));
+
+    finalizer.execute(context);
+
+    assertEquals(BatchRequestStatus.FAILED, entity.getStatus());
+    verify(repository).save(entity);
+    verifyNoInteractions(batchRequestSplitRepository);
   }
 
   @Test
