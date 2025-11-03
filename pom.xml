@@ -43,7 +43,7 @@
 
     <!-- test dependencies -->
     <wiremock.version>3.13.1</wiremock.version>
-    <testcontainers.version>1.20.6</testcontainers.version>
+    <testcontainers.version>1.21.3</testcontainers.version>
   </properties>
 
   <dependencies>
@@ -188,7 +188,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-backend-testing</artifactId>
-      <version>1.5.5</version>
+      <version>3.0.8</version>
       <scope>test</scope>
     </dependency>
     <dependency>
