@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(name = "items", url = "item-storage/items",
   configuration = FeignClientConfiguration.class, dismiss404 = true)
-public interface ItemClient {
+public interface ItemClient extends GetByQueryParamsClient<Items> {
 
   @GetMapping("/{id}")
   Optional<Item> get(@PathVariable String id);

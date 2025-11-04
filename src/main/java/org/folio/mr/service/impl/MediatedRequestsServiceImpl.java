@@ -37,12 +37,14 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
 
   @Override
   public MediatedRequests findBy(String query, Integer offset, Integer limit) {
-    var mediatedRequests =
-      mediatedRequestsRepository.findByCql(query, OffsetRequest.of(offset, limit)).stream()
-        .map(requestsMapper::mapEntityToDto)
-        .map(requestDetailsService::addRequestDetailsForGet)
-        .map(MediatedRequestsServiceImpl::removeSearchIndex)
-        .toList();
+    var mediatedRequests = mediatedRequestsRepository
+      .findByCql(query, OffsetRequest.of(offset, limit)).stream()
+      .map(requestsMapper::mapEntityToDto)
+      .toList();
+
+    mediatedRequests = requestDetailsService.addRequestBatchDetailsForGet(mediatedRequests).stream()
+      .map(MediatedRequestsServiceImpl::removeSearchIndex)
+      .toList();
 
     var totalRecords = mediatedRequestsRepository.count(query);
 
@@ -54,7 +56,9 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
     var mediatedRequests = mediatedRequestsRepository.findAll(OffsetRequest.of(offset, limit))
       .stream()
       .map(requestsMapper::mapEntityToDto)
-      .map(requestDetailsService::addRequestDetailsForGet)
+      .toList();
+
+    mediatedRequests = requestDetailsService.addRequestBatchDetailsForGet(mediatedRequests).stream()
       .map(MediatedRequestsServiceImpl::removeSearchIndex)
       .toList();
 
