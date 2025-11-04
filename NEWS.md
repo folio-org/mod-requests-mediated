@@ -1,3 +1,6 @@
+## 1.2.9 2025-11-04
+* Fix poor GET `/requests-mediated/mediated-requests` endpoint performance (MODREQMED-176)
+
 ## 1.2.8 2025-10-08
 * Ignore x-okapi-user-id Kafka message header (MODREQMED-133)
 
