@@ -175,7 +175,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private MediatedRequestContext buildRequestContext(MediatedRequest request) {
-    log.info("buildRequestContext:: building request context");
+    log.info("buildRequestContext:: building context for mediated request {}", request::getId);
     var contextBuilder = MediatedRequestContext.builder().request(request);
 
     User requester = fetchRequester(request);
@@ -187,7 +187,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     fetchProxyUser(request, contextBuilder);
     fetchPickupServicePoint(request, contextBuilder);
 
-    log.info("buildRequestContext:: request context is built");
+    log.debug("buildRequestContext:: request context is built");
     return contextBuilder.build();
   }
 
@@ -214,7 +214,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       () -> ctxBuilder.instance(inventoryService.fetchInstance(searchInstance.getId())));
 
     if (request.getItemId() == null) {
-      log.info("fetchInventoryInstance:: itemId is null");
+      log.debug("fetchInventoryInstance:: itemId is null");
       return;
     }
 
@@ -247,7 +247,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
   private void fetchProxyUser(MediatedRequest request, MediatedRequestContextBuilder ctxBuilder) {
     if (request.getProxyUserId() == null) {
-      log.info("fetchProxyUser:: proxyUserId is null");
+      log.debug("fetchProxyUser:: proxyUserId is null");
       return;
     }
     User proxy = userService.fetchUser(request.getProxyUserId());
@@ -269,7 +269,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     MediatedRequestContextBuilder ctxBuilder) {
 
     if (request.getPickupServicePointId() == null) {
-      log.info("fetchPickupServicePoint:: pickupServicePointId is null");
+      log.debug("fetchPickupServicePoint:: pickupServicePointId is null");
       return;
     }
 
@@ -442,7 +442,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       return new Instance();
     }
 
-    log.info("createFallbackInstance:: instance hrid: {}", instance::getHrid);
+    log.debug("createFallbackInstance:: instance hrid: {}", instance::getHrid);
     return new Instance()
       .hrid(instance.getHrid())
       .title(instance.getTitle());
@@ -455,7 +455,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       return new Item();
     }
 
-    log.info("createFallbackItem:: item barcode: {}", item::getBarcode);
+    log.debug("createFallbackItem:: item barcode: {}", item::getBarcode);
     return new Item().barcode(item.getBarcode());
   }
 
@@ -468,7 +468,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void addRequester(MediatedRequestContext context) {
-    log.info("addRequester:: adding requester data");
+    log.debug("addRequester:: adding requester data");
     User requester = context.requester();
     MediatedRequestRequester newRequester = new MediatedRequestRequester()
       .barcode(requester.getBarcode());
@@ -483,17 +483,17 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void extendRequester(MediatedRequestContext context) {
-    log.info("extendRequester:: extending requester data");
+    log.debug("extendRequester:: extending requester data");
     context.request()
       .getRequester()
       .patronGroupId(context.requester().getPatronGroup());
   }
 
   private static void addRequesterGroup(MediatedRequestContext context) {
-    log.info("addRequesterGroup:: adding requester user group data");
+    log.debug("addRequesterGroup:: adding requester user group data");
     UserGroup userGroup = context.requesterGroup();
     if (userGroup == null) {
-      log.info("addRequesterGroup:: userGroup is null");
+      log.debug("addRequesterGroup:: userGroup is null");
       return;
     }
     context.request()
@@ -505,10 +505,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void addProxy(MediatedRequestContext context) {
-    log.info("addProxy:: adding proxy user data");
+    log.debug("addProxy:: adding proxy user data");
     User proxy = context.proxy();
     if (proxy == null) {
-      log.info("addProxy:: proxy user is null");
+      log.debug("addProxy:: proxy user is null");
       context.request().proxy(null);
       return;
     }
@@ -526,9 +526,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void extendProxy(MediatedRequestContext context) {
-    log.info("extendProxy:: extending proxy user data");
+    log.debug("extendProxy:: extending proxy user data");
     if (context.proxy() == null) {
-      log.info("extendProxy:: proxy user is null");
+      log.debug("extendProxy:: proxy user is null");
       context.request().proxy(null);
       return;
     }
@@ -539,9 +539,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void addProxyGroup(MediatedRequestContext context) {
-    log.info("addProxyGroup:: adding proxy user group data");
+    log.debug("addProxyGroup:: adding proxy user group data");
     if (context.proxyGroup() == null) {
-      log.info("addProxyGroup:: proxy user group is null");
+      log.debug("addProxyGroup:: proxy user group is null");
       return;
     }
 
@@ -555,10 +555,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void addInstance(MediatedRequestContext context) {
-    log.info("addInstance:: adding instance data");
+    log.debug("addInstance:: adding instance data");
     var instance = context.instance();
     if (instance == null) {
-      log.info("addInstance:: instance is null");
+      log.debug("addInstance:: instance is null");
       context.request().instance(null);
       return;
     }
@@ -575,7 +575,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private void extendInstance(MediatedRequestContext context) {
-    log.info("extendInstance:: extending instance data");
+    log.debug("extendInstance:: extending instance data");
     var instance = context.instance();
 
     var contributors = Optional.ofNullable(instance.getContributors())
@@ -608,9 +608,9 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       .hrid(instance.getHrid());
   }
   private static void addItem(MediatedRequestContext context) {
-    log.info("addItem:: adding item data");
+    log.debug("addItem:: adding item data");
     if (context.item() == null) {
-      log.info("addItem:: item is null");
+      log.debug("addItem:: item is null");
       context.request().item(null);
       return;
     }
@@ -619,10 +619,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private void extendItem(MediatedRequestContext context) {
-    log.info("extendItem:: extending item data");
+    log.debug("extendItem:: extending item data");
     var item = context.item();
     if (item == null) {
-      log.info("extendItem:: item is null");
+      log.debug("extendItem:: item is null");
       context.request().item(null);
       return;
     }
@@ -652,11 +652,11 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   private static void addFulfillmentDetails(MediatedRequestContext context) {
     var fulfillmentPreference = context.request().getFulfillmentPreference();
     if (fulfillmentPreference == null) {
-      log.info("addFulfillmentDetails:: fulfillment preference is null");
+      log.debug("addFulfillmentDetails:: fulfillment preference is null");
       return;
     }
 
-    log.info("addFulfillmentDetails:: fulfillment preference is '{}'", fulfillmentPreference.getValue());
+    log.debug("addFulfillmentDetails:: fulfillment preference is '{}'", fulfillmentPreference.getValue());
 
     if (fulfillmentPreference == DELIVERY) {
       addDeliveryAddress(context);
@@ -666,10 +666,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void addPickupServicePoint(MediatedRequestContext context) {
-    log.info("addPickupServicePoint:: adding pickup service point data");
+    log.debug("addPickupServicePoint:: adding pickup service point data");
     ServicePoint pickupServicePoint = context.pickupServicePoint();
     if (pickupServicePoint == null) {
-      log.info("addPickupServicePoint:: pickup service point is null");
+      log.debug("addPickupServicePoint:: pickup service point is null");
       context.request().pickupServicePoint(null);
       return;
     }
@@ -684,10 +684,10 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void addDeliveryAddress(MediatedRequestContext context) {
-    log.info("addDeliveryAddress:: adding delivery address");
+    log.debug("addDeliveryAddress:: adding delivery address");
     String deliveryAddressTypeId = context.request().getDeliveryAddressTypeId();
     if (deliveryAddressTypeId == null) {
-      log.info("addDeliveryAddress:: deliveryAddressTypeId is null");
+      log.debug("addDeliveryAddress:: deliveryAddressTypeId is null");
       context.request().deliveryAddress(null);
       return;
     }
@@ -711,20 +711,20 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private static void addSearchIndex(MediatedRequestContext context) {
-    log.info("addSearchIndex:: adding search index");
+    log.debug("addSearchIndex:: adding search index");
     MediatedRequestSearchIndex searchIndex = new MediatedRequestSearchIndex();
 
     var searchItem = context.item();
     if (searchItem != null) {
-      log.info("addSearchIndex:: adding item data to search index");
+      log.debug("addSearchIndex:: adding item data to search index");
       String shelvingOrder = searchItem.getEffectiveShelvingOrder();
       var callNumberComponents = searchItem.getEffectiveCallNumberComponents();
       if (shelvingOrder != null) {
-        log.info("addSearchIndex:: adding shelving order to search index");
+        log.debug("addSearchIndex:: adding shelving order to search index");
         searchIndex.setShelvingOrder(shelvingOrder);
       }
       if (callNumberComponents != null) {
-        log.info("addSearchIndex:: adding call number components to search index");
+        log.debug("addSearchIndex:: adding call number components to search index");
         searchIndex.callNumberComponents(new MediatedRequestSearchIndexCallNumberComponents()
           .callNumber(callNumberComponents.getCallNumber())
           .prefix(callNumberComponents.getPrefix())
@@ -734,7 +734,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
     ServicePoint pickupServicePoint = context.pickupServicePoint();
     if (pickupServicePoint != null && pickupServicePoint.getName() != null) {
-      log.info("addSearchIndex:: adding pickup service point data to search index");
+      log.debug("addSearchIndex:: adding pickup service point data to search index");
       searchIndex.setPickupServicePointName(pickupServicePoint.getName());
     }
 
@@ -814,7 +814,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
         batchContext.pickupServicePoints.get(request.getPickupServicePointId()));
     }
 
-    log.info("extractRequestContextFromBatchContext:: extracted context for {}", request::getId);
+    log.debug("extractRequestContextFromBatchContext:: extracted context for {}", request::getId);
 
     return contextBuilder.build();
   }
