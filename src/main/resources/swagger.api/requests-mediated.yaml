@@ -532,7 +532,7 @@ components:
             $ref: 'schemas/batch/mediatedBatchRequestDto.yaml#/MediatedBatchRequestDto'
           examples:
             objectExample:
-              externalValue: 'examples/mediatedBatchRequests.json'
+              externalValue: 'examples/mediatedBatchRequest.json'
     mediatedBatchRequests:
       description: A collection of mediated batch request objects
       content:
@@ -541,7 +541,7 @@ components:
             $ref: 'schemas/batch/mediatedBatchRequestsDto.yaml#/MediatedBatchRequestsDto'
           examples:
             objectExample:
-              externalValue: 'examples/mediatedBatchRequest.json'
+              externalValue: 'examples/mediatedBatchRequests.json'
     mediatedBatchRequestDetails:
       description: A collection of mediated batch request details objects
       content:
@@ -550,7 +550,7 @@ components:
             $ref: 'schemas/batch/mediatedBatchRequestDetailsDto.yaml#/MediatedBatchRequestDetailsDto'
           examples:
             objectExample:
-              externalValue: 'examples/mediatedBatchRequest.json'
+              externalValue: 'examples/mediatedBatchRequestDetails.json'
     mediatedRequests:
       description: A collection of mediated request objects
       content:
