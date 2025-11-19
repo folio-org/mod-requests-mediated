@@ -49,6 +49,7 @@ import org.folio.mr.domain.dto.MediatedBatchRequestPostDtoItemRequestsInner;
 import org.folio.mr.domain.dto.MediatedBatchRequestsDto;
 import org.folio.mr.domain.dto.UserTenant;
 import org.folio.mr.domain.dto.UserTenantsResponse;
+import org.folio.mr.domain.entity.MediatedBatchRequest;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
@@ -83,7 +84,14 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   private static final String REQUESTER_ID = "9812e24b-0a66-457a-832c-c5e789797e35";
   private static final String BATCH_REQUEST_ID1 = UUID.randomUUID().toString();
   private static final String BATCH_REQUEST_ID2 = UUID.randomUUID().toString();
-  private static final UUID[] ITEM_IDS = {UUID.randomUUID(), UUID.randomUUID()};
+  private static final UUID[] ITEM_IDS = {
+    UUID.fromString("211c74f5-ebb1-42bf-b752-653fef171585"),
+    UUID.fromString("45172d4e-0484-408d-868d-70ea269152ab")
+  };
+  private static final UUID[] SERVICE_POINT_IDS = {
+    UUID.fromString("3afab82b-b4e5-4da6-9a3d-e6891770f0bb"),
+    UUID.fromString("53c12e46-c1c2-4181-8671-cd044ca566f1")
+  };
   private static final String SEARCH_ITEM_URL = "/search/consortium/item";
   private static final String ECS_TLR_EXTERNAL_URL = "/tlr/create-ecs-request-external";
   private static final UUID[] EXPECTED_CREATED_REQUEST_IDS = {
@@ -396,6 +404,74 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
       .andExpect(exceptionMatch(MediatedBatchRequestNotFoundException.class));
   }
 
+  @MethodSource("cqlDetailsQueryProvider")
+  @ParameterizedTest(name = "query = ({0})")
+  @DisplayName("Get Collection of Mediated Batch Requests Details by CQL query")
+  @SneakyThrows
+  void shouldReturnBatchRequestsDetailsForGivenQuery(String cql, int total, List<String> ids) {
+    var itemId = UUID.randomUUID();
+    var postDto1 = sampleBatchRequestPostDto(ITEM_IDS).batchId(BATCH_REQUEST_ID1);
+    var postDto2 = sampleBatchRequestPostDto(itemId).batchId(BATCH_REQUEST_ID2);
+
+    addStubsForEcsRequestCreation(EXPECTED_CREATED_REQUEST_IDS, ITEM_IDS);
+    addStubsForEcsRequestCreation(new UUID[]{EXPECTED_CREATED_REQUEST_IDS[0]}, new UUID[]{itemId});
+
+    createBatchRequests(postDto1)
+      .andExpect(jsonPath("batchId", is(BATCH_REQUEST_ID1)));
+    createBatchRequests(postDto2)
+      .andExpect(jsonPath("batchId", is(BATCH_REQUEST_ID2)));
+    assertThat(batchRequestRepository.count()).isEqualTo(2L);
+    assertThat(batchRequestSplitRepository.count()).isEqualTo(3L);
+
+    Awaitility.await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE)
+      .untilAsserted(() -> {
+        assertThat(batchRequestRepository.findAll())
+          .extracting(
+            MediatedBatchRequest::getId,
+            MediatedBatchRequest::getStatus)
+          .containsExactlyInAnyOrder(
+            tuple(UUID.fromString(BATCH_REQUEST_ID1), BatchRequestStatus.COMPLETED),
+            tuple(UUID.fromString(BATCH_REQUEST_ID2), BatchRequestStatus.COMPLETED)
+          );
+
+        assertThat(batchRequestSplitRepository.findAll())
+          .extracting(
+            dto -> dto.getMediatedBatchRequest().getId().toString(),
+            MediatedBatchRequestSplit::getItemId,
+            MediatedBatchRequestSplit::getConfirmedRequestId,
+            MediatedBatchRequestSplit::getPickupServicePointId)
+          .containsExactlyInAnyOrder(
+            tuple(BATCH_REQUEST_ID1, ITEM_IDS[0], EXPECTED_CREATED_REQUEST_IDS[0], SERVICE_POINT_IDS[0]),
+            tuple(BATCH_REQUEST_ID1, ITEM_IDS[1], EXPECTED_CREATED_REQUEST_IDS[1], SERVICE_POINT_IDS[1]),
+            tuple(BATCH_REQUEST_ID2, itemId, EXPECTED_CREATED_REQUEST_IDS[0], SERVICE_POINT_IDS[0])
+          );
+      });
+
+    var response = getRequestsDetailsByQuery(cql)
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("totalRecords", is(total)))
+      .andReturn().getResponse().getContentAsString();
+    var collectionDto = OBJECT_MAPPER.readValue(response, MediatedBatchRequestDetailsDto.class);
+
+    assertThat(collectionDto.getMediatedBatchRequestDetails())
+      .extracting(MediatedBatchRequestDetailDto::getBatchId)
+      .containsExactlyInAnyOrder(ids.toArray(new String[0]));
+  }
+
+  private static Stream<Arguments> cqlDetailsQueryProvider() {
+    return Stream.of(
+      arguments("", 3, List.of(BATCH_REQUEST_ID1, BATCH_REQUEST_ID1, BATCH_REQUEST_ID2)),
+      arguments("requesterId==" + REQUESTER_ID, 3, List.of(BATCH_REQUEST_ID1, BATCH_REQUEST_ID1, BATCH_REQUEST_ID2)),
+      arguments("itemId==" + ITEM_IDS[1], 1, List.of(BATCH_REQUEST_ID1)),
+      arguments("pickupServicePointId==" + SERVICE_POINT_IDS[0], 2, List.of(BATCH_REQUEST_ID1, BATCH_REQUEST_ID2)),
+      arguments("confirmedRequestId==" + EXPECTED_CREATED_REQUEST_IDS[1], 1, List.of(BATCH_REQUEST_ID1)),
+      arguments("confirmedRequestId==" + EXPECTED_CREATED_REQUEST_IDS[0] + " and itemId==" + ITEM_IDS[0], 1, List.of(BATCH_REQUEST_ID1)),
+      arguments("requestStatus==\"Open - Not yet filled\"", 3, List.of(BATCH_REQUEST_ID1, BATCH_REQUEST_ID1, BATCH_REQUEST_ID2)),
+      arguments("createdDate<" + "2999-09-17T12:00:00.0", 3, List.of(BATCH_REQUEST_ID1, BATCH_REQUEST_ID1, BATCH_REQUEST_ID2)),
+      arguments("updatedDate<" + "2024-09-17T12:00:00.0", 0, List.of())
+    );
+  }
+
   @SneakyThrows
   private ResultActions getAllRequests() {
     return mockMvc.perform(
@@ -408,6 +484,15 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   private ResultActions getRequestsByQuery(String query) {
     return mockMvc.perform(
       get(URL_MEDIATED_BATCH_REQUESTS)
+        .queryParam("query", query)
+        .headers(defaultHeaders())
+        .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @SneakyThrows
+  private ResultActions getRequestsDetailsByQuery(String query) {
+    return mockMvc.perform(
+      get(URL_MEDIATED_BATCH_REQUESTS + "/details")
         .queryParam("query", query)
         .headers(defaultHeaders())
         .contentType(MediaType.APPLICATION_JSON));
@@ -437,9 +522,10 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
       .mediatedWorkflow(MediatedBatchRequestPostDto.MediatedWorkflowEnum.MULTI_ITEM_REQUEST)
       .patronComments("batch patron comments");
     for (int i = 0; i < itemIds.length; i++) {
-      var randomUUID = UUID.randomUUID().toString();
       postDto.getItemRequests().add(
-        new MediatedBatchRequestPostDtoItemRequestsInner().itemId(itemIds[i].toString()).pickupServicePointId(randomUUID));
+        new MediatedBatchRequestPostDtoItemRequestsInner()
+          .itemId(itemIds[i].toString())
+          .pickupServicePointId(SERVICE_POINT_IDS[i].toString()));
     }
     return postDto;
   }
