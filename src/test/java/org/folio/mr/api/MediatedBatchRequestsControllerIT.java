@@ -176,8 +176,12 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   void shouldReturnBatchRequestsForGivenQuery(String cql, int total, List<String> ids) {
     var postDto1 = sampleBatchRequestPostDto(ITEM_IDS[0]).batchId(BATCH_REQUEST_ID1);
     var postDto2 = sampleBatchRequestPostDto(ITEM_IDS[0]).batchId(BATCH_REQUEST_ID2);
-    createBatchRequests(postDto1);
-    createBatchRequests(postDto2);
+    createBatchRequests(postDto1)
+      .andExpect(jsonPath("mediatedRequestStatus",
+        oneOf(PENDING.getValue(), IN_PROGRESS.getValue())));
+    createBatchRequests(postDto2)
+      .andExpect(jsonPath("mediatedRequestStatus",
+        oneOf(PENDING.getValue(), IN_PROGRESS.getValue())));
 
     var response = getRequestsByQuery(cql)
       .andExpect(status().isOk())
@@ -306,7 +310,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   @ParameterizedTest
   @ValueSource(strings = {"request placing failed", ""})
   void shouldHandleBatchSplitProcessingFailureAndMarkBatchSplitFailed(String errorMessage) {
-    var postBatchRequestDto = sampleBatchRequestPostDto(new UUID[]{ITEM_IDS[0], ITEM_IDS[0]})
+    var postBatchRequestDto = sampleBatchRequestPostDto(ITEM_IDS[0], ITEM_IDS[0])
       .batchId(BATCH_REQUEST_ID1);
     // one of the splits will fail during processing and the other will succeed
     Mockito.doCallRealMethod().doThrow(new RuntimeException(errorMessage))
@@ -466,6 +470,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
       arguments("pickupServicePointId==" + SERVICE_POINT_IDS[0], 2, List.of(BATCH_REQUEST_ID1, BATCH_REQUEST_ID2)),
       arguments("confirmedRequestId==" + EXPECTED_CREATED_REQUEST_IDS[1], 1, List.of(BATCH_REQUEST_ID1)),
       arguments("confirmedRequestId==" + EXPECTED_CREATED_REQUEST_IDS[0] + " and itemId==" + ITEM_IDS[0], 1, List.of(BATCH_REQUEST_ID1)),
+      arguments("mediatedRequestStatus==\"Completed\" ", 3, List.of(BATCH_REQUEST_ID1, BATCH_REQUEST_ID1, BATCH_REQUEST_ID2)),
       arguments("requestStatus==\"Open - Not yet filled\"", 3, List.of(BATCH_REQUEST_ID1, BATCH_REQUEST_ID1, BATCH_REQUEST_ID2)),
       arguments("createdDate<" + "2999-09-17T12:00:00.0", 3, List.of(BATCH_REQUEST_ID1, BATCH_REQUEST_ID1, BATCH_REQUEST_ID2)),
       arguments("updatedDate<" + "2024-09-17T12:00:00.0", 0, List.of())
@@ -509,6 +514,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
 
   private static Stream<Arguments> cqlQueryProvider() {
     return Stream.of(
+      arguments("mediatedRequestStatus==\"In progress\" or mediatedRequestStatus==\"Pending\"", 2, List.of(BATCH_REQUEST_ID1, BATCH_REQUEST_ID2)),
       arguments("requesterId = " + REQUESTER_ID, 2, List.of(BATCH_REQUEST_ID1, BATCH_REQUEST_ID2)),
       arguments("id = " + BATCH_REQUEST_ID1, 1, List.of(BATCH_REQUEST_ID1)),
       arguments("requestDate<" + "2999-09-17T12:00:00.0", 2, List.of(BATCH_REQUEST_ID1, BATCH_REQUEST_ID2)),
