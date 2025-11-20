@@ -74,6 +74,9 @@ public class MediatedBatchRequestSplit extends MetadataEntity implements Persist
   @Column(name = "error_details")
   private String errorDetails;
 
+  // copy column of status for easier querying
+  private String mediatedRequestStatus;
+
   @PostLoad
   @PrePersist
   void markNotNew() {

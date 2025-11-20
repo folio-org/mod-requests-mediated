@@ -79,4 +79,15 @@ class MediatedBatchRequestsControllerTest {
     assertEquals(OK, response.getStatusCode());
     assertEquals(responseDto, response.getBody());
   }
+
+  @Test
+  void shouldGetMediatedBatchRequestDetails() {
+    MediatedBatchRequestDetailsDto responseDto = new MediatedBatchRequestDetailsDto();
+    when(delegate.retrieveBatchRequestDetailsCollection(any(String.class), anyInt(), anyInt())).thenReturn(responseDto);
+
+    var response = controller.getMediatedBatchRequestDetailsCollection("query", 0, 10);
+
+    assertEquals(OK, response.getStatusCode());
+    assertEquals(responseDto, response.getBody());
+  }
 }

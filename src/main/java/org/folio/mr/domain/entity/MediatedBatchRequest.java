@@ -57,6 +57,9 @@ public class MediatedBatchRequest extends MetadataEntity implements Persistable<
   @Column(name = "mediated_workflow", length = 255)
   private String mediatedWorkflow;
 
+  // copy column of status for easier querying
+  private String mediatedRequestStatus;
+
   @PostLoad
   @PrePersist
   void markNotNew() {

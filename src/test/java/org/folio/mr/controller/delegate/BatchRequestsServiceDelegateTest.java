@@ -107,4 +107,19 @@ class BatchRequestsServiceDelegateTest {
 
     assertEquals(expectedDto, result);
   }
+
+  @Test
+  void getBatchRequestDetailsByQuery_positive_shouldReturnDetailsDto() {
+    var query = "query";
+    var offset = 0;
+    var limit = 10;
+    var batchSplitEntities = mock(Page.class);
+    var expectedDto = mock(MediatedBatchRequestDetailsDto.class);
+    when(requestSplitService.getAll(query, offset, limit)).thenReturn(batchSplitEntities);
+    when(mapper.toMediatedBatchRequestDetailsCollection(batchSplitEntities)).thenReturn(expectedDto);
+
+    var result = delegate.retrieveBatchRequestDetailsCollection(query, offset, limit);
+
+    assertEquals(expectedDto, result);
+  }
 }

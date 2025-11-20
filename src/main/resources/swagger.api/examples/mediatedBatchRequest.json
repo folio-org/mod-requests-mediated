@@ -2,7 +2,7 @@
   "batchId": "69abbd7d-b4a6-4376-8453-bf349c579a91",
   "requestDate": "2024-01-01T00:12:00Z",
   "requesterId": "73b17dee-d278-4128-b0fd-5d9f801b0400",
-  "patronComments": "",
+  "patronComments": "patron comments",
   "mediatedWorkflow": "Multi-Item request",
   "mediatedRequestStatus": "In Progress",
   "metadata": {

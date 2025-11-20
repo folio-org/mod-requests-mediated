@@ -4,6 +4,7 @@
 * Fix DB migration scripts run by adding new script for the changes ([MODREQMED-178](https://folio-org.atlassian.net/browse/MODREQMED-178))
 * Add processing of individual batch request execution using folio-flow-engine ([MODREQMED-160](https://folio-org.atlassian.net/browse/MODREQMED-160))
 * Implement batch request execution ([MODREQMED-162](https://folio-org.atlassian.net/browse/MODREQMED-162))
+* Add endpoint for batch request details collection retrieval by query ([MODREQMED-190](https://folio-org.atlassian.net/browse/MODREQMED-190))
 
 ## 1.2.0 2025-03-13
 * Upgrade to Java 21, folio-spring-support 9.0.0 (MODREQMED-97)

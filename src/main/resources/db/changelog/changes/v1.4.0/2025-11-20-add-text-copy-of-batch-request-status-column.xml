@@ -1,0 +1,38 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+  <changeSet id="addBatchStatusTextCopyColumn" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="batch_request"/>
+    </preConditions>
+
+    <addColumn tableName="batch_request">
+      <column name="mediated_request_status" type="text"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="addBatchSplitStatusTextCopyColumn" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="batch_request_split"/>
+    </preConditions>
+
+    <addColumn tableName="batch_request_split">
+      <column name="mediated_request_status" type="text"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="addBatchStatusTextCopyColumnTrigger" author="Mukhiddin_Yusupov">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="batch_request"/>
+        <tableExists tableName="batch_request_split"/>
+      </and>
+    </preConditions>
+
+    <sqlFile path="add_batch_status_text_copy_column_trigger.sql" relativeToChangelogFile="true"/>
+  </changeSet>
+
+</databaseChangeLog>
