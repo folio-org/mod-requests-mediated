@@ -1,0 +1,8 @@
+type: object
+properties:
+  loans:
+    type: array
+    items:
+      $ref: './loan.yaml'
+  totalRecords:
+    type: integer
