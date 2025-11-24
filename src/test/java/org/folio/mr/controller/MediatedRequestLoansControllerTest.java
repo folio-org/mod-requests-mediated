@@ -36,8 +36,7 @@ class MediatedRequestLoansControllerTest {
     private MediatedRequestLoansController controller;
 
     @Test
-    void checkInByBarcode_shouldReturnCheckInResponse_whenLoanPresent() {
-        // given
+    void checkInByBarcodeShouldReturnCheckInResponseWhenLoanPresent() {
         CheckInRequest request = new CheckInRequest();
         request.setItemBarcode("123456");
         CheckInResponseLoan loan = new CheckInResponseLoan();
@@ -46,10 +45,8 @@ class MediatedRequestLoansControllerTest {
         expectedResponse.setLoan(loan);
         when(checkInService.checkIn(any(CheckInRequest.class))).thenReturn(expectedResponse);
 
-        // when
         ResponseEntity<CheckInResponse> response = controller.checkInByBarcode(request);
 
-        // then
         assertThat(response.getStatusCode(), is(HttpStatus.OK));
         assertThat(response.getBody(), notNullValue());
         assertThat(response.getBody().getLoan(), notNullValue());
@@ -58,18 +55,15 @@ class MediatedRequestLoansControllerTest {
     }
 
     @Test
-    void checkInByBarcode_shouldReturnCheckInResponse_whenLoanAbsent() {
-        // given
+    void checkInByBarcodeShouldReturnCheckInResponseWhenLoanAbsent() {
         CheckInRequest request = new CheckInRequest();
         request.setItemBarcode("123456");
         CheckInResponse expectedResponse = new CheckInResponse();
         expectedResponse.setLoan(null);
         when(checkInService.checkIn(any(CheckInRequest.class))).thenReturn(expectedResponse);
 
-        // when
         ResponseEntity<CheckInResponse> response = controller.checkInByBarcode(request);
 
-        // then
         assertThat(response.getStatusCode(), is(HttpStatus.OK));
         assertThat(response.getBody(), notNullValue());
         assertThat(response.getBody().getLoan(), nullValue());
