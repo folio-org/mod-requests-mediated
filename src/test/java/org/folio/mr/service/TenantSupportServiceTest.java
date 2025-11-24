@@ -36,7 +36,7 @@ class TenantSupportServiceTest {
     var response = new GetUserTenantsResponse();
     response.setUserTenants(List.of(userTenant));
 
-    when(userTenantsClient.getUserTenants(1)).thenReturn(response);
+    when(userTenantsClient.getUserTenants(tenantId)).thenReturn(response);
 
     assertTrue(service.isCentralTenant(tenantId));
   }
@@ -49,7 +49,7 @@ class TenantSupportServiceTest {
     var response = new GetUserTenantsResponse();
     response.setUserTenants(List.of(userTenant));
 
-    when(userTenantsClient.getUserTenants(1)).thenReturn(response);
+    when(userTenantsClient.getUserTenants(tenantId)).thenReturn(response);
 
     assertFalse(service.isCentralTenant(tenantId));
   }
@@ -60,7 +60,7 @@ class TenantSupportServiceTest {
     var response = new GetUserTenantsResponse();
     response.setUserTenants(List.of());
 
-    when(userTenantsClient.getUserTenants(1)).thenReturn(response);
+    when(userTenantsClient.getUserTenants(tenantId)).thenReturn(response);
 
     assertFalse(service.isCentralTenant(tenantId));
   }
@@ -68,7 +68,7 @@ class TenantSupportServiceTest {
   @Test
   void isCentralTenant_shouldReturnFalse_whenResponseIsNull() {
     var tenantId = "tenant1";
-    when(userTenantsClient.getUserTenants(1)).thenReturn(null);
+    when(userTenantsClient.getUserTenants(tenantId)).thenReturn(null);
 
     assertFalse(service.isCentralTenant(tenantId));
   }

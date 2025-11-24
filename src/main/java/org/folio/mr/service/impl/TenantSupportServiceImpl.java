@@ -29,7 +29,10 @@ public class TenantSupportServiceImpl implements TenantSupportService {
 
   @Override
   public boolean isCentralTenant(String tenantId) {
-    return getCentralTenantId()
+    return Optional.ofNullable(userTenantsClient.getUserTenants(tenantId))
+      .flatMap(tenantsResponse -> tenantsResponse.getUserTenants().stream()
+        .findFirst()
+        .map(UserTenant::getCentralTenantId))
       .filter(centralTenantId -> centralTenantId.equals(tenantId))
       .isPresent();
   }
