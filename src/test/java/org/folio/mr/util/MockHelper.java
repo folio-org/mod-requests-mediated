@@ -4,6 +4,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
@@ -15,15 +17,22 @@ import static org.folio.test.TestUtils.asJsonString;
 
 import org.apache.http.HttpStatus;
 import org.folio.mr.domain.dto.BatchIds;
+import org.folio.mr.domain.dto.CheckInRequest;
+import org.folio.mr.domain.dto.CheckInResponse;
 import org.folio.mr.domain.dto.CheckOutDryRunRequest;
 import org.folio.mr.domain.dto.CheckOutDryRunResponse;
 import org.folio.mr.domain.dto.CheckOutRequest;
 import org.folio.mr.domain.dto.CheckOutResponse;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.ConsortiumItems;
+import org.folio.mr.domain.dto.GetUserTenantsResponse;
 import org.folio.mr.domain.dto.Loan;
 import org.folio.mr.domain.dto.LoanPolicy;
+import org.folio.mr.domain.dto.Loans;
 import org.folio.mr.domain.dto.Request;
+import org.folio.mr.domain.dto.UserTenant;
+
+import java.util.List;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -33,10 +42,13 @@ public class MockHelper {
   private static final String ITEM_BATCH_SEARCH_URL = "/search/consortium/batch/items";
   private static final String CIRCULATION_STORAGE_REQUESTS_URL = "/request-storage/requests";
   private static final String CIRCULATION_CHECK_OUT_URL = "/circulation/check-out-by-barcode";
+  private static final String CIRCULATION_CHECK_IN_URL = "/circulation/check-in-by-barcode";
   private static final String CIRCULATION_CHECK_OUT_DRY_RUN_URL =
     "/circulation/check-out-by-barcode-dry-run";
   private static final String LOAN_POLICIES_URL = "/loan-policy-storage/loan-policies";
   private static final String LOAN_STORAGE_URL = "/loan-storage/loans/";
+  private static final String CIRCULATION_STORAGE_LOANS_URL = "/loan-storage/loans";
+  private static final String USER_TENANTS_URL = "/user-tenants";
 
   private final WireMockServer wireMockServer;
 
@@ -110,6 +122,54 @@ public class MockHelper {
     wireMockServer.stubFor(get(urlPathEqualTo(url))
       .withHeader(TENANT, equalTo(tenant))
       .willReturn(notFound()));
+  }
+
+  public void mockCirculationCheckIn(CheckInRequest request, CheckInResponse response,
+    String tenantId) {
+
+    wireMockServer.stubFor(post(urlEqualTo(CIRCULATION_CHECK_IN_URL))
+      .withRequestBody(matchingJsonPath("$.itemBarcode", equalTo(request.getItemBarcode())))
+      .withRequestBody(matchingJsonPath("$.servicePointId", equalTo(request.getServicePointId().toString())))
+      .withHeader(TENANT, equalTo(tenantId))
+      .willReturn(okJson(asJsonString(response))));
+  }
+
+  public void mockGetUserTenants() {
+    GetUserTenantsResponse response = new GetUserTenantsResponse()
+      .userTenants(List.of(new UserTenant().centralTenantId("central")));
+
+    wireMockServer.stubFor(get(urlEqualTo(USER_TENANTS_URL + "?limit=1"))
+      .willReturn(okJson(asJsonString(response))));
+  }
+
+  public void mockGetUserTenantsEmpty() {
+    GetUserTenantsResponse response = new GetUserTenantsResponse()
+      .userTenants(List.of());
+
+    wireMockServer.stubFor(get(urlEqualTo(USER_TENANTS_URL + "?limit=1"))
+      .willReturn(okJson(asJsonString(response))));
+  }
+
+  public void mockGetOpenLoanByItemId(String itemId, Loan loan, String tenantId) {
+    Loans loans = new Loans()
+      .loans(List.of(loan))
+      .totalRecords(1);
+
+    wireMockServer.stubFor(get(urlPathEqualTo(CIRCULATION_STORAGE_LOANS_URL))
+      .withQueryParam("query", matching("itemId==\"?" + itemId + "\"?.*status\\.name==\"?Open\"?.*"))
+      .withHeader(TENANT, equalTo(tenantId))
+      .willReturn(okJson(asJsonString(loans))));
+  }
+
+  public void mockGetOpenLoanByItemIdNotFound(String itemId, String tenantId) {
+    Loans loans = new Loans()
+      .loans(List.of())
+      .totalRecords(0);
+
+    wireMockServer.stubFor(get(urlPathEqualTo(CIRCULATION_STORAGE_LOANS_URL))
+      .withQueryParam("query", matching("itemId==\"?" + itemId + "\"?.*status\\.name==\"?Open\"?.*"))
+      .withHeader(TENANT, equalTo(tenantId))
+      .willReturn(okJson(asJsonString(loans))));
   }
 
 }
