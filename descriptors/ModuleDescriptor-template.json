@@ -146,9 +146,7 @@
             "requests-mediated.loans.check-in-by-barcode.execute"
           ],
           "modulePermissions": [
-            "circulation.check-in-by-barcode.post",
-            "circulation-storage.loans.item.get",
-            "circulation-storage.loans.collection.get"
+            "circulation.check-in-by-barcode.post"
           ]
         },
         {
@@ -487,8 +485,6 @@
         "circulation-storage.loan-policies.item.get",
         "circulation-storage.requests.collection.get",
         "circulation-storage.requests.item.get",
-        "circulation-storage.loans.item.get",
-        "circulation-storage.loans.collection.get",
         "tlr.loans.declare-item-lost.execute",
         "tlr.loans.claim-item-returned.execute",
         "tlr.loans.declare-claimed-returned-item-as-missing.execute",

@@ -257,6 +257,8 @@ paths:
                 $ref: 'schemas/circulation/check-in-response.yaml'
         '400':
           $ref: '#/components/responses/badRequestResponse'
+        '422':
+          $ref: '#/components/responses/unprocessableEntityResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
   /requests-mediated/loans/{loanId}/declare-item-lost:
@@ -487,8 +489,6 @@ components:
       $ref: 'schemas/circulation/declareLostTlrRequest.yaml'
     loan:
       $ref: 'schemas/circulation-storage/loan.yaml'
-    loans:
-      $ref: 'schemas/circulation-storage/loans.yaml'
     claimItemReturnedCirculationRequest:
       $ref: 'schemas/circulation/claimItemReturnedCirculationRequest.yaml'
     claimItemReturnedTlrRequest:

@@ -139,9 +139,7 @@ public class BaseIT {
 
   @BeforeAll
   static void setUp() {
-    if (!wireMockServer.isRunning()) {
-      wireMockServer.start();
-    }
+    wireMockServer.start();
     mockHelper = new MockHelper(wireMockServer);
 
     kafkaAdminClient = KafkaAdminClient.create(Map.of(
@@ -151,12 +149,8 @@ public class BaseIT {
 
   @AfterAll
   static void tearDown() {
-    if (kafkaAdminClient != null) {
-      kafkaAdminClient.close();
-    }
-    if (wireMockServer != null && wireMockServer.isRunning()) {
-      wireMockServer.stop();
-    }
+    kafkaAdminClient.close();
+    wireMockServer.stop();
   }
 
   @SneakyThrows

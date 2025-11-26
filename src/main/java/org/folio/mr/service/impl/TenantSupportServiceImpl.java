@@ -20,14 +20,6 @@ public class TenantSupportServiceImpl implements TenantSupportService {
   private final TenantConfig tenantConfig;
 
   @Override
-  public Optional<String> getCentralTenantId() {
-    return Optional.ofNullable(userTenantsClient.getUserTenants(1))
-      .flatMap(tenantsResponse -> tenantsResponse.getUserTenants().stream()
-        .findFirst()
-        .map(UserTenant::getCentralTenantId));
-  }
-
-  @Override
   public boolean isCentralTenant(String tenantId) {
     return Optional.ofNullable(userTenantsClient.getUserTenants(tenantId))
       .flatMap(tenantsResponse -> tenantsResponse.getUserTenants().stream()

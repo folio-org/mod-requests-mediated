@@ -2,12 +2,9 @@ package org.folio.mr.api;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.folio.spring.integration.XOkapiHeaders.TENANT;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -20,7 +17,6 @@ import org.folio.mr.domain.dto.CheckInRequest;
 import org.folio.mr.domain.dto.CheckInResponse;
 import org.folio.mr.domain.dto.CheckInResponseLoan;
 import org.folio.mr.domain.dto.CheckInResponseLoanItem;
-import org.folio.mr.domain.dto.Loan;
 import org.folio.test.types.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -43,7 +39,6 @@ class CheckInApiTest extends BaseIT {
   private static final String MEDIATED_REQUESTS_CHECK_IN_URL =
     "/requests-mediated/loans/check-in-by-barcode";
   private static final String CIRCULATION_CHECK_IN_URL = "/circulation/check-in-by-barcode";
-  private static final String CIRCULATION_STORAGE_LOANS_URL = "/loan-storage/loans";
 
   private static final String ITEM_BARCODE = "item_barcode";
 
@@ -52,20 +47,17 @@ class CheckInApiTest extends BaseIT {
   void checkInWithLoanInResponse() {
     CheckInResponseLoan loan = buildCheckInResponseLoan();
     CheckInResponse circulationCheckInResponse = buildCheckInResponse(loan);
-    Loan centralLoan = buildCentralLoan();
 
     mockCirculationCheckIn(circulationCheckInResponse);
-    mockHelper.mockGetUserTenants();
-    mockHelper.mockGetOpenLoanByItemId(ITEM_ID.toString(), centralLoan, TENANT_ID_CENTRAL);
 
     checkIn(buildCheckInRequest(ITEM_BARCODE))
       .andExpect(status().isOk())
-      .andExpect(jsonPath("$.loan.id").value(LOAN_ID.toString()))
-      .andExpect(jsonPath("$.loan.userId").value(USER_ID.toString()))
+      .andExpect(jsonPath("$.loan.id").doesNotExist())
+      .andExpect(jsonPath("$.loan.userId").doesNotExist())
+      .andExpect(jsonPath("$.loan.borrower").doesNotExist())
       .andExpect(jsonPath("$.loan.item.id").value(ITEM_ID.toString()));
 
     verifyCirculationCheckInCalled();
-    verifyLoanStorageCalledForCentralTenant();
   }
 
   @Test
@@ -80,42 +72,6 @@ class CheckInApiTest extends BaseIT {
       .andExpect(content().json(asJsonString(circulationCheckInResponse)));
 
     verifyCirculationCheckInCalled();
-    verifyLoanStorageNotCalled();
-  }
-
-  @Test
-  @SneakyThrows
-  void checkInWhenCentralTenantIsNotFound() {
-    CheckInResponseLoan loan = buildCheckInResponseLoan();
-    CheckInResponse circulationCheckInResponse = buildCheckInResponse(loan);
-
-    mockCirculationCheckIn(circulationCheckInResponse);
-    mockHelper.mockGetUserTenantsEmpty();
-
-    checkIn(buildCheckInRequest(ITEM_BARCODE))
-      .andExpect(status().isOk())
-      .andExpect(content().json(asJsonString(circulationCheckInResponse)));
-
-    verifyCirculationCheckInCalled();
-    verifyLoanStorageNotCalled();
-  }
-
-  @Test
-  @SneakyThrows
-  void checkInWhenCentralLoanIsNotFound() {
-    CheckInResponseLoan loan = buildCheckInResponseLoan();
-    CheckInResponse circulationCheckInResponse = buildCheckInResponse(loan);
-
-    mockCirculationCheckIn(circulationCheckInResponse);
-    mockHelper.mockGetUserTenants();
-    mockHelper.mockGetOpenLoanByItemIdNotFound(ITEM_ID.toString(), TENANT_ID_CENTRAL);
-
-    checkIn(buildCheckInRequest(ITEM_BARCODE))
-      .andExpect(status().isOk())
-      .andExpect(content().json(asJsonString(circulationCheckInResponse)));
-
-    verifyCirculationCheckInCalled();
-    verifyLoanStorageCalledForCentralTenant();
   }
 
   @ParameterizedTest
@@ -132,7 +88,6 @@ class CheckInApiTest extends BaseIT {
       .andExpect(content().string("Response status is " + checkInResponseStatus));
 
     verifyCirculationCheckInCalled();
-    verifyLoanStorageNotCalled();
   }
 
   private void mockCirculationCheckIn(CheckInResponse response) {
@@ -144,15 +99,6 @@ class CheckInApiTest extends BaseIT {
       .withHeader(TENANT, equalTo(TENANT_ID_CONSORTIUM)));
   }
 
-  private void verifyLoanStorageCalledForCentralTenant() {
-    wireMockServer.verify(1, getRequestedFor(urlPathEqualTo(CIRCULATION_STORAGE_LOANS_URL))
-      .withQueryParam("query", matching("itemId==\"?" + ITEM_ID + "\"?.*status\\.name==\"?Open\"?.*"))
-      .withHeader(TENANT, equalTo(TENANT_ID_CENTRAL)));
-  }
-
-  private void verifyLoanStorageNotCalled() {
-    wireMockServer.verify(0, getRequestedFor(urlPathEqualTo(CIRCULATION_STORAGE_LOANS_URL)));
-  }
 
   private static CheckInRequest buildCheckInRequest(String itemBarcode) {
     return new CheckInRequest()
@@ -173,12 +119,6 @@ class CheckInApiTest extends BaseIT {
       .item(new CheckInResponseLoanItem().id(ITEM_ID.toString()));
   }
 
-  private static Loan buildCentralLoan() {
-    return new Loan()
-      .id(LOAN_ID)
-      .itemId(ITEM_ID)
-      .userId(USER_ID.toString());
-  }
 
   @SneakyThrows
   private ResultActions checkIn(CheckInRequest request) {

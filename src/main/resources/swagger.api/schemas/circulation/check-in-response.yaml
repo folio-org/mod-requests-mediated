@@ -150,6 +150,23 @@ properties:
             description: Last checked in service point of the item
             type: string
         additionalProperties: true
+      requester:
+        description: Requester information
+        type: object
+        properties:
+          firstName:
+            type: string
+          preferredFirstName:
+            type: string
+          lastName:
+            type: string
+          middleName:
+            type: string
+          barcode:
+            type: string
+          patronGroup:
+            type: string
+        additionalProperties: true
     additionalProperties: true
   loan:
     description: Links the item with the patron and applies certain conditions based on policies
@@ -193,6 +210,23 @@ properties:
             type: string
           holdingsRecordId:
             description: Related holding record id
+            type: string
+        additionalProperties: true
+      borrower:
+        description: Borrower information
+        type: object
+        properties:
+          firstName:
+            type: string
+          preferredFirstName:
+            type: string
+          lastName:
+            type: string
+          middleName:
+            type: string
+          barcode:
+            type: string
+          patronGroup:
             type: string
         additionalProperties: true
     additionalProperties: true
