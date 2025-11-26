@@ -16,7 +16,10 @@ import java.util.UUID;
 import org.folio.mr.domain.dto.CheckInRequest;
 import org.folio.mr.domain.dto.CheckInResponse;
 import org.folio.mr.domain.dto.CheckInResponseLoan;
+import org.folio.mr.domain.dto.CheckInResponseLoanBorrower;
 import org.folio.mr.domain.dto.CheckInResponseLoanItem;
+import org.folio.mr.domain.dto.CheckInResponseStaffSlipContext;
+import org.folio.mr.domain.dto.CheckInResponseStaffSlipContextRequester;
 import org.folio.test.types.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,46 +33,42 @@ import lombok.SneakyThrows;
 @IntegrationTest
 class CheckInApiTest extends BaseIT {
 
+  private static final String MEDIATED_REQUESTS_CHECK_IN_URL = "/requests-mediated/loans/check-in-by-barcode";
+  private static final String CIRCULATION_CHECK_IN_URL = "/circulation/check-in-by-barcode";
+  private static final String ITEM_BARCODE = "item_barcode";
+
   private static final UUID SERVICE_POINT_ID = UUID.randomUUID();
   private static final UUID ITEM_ID = UUID.randomUUID();
   private static final UUID LOAN_ID = UUID.randomUUID();
   private static final UUID USER_ID = UUID.randomUUID();
   private static final Date CHECK_IN_DATE = new Date();
 
-  private static final String MEDIATED_REQUESTS_CHECK_IN_URL =
-    "/requests-mediated/loans/check-in-by-barcode";
-  private static final String CIRCULATION_CHECK_IN_URL = "/circulation/check-in-by-barcode";
-
-  private static final String ITEM_BARCODE = "item_barcode";
-
   @Test
   @SneakyThrows
-  void checkInWithLoanInResponse() {
-    CheckInResponseLoan loan = buildCheckInResponseLoan();
-    CheckInResponse circulationCheckInResponse = buildCheckInResponse(loan);
+  void checkInShouldRemovePersonalDataFromLoanAndStaffSlipContext() {
+    CheckInResponse response = buildFullCheckInResponse();
+    mockCirculationCheckIn(response);
 
-    mockCirculationCheckIn(circulationCheckInResponse);
-
-    checkIn(buildCheckInRequest(ITEM_BARCODE))
+    performCheckIn()
       .andExpect(status().isOk())
       .andExpect(jsonPath("$.loan.id").doesNotExist())
       .andExpect(jsonPath("$.loan.userId").doesNotExist())
       .andExpect(jsonPath("$.loan.borrower").doesNotExist())
-      .andExpect(jsonPath("$.loan.item.id").value(ITEM_ID.toString()));
+      .andExpect(jsonPath("$.loan.item.id").value(ITEM_ID.toString()))
+      .andExpect(jsonPath("$.staffSlipContext.requester").doesNotExist());
 
     verifyCirculationCheckInCalled();
   }
 
   @Test
   @SneakyThrows
-  void checkInWithoutLoanInResponse() {
-    CheckInResponse circulationCheckInResponse = buildCheckInResponse(null);
+  void checkInShouldHandleResponseWithoutLoan() {
+    CheckInResponse response = buildCheckInResponse(null, null);
+    mockCirculationCheckIn(response);
 
-    mockCirculationCheckIn(circulationCheckInResponse);
-
-    checkIn(buildCheckInRequest(ITEM_BARCODE))
+    performCheckIn()
       .andExpect(status().isOk())
-      .andExpect(content().json(asJsonString(circulationCheckInResponse)));
+      .andExpect(content().json(asJsonString(response)));
 
     verifyCirculationCheckInCalled();
   }
@@ -77,21 +76,25 @@ class CheckInApiTest extends BaseIT {
   @ParameterizedTest
   @ValueSource(ints = { 400, 422, 500 })
   @SneakyThrows
-  void circulationCheckInErrorsAreForwarded(int checkInResponseStatus) {
-    wireMockServer.stubFor(post(urlEqualTo(CIRCULATION_CHECK_IN_URL))
-      .withHeader(TENANT, equalTo(TENANT_ID_CONSORTIUM))
-      .willReturn(aResponse().withStatus(checkInResponseStatus)
-        .withBody("Response status is " + checkInResponseStatus)));
+  void checkInShouldForwardCirculationErrors(int errorStatus) {
+    String errorMessage = "Response status is " + errorStatus;
+    stubCirculationCheckInError(errorStatus, errorMessage);
 
-    checkIn(buildCheckInRequest(ITEM_BARCODE))
-      .andExpect(status().is(checkInResponseStatus))
-      .andExpect(content().string("Response status is " + checkInResponseStatus));
+    performCheckIn()
+      .andExpect(status().is(errorStatus))
+      .andExpect(content().string(errorMessage));
 
     verifyCirculationCheckInCalled();
   }
 
+  private void stubCirculationCheckInError(int status, String body) {
+    wireMockServer.stubFor(post(urlEqualTo(CIRCULATION_CHECK_IN_URL))
+      .withHeader(TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(aResponse().withStatus(status).withBody(body)));
+  }
+
   private void mockCirculationCheckIn(CheckInResponse response) {
-    mockHelper.mockCirculationCheckIn(buildCheckInRequest(ITEM_BARCODE), response, TENANT_ID_CONSORTIUM);
+    mockHelper.mockCirculationCheckIn(buildCheckInRequest(), response, TENANT_ID_CONSORTIUM);
   }
 
   private void verifyCirculationCheckInCalled() {
@@ -99,26 +102,10 @@ class CheckInApiTest extends BaseIT {
       .withHeader(TENANT, equalTo(TENANT_ID_CONSORTIUM)));
   }
 
-
-  private static CheckInRequest buildCheckInRequest(String itemBarcode) {
-    return new CheckInRequest()
-      .itemBarcode(itemBarcode)
-      .servicePointId(SERVICE_POINT_ID)
-      .checkInDate(CHECK_IN_DATE);
+  @SneakyThrows
+  private ResultActions performCheckIn() {
+    return checkIn(buildCheckInRequest());
   }
-
-  private static CheckInResponse buildCheckInResponse(CheckInResponseLoan loan) {
-    return new CheckInResponse()
-      .loan(loan);
-  }
-
-  private static CheckInResponseLoan buildCheckInResponseLoan() {
-    return new CheckInResponseLoan()
-      .id(LOAN_ID.toString())
-      .userId(USER_ID.toString())
-      .item(new CheckInResponseLoanItem().id(ITEM_ID.toString()));
-  }
-
 
   @SneakyThrows
   private ResultActions checkIn(CheckInRequest request) {
@@ -128,5 +115,54 @@ class CheckInApiTest extends BaseIT {
       .content(asJsonString(request)));
   }
 
+  private static CheckInRequest buildCheckInRequest() {
+    return new CheckInRequest()
+      .itemBarcode(ITEM_BARCODE)
+      .servicePointId(SERVICE_POINT_ID)
+      .checkInDate(CHECK_IN_DATE);
+  }
+
+  private static CheckInResponse buildFullCheckInResponse() {
+    return buildCheckInResponse(buildLoanWithPersonalData(), buildStaffSlipContextWithPersonalData());
+  }
+
+  private static CheckInResponse buildCheckInResponse(CheckInResponseLoan loan,
+    CheckInResponseStaffSlipContext staffSlipContext) {
+    return new CheckInResponse()
+      .loan(loan)
+      .staffSlipContext(staffSlipContext);
+  }
+
+  private static CheckInResponseLoan buildLoanWithPersonalData() {
+    return new CheckInResponseLoan()
+      .id(LOAN_ID.toString())
+      .userId(USER_ID.toString())
+      .borrower(buildBorrower())
+      .item(buildLoanItem());
+  }
+
+  private static CheckInResponseLoanBorrower buildBorrower() {
+    return new CheckInResponseLoanBorrower()
+      .firstName("John")
+      .lastName("Doe")
+      .barcode("borrower-barcode");
+  }
+
+  private static CheckInResponseLoanItem buildLoanItem() {
+    return new CheckInResponseLoanItem()
+      .id(ITEM_ID.toString());
+  }
+
+  private static CheckInResponseStaffSlipContext buildStaffSlipContextWithPersonalData() {
+    return new CheckInResponseStaffSlipContext()
+      .requester(buildRequester());
+  }
+
+  private static CheckInResponseStaffSlipContextRequester buildRequester() {
+    return new CheckInResponseStaffSlipContextRequester()
+      .firstName("Jane")
+      .lastName("Smith")
+      .barcode("requester-barcode");
+  }
 }
 
