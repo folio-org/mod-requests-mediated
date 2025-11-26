@@ -71,4 +71,29 @@ class MediatedBatchRequestSplitServiceTest {
     var ex = assertThrows(MediatedBatchRequestNotFoundException.class, () -> service.getAllByBatchId(batchId, 0, 10));
     assertTrue(ex.getMessage().contains("Mediated Batch Request with ID [%s] was not found".formatted(batchId)));
   }
+
+  @Test
+  void shouldGetPagedBatchRequestSplits() {
+    var offset = 0;
+    var limit = 10;
+    var expected = mock(Page.class);
+    when(splitRepository.findAll(new OffsetRequest(offset, limit))).thenReturn(expected);
+
+    var result = service.getAll("", offset, limit);
+
+    assertEquals(expected, result);
+  }
+
+  @Test
+  void shouldGetPagedBatchRequestSplitsByQuery() {
+    var offset = 0;
+    var limit = 10;
+    var query = "requesterId==some-id";
+    var expected = mock(Page.class);
+    when(splitRepository.findByCql(query, new OffsetRequest(offset, limit))).thenReturn(expected);
+
+    var result = service.getAll(query, offset, limit);
+
+    assertEquals(expected, result);
+  }
 }

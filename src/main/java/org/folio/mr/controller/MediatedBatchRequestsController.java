@@ -47,4 +47,10 @@ public class MediatedBatchRequestsController implements MediatedBatchRequestsApi
     var collectionDto = delegate.getBatchRequestDetailsByBatchId(batchRequestId, offset, limit);
     return ResponseEntity.status(OK).body(collectionDto);
   }
+
+  @Override
+  public ResponseEntity<MediatedBatchRequestDetailsDto> getMediatedBatchRequestDetailsCollection(String query, Integer offset, Integer limit) {
+    var details = delegate.retrieveBatchRequestDetailsCollection(query, offset, limit);
+    return ResponseEntity.status(OK).body(details);
+  }
 }

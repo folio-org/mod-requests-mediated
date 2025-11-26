@@ -10,4 +10,6 @@ public interface MediatedBatchRequestSplitService {
   void create(List<MediatedBatchRequestSplit> requestSplits);
 
   Page<MediatedBatchRequestSplit> getAllByBatchId(UUID batchId, Integer offset, Integer limit);
+
+  Page<MediatedBatchRequestSplit> getAll(String query, Integer offset, Integer limit);
 }

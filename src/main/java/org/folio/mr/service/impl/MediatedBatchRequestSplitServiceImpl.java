@@ -1,5 +1,7 @@
 package org.folio.mr.service.impl;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -37,5 +39,21 @@ public class MediatedBatchRequestSplitServiceImpl implements MediatedBatchReques
     }
 
     return repository.findAllByBatchId(batchId, new OffsetRequest(offset, limit));
+  }
+
+  @Override
+  public Page<MediatedBatchRequestSplit> getAll(String query, Integer offset, Integer limit) {
+    log.debug("getAll:: Attempts to find all Mediated Batch Requests Details by [offset: {}, limit: {}, query: {}]",
+      offset, limit, query);
+
+    return findEntities(query, offset, limit);
+  }
+
+  private Page<MediatedBatchRequestSplit> findEntities(String query, Integer offset, Integer limit) {
+    if (isBlank(query)) {
+      return repository.findAll(new OffsetRequest(offset, limit));
+    }
+
+    return repository.findByCql(query, new OffsetRequest(offset, limit));
   }
 }
