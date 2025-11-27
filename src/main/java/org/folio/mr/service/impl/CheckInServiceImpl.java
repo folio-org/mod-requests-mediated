@@ -31,7 +31,7 @@ public class CheckInServiceImpl implements CheckInService {
   private void removePersonalDataFromResponse(CheckInResponse response) {
     removePersonalDataFromLoan(response);
     removePersonalDataFromStaffSlipContext(response);
-    log.info("removePersonalDataFromResponse:: personal data removed from response");
+    log.info("removePersonalDataFromResponse:: personal data removed from response: {}", response);
   }
 
   private void removePersonalDataFromLoan(CheckInResponse response) {
