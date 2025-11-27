@@ -60,4 +60,11 @@ public class BatchRequestsServiceDelegate {
     var batchSplitEntities = requestSplitService.getAllByBatchId(batchId, offset, limit);
     return mapper.toMediatedBatchRequestDetailsCollection(batchSplitEntities);
   }
+
+  public MediatedBatchRequestDetailsDto retrieveBatchRequestDetailsCollection(String query, Integer offset, Integer limit) {
+    log.debug("retrieveBatchRequestDetailsCollection:: parameters query: {}, offset: {}, limit: {}", query, offset, limit);
+
+    var entitiesPage = requestSplitService.getAll(query, offset, limit);
+    return mapper.toMediatedBatchRequestDetailsCollection(entitiesPage);
+  }
 }

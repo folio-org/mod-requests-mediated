@@ -239,6 +239,16 @@
             "GET"
           ],
           "pathPattern": "/requests-mediated/batch-mediated-requests/{batchId}/details",
+          "permissionsRequired": ["requests-mediated.batch-mediated-requests.batch-details.collection.get"],
+          "modulePermissions": [
+
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/requests-mediated/batch-mediated-requests/details",
           "permissionsRequired": ["requests-mediated.batch-mediated-requests.details.collection.get"],
           "modulePermissions": [
 
@@ -280,23 +290,28 @@
   "permissionSets" : [
     {
       "permissionName": "requests-mediated.batch-mediated-requests.item.post",
-      "displayName": "batch requests-mediated - create mediated batch requests",
-      "description": "Create mediated batch requests"
+      "displayName": "batch mediated request - create mediated batch requests",
+      "description": "Create mediated batch request"
     },
     {
       "permissionName": "requests-mediated.batch-mediated-requests.collection.get",
-      "displayName": "batch requests-mediated - get mediated batch requests",
+      "displayName": "get batch mediated requests - get mediated batch requests",
       "description": "Get mediated batch requests"
     },
     {
       "permissionName": "requests-mediated.batch-mediated-requests.item.get",
-      "displayName": "batch requests-mediated - get mediated batch request by ID",
+      "displayName": "get batch mediated request - get mediated batch request by ID",
       "description": "Get mediated batch request by ID"
     },
     {
-      "permissionName": "requests-mediated.batch-mediated-requests.details.collection.get",
-      "displayName": "details of batch requests-mediated - get details of mediated batch request by batch request ID",
+      "permissionName": "requests-mediated.batch-mediated-requests.batch-details.collection.get",
+      "displayName": "details of batch mediated request - get details of mediated batch request by batch request ID",
       "description": "Get details of mediated batch request by batch request ID"
+    },
+    {
+      "permissionName": "requests-mediated.batch-mediated-requests.details.collection.get",
+      "displayName": "details of batch mediated requests - get details of mediated batch requests",
+      "description": "Get details of mediated batch requests"
     },
     {
       "permissionName": "requests-mediated.mediated-request.collection.get",
