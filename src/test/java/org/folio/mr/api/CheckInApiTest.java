@@ -19,6 +19,7 @@ import org.folio.mr.domain.dto.CheckInResponseLoan;
 import org.folio.mr.domain.dto.CheckInResponseLoanBorrower;
 import org.folio.mr.domain.dto.CheckInResponseLoanItem;
 import org.folio.mr.domain.dto.CheckInResponseStaffSlipContext;
+import org.folio.mr.domain.dto.CheckInResponseStaffSlipContextRequest;
 import org.folio.mr.domain.dto.CheckInResponseStaffSlipContextRequester;
 import org.folio.test.types.IntegrationTest;
 import org.junit.jupiter.api.Test;
@@ -55,7 +56,8 @@ class CheckInApiTest extends BaseIT {
       .andExpect(jsonPath("$.loan.userId").doesNotExist())
       .andExpect(jsonPath("$.loan.borrower").doesNotExist())
       .andExpect(jsonPath("$.loan.item.id").value(ITEM_ID.toString()))
-      .andExpect(jsonPath("$.staffSlipContext.requester").doesNotExist());
+      .andExpect(jsonPath("$.staffSlipContext.requester").doesNotExist())
+      .andExpect(jsonPath("$.staffSlipContext.request").doesNotExist());
 
     verifyCirculationCheckInCalled();
   }
@@ -155,7 +157,8 @@ class CheckInApiTest extends BaseIT {
 
   private static CheckInResponseStaffSlipContext buildStaffSlipContextWithPersonalData() {
     return new CheckInResponseStaffSlipContext()
-      .requester(buildRequester());
+      .requester(buildRequester())
+      .request(buildStaffSlipContextRequest());
   }
 
   private static CheckInResponseStaffSlipContextRequester buildRequester() {
@@ -164,5 +167,12 @@ class CheckInApiTest extends BaseIT {
       .lastName("Smith")
       .barcode("requester-barcode");
   }
-}
 
+  private static CheckInResponseStaffSlipContextRequest buildStaffSlipContextRequest() {
+    return new CheckInResponseStaffSlipContextRequest()
+      .requestID("request-id-123")
+      .servicePointPickup("Main Library")
+      .patronComments("Please hold for pickup");
+  }
+
+}

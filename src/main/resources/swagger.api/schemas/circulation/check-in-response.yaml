@@ -167,6 +167,41 @@ properties:
           patronGroup:
             type: string
         additionalProperties: true
+      request:
+        description: Request information
+        type: object
+        properties:
+          requestID:
+            description: Request ID
+            type: string
+          servicePointPickup:
+            description: Pickup service point name
+            type: string
+          requestDate:
+            description: Date of the request
+            type: string
+            format: date-time
+          requestExpirationDate:
+            description: Request expiration date
+            type: string
+            format: date-time
+          holdShelfExpirationDate:
+            description: Hold shelf expiration date
+            type: string
+            format: date-time
+          additionalInfo:
+            description: Cancellation additional information
+            type: string
+          reasonForCancellation:
+            description: Reason for cancellation
+            type: string
+          deliveryAddressType:
+            description: Delivery address type name
+            type: string
+          patronComments:
+            description: Patron comments
+            type: string
+        additionalProperties: true
     additionalProperties: true
   loan:
     description: Links the item with the patron and applies certain conditions based on policies

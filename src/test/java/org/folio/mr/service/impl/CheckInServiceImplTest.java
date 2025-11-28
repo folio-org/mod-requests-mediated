@@ -15,6 +15,7 @@ import org.folio.mr.domain.dto.CheckInResponseLoan;
 import org.folio.mr.domain.dto.CheckInResponseLoanBorrower;
 import org.folio.mr.domain.dto.CheckInResponseLoanItem;
 import org.folio.mr.domain.dto.CheckInResponseStaffSlipContext;
+import org.folio.mr.domain.dto.CheckInResponseStaffSlipContextRequest;
 import org.folio.mr.domain.dto.CheckInResponseStaffSlipContextRequester;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,44 +42,6 @@ class CheckInServiceImplTest {
   }
 
   @Test
-  void checkInShouldRemovePersonalDataFromLoan() {
-    CheckInRequest request = buildRequest();
-    CheckInResponseLoanItem item = buildLoanItem();
-    CheckInResponseLoanBorrower borrower = buildBorrower();
-    CheckInResponseLoan loan = buildLoan("loan-id", "user-id", item, borrower);
-    CheckInResponse response = buildResponse(loan, null);
-
-    when(checkInClient.checkIn(request)).thenReturn(response);
-
-    CheckInResponse result = checkInService.checkIn(request);
-
-    assertThat(result, notNullValue());
-    assertThat(result.getLoan(), notNullValue());
-    assertThat(result.getLoan().getId(), nullValue());
-    assertThat(result.getLoan().getUserId(), nullValue());
-    assertThat(result.getLoan().getBorrower(), nullValue());
-    assertThat(result.getLoan().getItem(), notNullValue());
-    verify(checkInClient).checkIn(request);
-  }
-
-  @Test
-  void checkInShouldRemovePersonalDataFromStaffSlipContext() {
-    CheckInRequest request = buildRequest();
-    CheckInResponseStaffSlipContextRequester requester = buildRequester();
-    CheckInResponseStaffSlipContext staffSlipContext = buildStaffSlipContext(requester);
-    CheckInResponse response = buildResponse(null, staffSlipContext);
-
-    when(checkInClient.checkIn(request)).thenReturn(response);
-
-    CheckInResponse result = checkInService.checkIn(request);
-
-    assertThat(result, notNullValue());
-    assertThat(result.getStaffSlipContext(), notNullValue());
-    assertThat(result.getStaffSlipContext().getRequester(), nullValue());
-    verify(checkInClient).checkIn(request);
-  }
-
-  @Test
   void checkInShouldRemovePersonalDataFromBothLoanAndStaffSlipContext() {
     CheckInRequest request = buildRequest();
     CheckInResponseLoanItem item = buildLoanItem();
@@ -100,6 +63,7 @@ class CheckInServiceImplTest {
     assertThat(result.getLoan().getItem(), notNullValue());
     assertThat(result.getStaffSlipContext(), notNullValue());
     assertThat(result.getStaffSlipContext().getRequester(), nullValue());
+    assertThat(result.getStaffSlipContext().getRequest(), nullValue());
     verify(checkInClient).checkIn(request);
   }
 
@@ -176,10 +140,19 @@ class CheckInServiceImplTest {
     return requester;
   }
 
+  private CheckInResponseStaffSlipContextRequest buildStaffSlipContextRequest() {
+    CheckInResponseStaffSlipContextRequest request = new CheckInResponseStaffSlipContextRequest();
+    request.setRequestID("request-id-123");
+    request.setServicePointPickup("Main Library");
+    request.setPatronComments("Please hold for pickup");
+    return request;
+  }
+
   private CheckInResponseStaffSlipContext buildStaffSlipContext(
     CheckInResponseStaffSlipContextRequester requester) {
     CheckInResponseStaffSlipContext context = new CheckInResponseStaffSlipContext();
     context.setRequester(requester);
+    context.setRequest(buildStaffSlipContextRequest());
     return context;
   }
 

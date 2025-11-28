@@ -45,6 +45,9 @@ public class CheckInServiceImpl implements CheckInService {
 
   private void removePersonalDataFromStaffSlipContext(CheckInResponse response) {
     Optional.ofNullable(response.getStaffSlipContext())
-      .ifPresent(context -> context.requester(null));
+      .ifPresent(context -> {
+        context.requester(null);
+        context.request(null);
+      });
   }
 }
