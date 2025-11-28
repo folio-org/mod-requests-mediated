@@ -2,6 +2,8 @@ package org.folio.mr.controller;
 
 import java.util.UUID;
 
+import org.folio.mr.domain.dto.CheckInRequest;
+import org.folio.mr.domain.dto.CheckInResponse;
 import org.folio.mr.domain.dto.CheckOutRequest;
 import org.folio.mr.domain.dto.CheckOutResponse;
 import org.folio.mr.domain.dto.ClaimItemReturnedCirculationRequest;
@@ -9,6 +11,7 @@ import org.folio.mr.domain.dto.DeclareClaimedReturnedItemAsMissingCirculationReq
 import org.folio.mr.domain.dto.DeclareLostCirculationRequest;
 import org.folio.mr.exception.HttpFailureFeignException;
 import org.folio.mr.rest.resource.MediatedRequestsLoansApi;
+import org.folio.mr.service.CheckInService;
 import org.folio.mr.service.CheckOutService;
 import org.folio.mr.service.MediatedRequestsLoansActionService;
 import org.springframework.http.ResponseEntity;
@@ -23,12 +26,18 @@ import lombok.extern.log4j.Log4j2;
 @AllArgsConstructor
 public class MediatedRequestLoansController implements MediatedRequestsLoansApi {
 
+  private final CheckInService checkInService;
   private final CheckOutService checkOutService;
   private final MediatedRequestsLoansActionService mediatedRequestsLoansActionService;
 
   @Override
   public ResponseEntity<CheckOutResponse> checkOutByBarcode(CheckOutRequest request) {
     return ResponseEntity.ok(checkOutService.checkOut(request));
+  }
+
+  @Override
+  public ResponseEntity<CheckInResponse> checkInByBarcode(CheckInRequest request) {
+    return ResponseEntity.ok(checkInService.checkIn(request));
   }
 
   @Override

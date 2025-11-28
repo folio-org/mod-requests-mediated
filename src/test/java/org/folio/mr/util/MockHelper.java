@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
@@ -15,6 +16,8 @@ import static org.folio.test.TestUtils.asJsonString;
 
 import org.apache.http.HttpStatus;
 import org.folio.mr.domain.dto.BatchIds;
+import org.folio.mr.domain.dto.CheckInRequest;
+import org.folio.mr.domain.dto.CheckInResponse;
 import org.folio.mr.domain.dto.CheckOutDryRunRequest;
 import org.folio.mr.domain.dto.CheckOutDryRunResponse;
 import org.folio.mr.domain.dto.CheckOutRequest;
@@ -33,6 +36,7 @@ public class MockHelper {
   private static final String ITEM_BATCH_SEARCH_URL = "/search/consortium/batch/items";
   private static final String CIRCULATION_STORAGE_REQUESTS_URL = "/request-storage/requests";
   private static final String CIRCULATION_CHECK_OUT_URL = "/circulation/check-out-by-barcode";
+  private static final String CIRCULATION_CHECK_IN_URL = "/circulation/check-in-by-barcode";
   private static final String CIRCULATION_CHECK_OUT_DRY_RUN_URL =
     "/circulation/check-out-by-barcode-dry-run";
   private static final String LOAN_POLICIES_URL = "/loan-policy-storage/loan-policies";
@@ -112,4 +116,13 @@ public class MockHelper {
       .willReturn(notFound()));
   }
 
+  public void mockCirculationCheckIn(CheckInRequest request, CheckInResponse response,
+    String tenantId) {
+
+    wireMockServer.stubFor(post(urlEqualTo(CIRCULATION_CHECK_IN_URL))
+      .withRequestBody(matchingJsonPath("$.itemBarcode", equalTo(request.getItemBarcode())))
+      .withRequestBody(matchingJsonPath("$.servicePointId", equalTo(request.getServicePointId().toString())))
+      .withHeader(TENANT, equalTo(tenantId))
+      .willReturn(okJson(asJsonString(response))));
+  }
 }
