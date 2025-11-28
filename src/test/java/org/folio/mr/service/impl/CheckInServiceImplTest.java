@@ -28,18 +28,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class CheckInServiceImplTest {
 
   private static final String ITEM_BARCODE = "item-barcode-123";
-  private UUID itemId;
+  private UUID itemId = UUID.randomUUID();
 
   @Mock
   private CheckInClient checkInClient;
 
   @InjectMocks
   private CheckInServiceImpl checkInService;
-
-  @BeforeEach
-  void setUp() {
-    itemId = UUID.randomUUID();
-  }
 
   @Test
   void checkInShouldRemovePersonalDataFromBothLoanAndStaffSlipContext() {

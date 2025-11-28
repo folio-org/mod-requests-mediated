@@ -31,15 +31,14 @@ public class CheckInServiceImpl implements CheckInService {
   private void removePersonalDataFromResponse(CheckInResponse response) {
     removePersonalDataFromLoan(response);
     removePersonalDataFromStaffSlipContext(response);
-    log.info("removePersonalDataFromResponse:: personal data removed from response: {}", response);
   }
 
   private void removePersonalDataFromLoan(CheckInResponse response) {
     Optional.ofNullable(response.getLoan())
       .ifPresent(loan -> {
-        loan.id(null);
-        loan.userId(null);
-        loan.borrower(null);
+        loan.id(null)
+          .userId(null)
+          .borrower(null);
       });
   }
 
