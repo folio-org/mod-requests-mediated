@@ -236,6 +236,31 @@ paths:
           $ref: '#/components/responses/badRequestResponse'
         '500':
           $ref: '#/components/responses/internalServerErrorResponse'
+  /requests-mediated/loans/check-in-by-barcode:
+    post:
+      description: Check in an item for secure request
+      operationId: checkInByBarcode
+      tags:
+        - mediatedRequestsLoans
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/checkInRequest'
+        required: true
+      responses:
+        '200':
+          description: Item was checked in successfully
+          content:
+            application/json:
+              schema:
+                $ref: 'schemas/circulation/check-in-response.yaml'
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '422':
+          $ref: '#/components/responses/unprocessableEntityResponse'
+        '500':
+          $ref: '#/components/responses/internalServerErrorResponse'
   /requests-mediated/loans/{loanId}/declare-item-lost:
     post:
       description: Declare item lost for a loan
@@ -459,6 +484,10 @@ components:
       $ref: 'schemas/circulation/check-out-dry-run-request.yaml'
     checkOutDryRunResponse:
       $ref: 'schemas/circulation/check-out-dry-run-response.yaml'
+    checkInRequest:
+      $ref: 'schemas/circulation/check-in-request.yaml'
+    checkInResponse:
+      $ref: 'schemas/circulation/check-in-response.yaml'
     loanPolicy:
       $ref: 'schemas/circulation-storage/loan-policy.json'
     searchInstanceResponse:

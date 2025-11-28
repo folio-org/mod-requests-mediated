@@ -37,6 +37,8 @@ class MediatedBatchRequestSplitRepositoryIT extends BaseIT {
   void batchRequestSplitMetadataShouldBeGeneratedWhenSaveEntity() {
     var randomUUID = UUID.randomUUID();
     var userId = UUID.randomUUID();
+    var itemId = UUID.randomUUID();
+    var pickupServicePointId = UUID.randomUUID();
     var requestDate = Timestamp.from(Instant.parse("2025-09-10T10:15:30.00Z"));
     var batch = MediatedBatchRequest.builder()
       .id(randomUUID)
@@ -48,6 +50,8 @@ class MediatedBatchRequestSplitRepositoryIT extends BaseIT {
     requestSplit.setId(randomUUID);
     requestSplit.setMediatedBatchRequest(batch);
     requestSplit.setRequesterId(randomUUID);
+    requestSplit.setItemId(itemId);
+    requestSplit.setPickupServicePointId(pickupServicePointId);
     requestSplit.setStatus(BatchRequestSplitStatus.fromValue("Completed"));
     when(context.getUserId()).thenReturn(userId);
 
