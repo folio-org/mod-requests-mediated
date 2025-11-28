@@ -34,6 +34,7 @@ public class CheckInServiceImpl implements CheckInService {
   }
 
   private void removePersonalDataFromLoan(CheckInResponse response) {
+    log.info("removePersonalDataFromLoan:: removing personal data from loan");
     Optional.ofNullable(response.getLoan())
       .ifPresent(loan -> loan.id(null)
         .userId(null)
@@ -41,10 +42,10 @@ public class CheckInServiceImpl implements CheckInService {
   }
 
   private void removePersonalDataFromStaffSlipContext(CheckInResponse response) {
+    log.info("removePersonalDataFromStaffSlipContext:: removing personal data from staff slip context");
     Optional.ofNullable(response.getStaffSlipContext())
-      .ifPresent(context -> {
-        context.requester(null);
-        context.request(null);
-      });
+      .ifPresent(context ->
+        context.requester(null)
+          .request(null));
   }
 }
