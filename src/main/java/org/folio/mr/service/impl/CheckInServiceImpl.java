@@ -35,11 +35,9 @@ public class CheckInServiceImpl implements CheckInService {
 
   private void removePersonalDataFromLoan(CheckInResponse response) {
     Optional.ofNullable(response.getLoan())
-      .ifPresent(loan -> {
-        loan.id(null)
-          .userId(null)
-          .borrower(null);
-      });
+      .ifPresent(loan -> loan.id(null)
+        .userId(null)
+        .borrower(null));
   }
 
   private void removePersonalDataFromStaffSlipContext(CheckInResponse response) {

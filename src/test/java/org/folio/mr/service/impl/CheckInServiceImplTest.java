@@ -17,7 +17,6 @@ import org.folio.mr.domain.dto.CheckInResponseLoanItem;
 import org.folio.mr.domain.dto.CheckInResponseStaffSlipContext;
 import org.folio.mr.domain.dto.CheckInResponseStaffSlipContextRequest;
 import org.folio.mr.domain.dto.CheckInResponseStaffSlipContextRequester;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
