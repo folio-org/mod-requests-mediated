@@ -820,7 +820,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
   }
 
   private <T> Map<String, T> toMap(Collection<T> collection, Function<T, String> keyMapper) {
-    return collection.stream().collect(Collectors.toMap(keyMapper, identity()));
+    return collection.stream().collect(Collectors.toMap(keyMapper, identity(), (existing, replacement) -> existing));
   }
 
   @Builder
