@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.folio.mr.client.InstanceClient;
 import org.folio.mr.client.ItemClient;
@@ -235,7 +236,7 @@ class MediatedRequestDetailsServiceImplTest {
     when(searchClient.searchInstance(any())).thenReturn(searchResponse);
 
     doAnswer(invocation -> {
-      var supplier = (java.util.function.Supplier<?>) invocation.getArguments()[1];
+      var supplier = (Supplier<?>) invocation.getArguments()[1];
       return supplier.get();
     }).when(executionService).executeSystemUserScoped(anyString(), any());
 
@@ -248,8 +249,8 @@ class MediatedRequestDetailsServiceImplTest {
       .thenReturn(List.of(userGroup));
     var instance1 = new Instance().id(instanceId1).title("Test Instance 1");
     var instance2 = new Instance().id(instanceId2).title("Test Instance 2");
-    when(inventoryService.fetchInstance(eq(instanceId1))).thenReturn(instance1);
-    when(inventoryService.fetchInstance(eq(instanceId2))).thenReturn(instance2);
+    when(inventoryService.fetchInstance(instanceId1)).thenReturn(instance1);
+    when(inventoryService.fetchInstance(instanceId2)).thenReturn(instance2);
     var item1 = new Item().id(itemId1).barcode("item1").effectiveLocationId(locationId);
     var item2 = new Item().id(itemId2).barcode("item2").effectiveLocationId(locationId);
     when(fetchingService.fetchByIds(eq(itemClient), any(Collection.class), any(Function.class)))
