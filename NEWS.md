@@ -1,3 +1,6 @@
+## 1.2.10 2025-12-04
+* Create check-in-by-barcode endpoint (MODREQMED-191)
+
 ## 1.2.9 2025-11-04
 * Fix poor GET `/requests-mediated/mediated-requests` endpoint performance (MODREQMED-176)
 
