@@ -211,7 +211,9 @@
             "tlr.ecs-request-external.post",
             "circulation.requests.item.get",
             "circulation.requests.item.post",
-            "circulation.requests.allowed-service-points.get"
+            "circulation.requests.allowed-service-points.get",
+            "mod-settings.entries.collection.get",
+            "mod-settings.global.read.mod-requests-mediated.manage"
           ]
         },
         {
@@ -406,6 +408,16 @@
         "inventory-storage.location-units.libraries.item.get"
       ],
       "visible": false
+    },
+    {
+      "permissionName": "mod-settings.global.read.mod-requests-mediated.manage",
+      "displayName": "Requests Mediated Settings - Read configuration",
+      "description": "To read the setting from mod-settings"
+    },
+    {
+      "permissionName": "mod-settings.global.write.mod-requests-mediated.manage",
+      "displayName": "Requests Mediated Settings - Create configuration",
+      "description": "To write the configuration in mod-settings"
     }
   ],
   "requires": [
@@ -460,6 +472,10 @@
     {
       "id": "request-storage",
       "version": "6.1"
+    },
+    {
+      "id": "settings",
+      "version": "1.2"
     }
   ],
   "optional": [

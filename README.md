@@ -36,6 +36,37 @@ FOLIO compatible mediated requests functionality, including secure requests.
 | BATCH_REQUEST_EXECUTION_TIMEOUT          | 10m                       | Maximum execution timeout for batch requests processing.                                                                                                                              |
 | BATCH_REQUEST_LAST_EXECUTIONS_CACHE_SIZE | 25                        | Max cache size for the latest flow executions of batch requests processing.                                                                                                           |
 | BATCH_REQUEST_PRINT_RESULTS              | false                     | Defines if flow engine should print batch requests execution results in logs or not                                                                                                   |
+| BATCH_REQUEST_MAX_ITEMS                  | 50                        | Defines the maximum number of items allowed in a single multi-item batch request.                                                                                                     |
+
+
+## Multi-Item Batch Requests
+
+### Configuration for the validation of maximum allowed items in a single multi-item batch request
+
+Module provides a way to control the maximum number of items allowed in a single multi-item batch request through global setting or
+if the setting is not found through environment variable `BATCH_REQUEST_MAX_ITEMS` (default value is 50).
+
+To configure the maximum number of items allowed in a single multi-item batch request through global setting, we need to add the below configuration in mod-settings:
+
+**Permissions**
+To make a post call to mod-settings, user should have below permissions.
+```
+  mod-settings.entries.item.post
+  mod-settings.global.write.mod-requests-mediated.manage
+```
+
+**Example request**
+```
+POST https://{okapi-url}/settings/entries
+{
+  "id": "65de6432-be11-48ba-9686-a65101634040",
+  "scope": "mod-requests-mediated",
+  "key": "multiItemBatchRequestItemsValidation",
+  "value": {
+    "maxAllowedItemsCount": 100
+  }
+}
+```
 
 ## Further information
 

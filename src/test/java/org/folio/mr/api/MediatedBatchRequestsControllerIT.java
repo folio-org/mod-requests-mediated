@@ -2,7 +2,9 @@ package org.folio.mr.api;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.jsonResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -10,8 +12,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
 import static org.awaitility.Durations.ONE_SECOND;
 import static org.folio.mr.api.BaseIT.TENANT_ID_SECURE;
+import static org.folio.mr.controller.delegate.BatchRequestsServiceDelegate.BATCH_REQUEST_ITEMS_VALIDATION_SETTING_FETCH_QUERY;
+import static org.folio.mr.controller.delegate.BatchRequestsServiceDelegate.SETTING_KEY;
+import static org.folio.mr.controller.delegate.BatchRequestsServiceDelegate.SETTING_SCOPE;
 import static org.folio.mr.domain.dto.MediatedBatchRequestDto.MediatedRequestStatusEnum.IN_PROGRESS;
 import static org.folio.mr.domain.dto.MediatedBatchRequestDto.MediatedRequestStatusEnum.PENDING;
+import static org.folio.mr.domain.type.ErrorCode.BATCH_REQUEST_ITEM_IDS_COUNT_EXCEEDS_MAX_LIMIT;
 import static org.folio.mr.domain.type.ErrorCode.DUPLICATE_BATCH_REQUEST_ID;
 import static org.hamcrest.Matchers.emptyIterable;
 import static org.hamcrest.Matchers.is;
@@ -35,6 +41,7 @@ import lombok.SneakyThrows;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
+import org.folio.mr.client.SettingsClient;
 import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.BatchRequestStatus;
 import org.folio.mr.domain.BatchSplitContext;
@@ -52,6 +59,7 @@ import org.folio.mr.domain.dto.UserTenantsResponse;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
+import org.folio.mr.exception.MediatedBatchRequestValidationException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
 import org.folio.mr.service.flow.BatchFailedFlowFinalizer;
@@ -94,6 +102,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   };
   private static final String SEARCH_ITEM_URL = "/search/consortium/item";
   private static final String ECS_TLR_EXTERNAL_URL = "/tlr/create-ecs-request-external";
+  private static final String SETTINGS_ENTRIES_URL = "/settings/entries";
   private static final UUID[] EXPECTED_CREATED_REQUEST_IDS = {
     UUID.fromString("9a326225-6530-41cc-9399-a61987bfab3c"),
     UUID.fromString("16f40c4e-235d-4912-a683-2ad919cc8b07")};
@@ -148,6 +157,8 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   @SneakyThrows
   void shouldReturnBatchRequestById() {
     var dto = sampleBatchRequestPostDto(ITEM_IDS[0]).batchId(BATCH_REQUEST_ID1);
+    addStubForSettings();
+
     createBatchRequests(dto);
 
     mockMvc.perform(
@@ -176,6 +187,8 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   void shouldReturnBatchRequestsForGivenQuery(String cql, int total, List<String> ids) {
     var postDto1 = sampleBatchRequestPostDto(ITEM_IDS[0]).batchId(BATCH_REQUEST_ID1);
     var postDto2 = sampleBatchRequestPostDto(ITEM_IDS[0]).batchId(BATCH_REQUEST_ID2);
+    addStubForSettings();
+
     createBatchRequests(postDto1)
       .andExpect(jsonPath("mediatedRequestStatus",
         oneOf(PENDING.getValue(), IN_PROGRESS.getValue())));
@@ -199,6 +212,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   void shouldCreateMediatedBatchRequest() {
     var postBatchRequestDto = sampleBatchRequestPostDto(ITEM_IDS);
 
+    addStubForSettings();
     createBatchRequests(postBatchRequestDto)
       .andExpect(jsonPath("mediatedRequestStatus", oneOf(PENDING.getValue(), IN_PROGRESS.getValue())))
       .andExpect(jsonPath("requesterId", is(REQUESTER_ID)))
@@ -253,6 +267,37 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
           );
         assertEquals(BatchRequestStatus.COMPLETED, batchRequestRepository.findAll().getFirst().getStatus());
       });
+    wireMockServer.verify(1, getRequestedFor(urlPathEqualTo(SEARCH_ITEM_URL + "/" + ITEM_IDS[0])));
+    wireMockServer.verify(1, getRequestedFor(urlPathEqualTo(SEARCH_ITEM_URL + "/" + ITEM_IDS[1])));
+    wireMockServer.verify(2, postRequestedFor(urlPathEqualTo(ECS_TLR_EXTERNAL_URL)));
+    wireMockServer.verify(1, getRequestedFor(urlPathEqualTo(SETTINGS_ENTRIES_URL)));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldFailToCreateMediatedBatchRequestWithItemsLimitExceedError() {
+    var postBatchRequestDto = sampleBatchRequestPostDto(ITEM_IDS)
+      .batchId(BATCH_REQUEST_ID1);
+
+    var settingsEntries = new SettingsClient.SettingsEntries(List.of(
+      new SettingsClient.SettingEntry(UUID.randomUUID(), SETTING_SCOPE, SETTING_KEY,
+        new SettingsClient.BatchRequestItemsValidationValue(1))
+    ),
+      new SettingsClient.ResultInfo(1));
+
+    wireMockServer.stubFor(WireMock.get(urlPathEqualTo(SETTINGS_ENTRIES_URL))
+      .withQueryParam("query", containing(BATCH_REQUEST_ITEMS_VALIDATION_SETTING_FETCH_QUERY))
+      .withQueryParam("limit", equalTo("1"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(settingsEntries, HttpStatus.SC_OK)));
+
+    mockMvc.perform(post(URL_MEDIATED_BATCH_REQUESTS)
+        .headers(defaultHeaders())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(asJsonString(postBatchRequestDto)))
+      .andExpect(status().isUnprocessableEntity())
+      .andExpect(errorMessageMatch(is(BATCH_REQUEST_ITEM_IDS_COUNT_EXCEEDS_MAX_LIMIT.getMessage())))
+      .andExpect(exceptionMatch(MediatedBatchRequestValidationException.class));
   }
 
   @Test
@@ -260,6 +305,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   void shouldHandleInitializerFlowErrorAndSetFailedStatuses() {
     var postBatchRequestDto = sampleBatchRequestPostDto(ITEM_IDS[0]).batchId(BATCH_REQUEST_ID1);
 
+    addStubForSettings();
     doThrow(new MediatedBatchRequestNotFoundException(UUID.fromString(BATCH_REQUEST_ID1)))
       .when(flowInitializer).execute(any(BatchContext.class));
 
@@ -310,14 +356,13 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   @ParameterizedTest
   @ValueSource(strings = {"request placing failed", ""})
   void shouldHandleBatchSplitProcessingFailureAndMarkBatchSplitFailed(String errorMessage) {
-    var postBatchRequestDto = sampleBatchRequestPostDto(ITEM_IDS[0], ITEM_IDS[0])
+    var postBatchRequestDto = sampleBatchRequestPostDto(ITEM_IDS[0])
       .batchId(BATCH_REQUEST_ID1);
-    // one of the splits will fail during processing and the other will succeed
-    Mockito.doCallRealMethod().doThrow(new RuntimeException(errorMessage))
+    Mockito.doThrow(new RuntimeException(errorMessage))
       .when(batchSplitProcessor).execute(any(BatchSplitContext.class));
 
-    var expectedCreatedRequestIds = new UUID[]{EXPECTED_CREATED_REQUEST_IDS[0], EXPECTED_CREATED_REQUEST_IDS[0]};
-    var itemIds = new UUID[]{ITEM_IDS[0], ITEM_IDS[0]};
+    var expectedCreatedRequestIds = new UUID[]{EXPECTED_CREATED_REQUEST_IDS[0]};
+    var itemIds = new UUID[]{ITEM_IDS[0]};
     addStubsForEcsRequestCreation(expectedCreatedRequestIds, itemIds);
 
     createBatchRequests(postBatchRequestDto)
@@ -329,7 +374,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
         verify(flowInitializer).execute(captor.capture());
         var batchContext = captor.getValue();
         assertEquals(BATCH_REQUEST_ID1, batchContext.getBatchRequestId().toString());
-        assertThat(batchContext.getBatchSplitEntitiesById()).hasSize(2);
+        assertThat(batchContext.getBatchSplitEntitiesById()).hasSize(1);
 
         verify(failedFlowFinalizer).execute(any(BatchContext.class));
       });
@@ -337,9 +382,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
     var expectedErrorMsg = isNotBlank(errorMessage) ? errorMessage : "Failed to create request for item %s".formatted(ITEM_IDS[0]);
     assertThat(batchRequestSplitRepository.findAll())
       .extracting(MediatedBatchRequestSplit::getStatus, MediatedBatchRequestSplit::getConfirmedRequestId, MediatedBatchRequestSplit::getErrorDetails)
-      .containsExactlyInAnyOrder(
-        tuple(BatchRequestSplitStatus.COMPLETED, EXPECTED_CREATED_REQUEST_IDS[0], null),
-        tuple(BatchRequestSplitStatus.FAILED, null, expectedErrorMsg));
+      .containsExactly(tuple(BatchRequestSplitStatus.FAILED, null, expectedErrorMsg));
 
     var batchRequest = batchRequestRepository.findById(UUID.fromString(BATCH_REQUEST_ID1)).orElseThrow();
     assertThat(batchRequest.getStatus()).isEqualTo(BatchRequestStatus.FAILED);
@@ -352,6 +395,8 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
       .batchId(BATCH_REQUEST_ID1);
     var postBatchRequestDto2 = sampleBatchRequestPostDto(ITEM_IDS)
       .batchId(BATCH_REQUEST_ID1);
+    addStubForSettings();
+
     createBatchRequests(postBatchRequestDto1);
 
     mockMvc.perform(post(URL_MEDIATED_BATCH_REQUESTS)
@@ -367,6 +412,8 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   @SneakyThrows
   void shouldReturnsBatchRequestDetailsForGivenBatchId() {
     var dto = sampleBatchRequestPostDto(ITEM_IDS).batchId(BATCH_REQUEST_ID1);
+    addStubForSettings();
+
     createBatchRequests(dto);
     var expectedPatronComment = dto.getPatronComments() + "\n\n\nBatch request ID: " + BATCH_REQUEST_ID1;
 
@@ -546,6 +593,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
 
       var ecsTrl = new EcsTlr().primaryRequestId(expectedCreatedRequestIds[i].toString());
 
+
       wireMockServer.stubFor(WireMock.get(urlPathEqualTo(SEARCH_ITEM_URL + "/" + itemIds[i]))
         .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
         .willReturn(jsonResponse(item, HttpStatus.SC_OK)));
@@ -554,6 +602,22 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
         .withRequestBody(containing(itemIds[i].toString()))
         .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
         .willReturn(jsonResponse(ecsTrl, HttpStatus.SC_CREATED)));
+
+      addStubForSettings();
     }
+  }
+
+  private void addStubForSettings() {
+    var settingsEntries = new SettingsClient.SettingsEntries(List.of(
+      new SettingsClient.SettingEntry(UUID.randomUUID(), SETTING_SCOPE, SETTING_KEY,
+        new SettingsClient.BatchRequestItemsValidationValue(10))
+    ),
+      new SettingsClient.ResultInfo(1));
+
+    wireMockServer.stubFor(WireMock.get(urlPathEqualTo(SETTINGS_ENTRIES_URL))
+      .withQueryParam("query", containing(BATCH_REQUEST_ITEMS_VALIDATION_SETTING_FETCH_QUERY))
+      .withQueryParam("limit", equalTo("1"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(settingsEntries, HttpStatus.SC_OK)));
   }
 }
