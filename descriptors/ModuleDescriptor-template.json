@@ -213,7 +213,7 @@
             "circulation.requests.item.post",
             "circulation.requests.allowed-service-points.get",
             "mod-settings.entries.collection.get",
-            "mod-settings.global.read.multi-item-batch-request"
+            "mod-settings.global.read.mod-requests-mediated.manage"
           ]
         },
         {
@@ -410,9 +410,14 @@
       "visible": false
     },
     {
-      "permissionName": "mod-settings.global.read.multi-item-batch-request",
-      "displayName": "multi-item batch request functionality settings - read",
-      "description": "To read multi-item batch request functionality settings from mod-settings"
+      "permissionName": "mod-settings.global.read.mod-requests-mediated.manage",
+      "displayName": "Requests Mediated Settings - Read configuration",
+      "description": "To read the setting from mod-settings"
+    },
+    {
+      "permissionName": "mod-settings.global.write.mod-requests-mediated.manage",
+      "displayName": "Requests Mediated Settings - Create configuration",
+      "description": "To write the configuration in mod-settings"
     }
   ],
   "requires": [

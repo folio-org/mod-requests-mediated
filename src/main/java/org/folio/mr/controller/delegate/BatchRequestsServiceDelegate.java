@@ -27,10 +27,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class BatchRequestsServiceDelegate {
 
-  public static final String SETTING_SCOPE = "multi-item-batch-request";
-  public static final String SETTING_KEY = "requestItemsValidation";
+  public static final String SETTING_SCOPE = "mod-requests-mediated";
+  public static final String SETTING_KEY = "multiItemBatchRequestItemsValidation";
   public static final String BATCH_REQUEST_ITEMS_VALIDATION_SETTING_FETCH_QUERY =
-    "(scope=multi-item-batch-request AND key=requestItemsValidation)";
+    "(scope=%s AND key=%s)".formatted(SETTING_SCOPE, SETTING_KEY);
 
   @Value("${folio.batch-requests.validation.max-allowed-items}")
   private Integer batchRequestMaxAllowedItemsCount;

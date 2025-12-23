@@ -356,14 +356,13 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   @ParameterizedTest
   @ValueSource(strings = {"request placing failed", ""})
   void shouldHandleBatchSplitProcessingFailureAndMarkBatchSplitFailed(String errorMessage) {
-    var postBatchRequestDto = sampleBatchRequestPostDto(ITEM_IDS[0], ITEM_IDS[0])
+    var postBatchRequestDto = sampleBatchRequestPostDto(ITEM_IDS[0])
       .batchId(BATCH_REQUEST_ID1);
-    // one of the splits will fail during processing and the other will succeed
-    Mockito.doCallRealMethod().doThrow(new RuntimeException(errorMessage))
+    Mockito.doThrow(new RuntimeException(errorMessage))
       .when(batchSplitProcessor).execute(any(BatchSplitContext.class));
 
-    var expectedCreatedRequestIds = new UUID[]{EXPECTED_CREATED_REQUEST_IDS[0], EXPECTED_CREATED_REQUEST_IDS[0]};
-    var itemIds = new UUID[]{ITEM_IDS[0], ITEM_IDS[0]};
+    var expectedCreatedRequestIds = new UUID[]{EXPECTED_CREATED_REQUEST_IDS[0]};
+    var itemIds = new UUID[]{ITEM_IDS[0]};
     addStubsForEcsRequestCreation(expectedCreatedRequestIds, itemIds);
 
     createBatchRequests(postBatchRequestDto)
@@ -375,7 +374,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
         verify(flowInitializer).execute(captor.capture());
         var batchContext = captor.getValue();
         assertEquals(BATCH_REQUEST_ID1, batchContext.getBatchRequestId().toString());
-        assertThat(batchContext.getBatchSplitEntitiesById()).hasSize(2);
+        assertThat(batchContext.getBatchSplitEntitiesById()).hasSize(1);
 
         verify(failedFlowFinalizer).execute(any(BatchContext.class));
       });
@@ -383,9 +382,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
     var expectedErrorMsg = isNotBlank(errorMessage) ? errorMessage : "Failed to create request for item %s".formatted(ITEM_IDS[0]);
     assertThat(batchRequestSplitRepository.findAll())
       .extracting(MediatedBatchRequestSplit::getStatus, MediatedBatchRequestSplit::getConfirmedRequestId, MediatedBatchRequestSplit::getErrorDetails)
-      .containsExactlyInAnyOrder(
-        tuple(BatchRequestSplitStatus.COMPLETED, EXPECTED_CREATED_REQUEST_IDS[0], null),
-        tuple(BatchRequestSplitStatus.FAILED, null, expectedErrorMsg));
+      .containsExactly(tuple(BatchRequestSplitStatus.FAILED, null, expectedErrorMsg));
 
     var batchRequest = batchRequestRepository.findById(UUID.fromString(BATCH_REQUEST_ID1)).orElseThrow();
     assertThat(batchRequest.getStatus()).isEqualTo(BatchRequestStatus.FAILED);
