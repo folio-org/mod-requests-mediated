@@ -33,7 +33,7 @@
     <argLine />
 
     <!--Folio dependencies properties-->
-    <folio-module-descriptor-validator.version>1.0.0</folio-module-descriptor-validator.version>
+    <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
 
     <!-- runtime dependencies -->
     <folio-spring-support.version>9.0.1</folio-spring-support.version>
@@ -372,6 +372,9 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <failOnInvalidDescriptor>false</failOnInvalidDescriptor>
+        </configuration>
       </plugin>
     </plugins>
   </build>

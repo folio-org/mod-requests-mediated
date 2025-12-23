@@ -13,7 +13,9 @@ public enum ErrorCode {
     "Mediated request cannot be confirmed for inactive patron"),
   DUPLICATE_BATCH_REQUEST_ID("103", "Mediated batch request with the given 'id' already exists."),
   INVALID_BATCH_REQUEST_INITIAL_STATUS("104", "Invalid initial status for mediated batch request."),
-  INVALID_SERVICE_POINT_FOR_BATCH_REQUEST_ENTITY("105", "Not allowed to create Request for the given service point id.");
+  INVALID_SERVICE_POINT_FOR_BATCH_REQUEST_ENTITY("105", "Not allowed to create Request for the given service point id."),
+  DUPLICATE_BATCH_REQUEST_ITEM_IDS("106", "Mediated Batch Request contains duplicate item IDs."),
+  BATCH_REQUEST_ITEM_IDS_COUNT_EXCEEDS_MAX_LIMIT("107", "The maximum number of items per batch request has been exceeded.");
 
   private final String code;
   private final String message;

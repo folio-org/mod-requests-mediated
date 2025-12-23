@@ -211,7 +211,9 @@
             "tlr.ecs-request-external.post",
             "circulation.requests.item.get",
             "circulation.requests.item.post",
-            "circulation.requests.allowed-service-points.get"
+            "circulation.requests.allowed-service-points.get",
+            "mod-settings.entries.collection.get",
+            "mod-settings.global.read.multi-item-batch-request"
           ]
         },
         {
@@ -406,6 +408,11 @@
         "inventory-storage.location-units.libraries.item.get"
       ],
       "visible": false
+    },
+    {
+      "permissionName": "mod-settings.global.read.multi-item-batch-request",
+      "displayName": "multi-item batch request functionality settings - read",
+      "description": "To read multi-item batch request functionality settings from mod-settings"
     }
   ],
   "requires": [
@@ -460,6 +467,10 @@
     {
       "id": "request-storage",
       "version": "6.1"
+    },
+    {
+      "id": "settings",
+      "version": "1.2"
     }
   ],
   "optional": [

@@ -58,6 +58,8 @@ folio:
     lastname: System
     permissionsFilePath: permissions/mod-requests-mediated.csv
   batch-requests:
+    validation:
+      max-allowed-items: ${BATCH_REQUEST_MAX_ITEMS:50}
     thread-pool-size: ${BATCH_REQUEST_THREADS_NUM:4}
     execution-timeout: ${BATCH_REQUEST_EXECUTION_TIMEOUT:10m}
     last-executions-status-cache-size: ${BATCH_REQUEST_LAST_EXECUTIONS_CACHE_SIZE:25}
