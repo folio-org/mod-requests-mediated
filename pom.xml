@@ -5,7 +5,7 @@
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
     <version>3.4.3</version>
-    <relativePath />
+    <relativePath/>
   </parent>
   <groupId>org.folio</groupId>
   <artifactId>mod-requests-mediated</artifactId>
@@ -30,7 +30,7 @@
       src/main/java/org/folio/template/FolioSpringTemplateApplication.java,
       src/main/java/org/folio/mr/domain/mapper/MediatedRequestMapper.java
     </sonar.exclusions>
-    <argLine />
+    <argLine/>
 
     <!--Folio dependencies properties-->
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
@@ -42,8 +42,8 @@
     <mapstruct.version>1.6.3</mapstruct.version>
 
     <!-- test dependencies -->
-    <wiremock.version>3.13.1</wiremock.version>
-    <testcontainers.version>1.20.6</testcontainers.version>
+    <wiremock.version>3.13.2</wiremock.version>
+    <testcontainers.version>1.21.4</testcontainers.version>
   </properties>
 
   <dependencies>
@@ -188,7 +188,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-backend-testing</artifactId>
-      <version>1.5.5</version>
+      <version>3.0.9</version>
       <scope>test</scope>
     </dependency>
     <dependency>
