@@ -1,3 +1,6 @@
+## 1.2.11 2026-01-13
+* Fix searching and filtering for scenarios with duplicate locations IDs (MODREQMED-197)
+
 ## 1.2.10 2025-12-04
 * Create check-in-by-barcode endpoint (MODREQMED-191)
 
