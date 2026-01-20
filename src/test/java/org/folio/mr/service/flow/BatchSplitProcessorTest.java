@@ -71,10 +71,11 @@ class BatchSplitProcessorTest {
   void execute_positive_shouldCreateRequestWhenInEcsEnv() {
     var batch = new MediatedBatchRequest();
     batch.setId(UUID.randomUUID());
-    var split = new MediatedBatchRequestSplit();
-    split.setItemId(UUID.randomUUID());
-    split.setPickupServicePointId(UUID.randomUUID());
-    split.setRequesterId(UUID.randomUUID());
+    var split = MediatedBatchRequestSplit.builder()
+      .itemId(UUID.randomUUID())
+      .pickupServicePointId(UUID.randomUUID())
+      .requesterId(UUID.randomUUID())
+      .build();
 
     var tenant = "central-tenant";
     var requestId = UUID.randomUUID().toString();
@@ -110,10 +111,11 @@ class BatchSplitProcessorTest {
   void execute_positive_shouldCreateSingleTenantRequestWhenInSingleTenantEnv() {
     var batch = new MediatedBatchRequest();
     batch.setId(UUID.randomUUID());
-    var split = new MediatedBatchRequestSplit();
-    split.setItemId(UUID.randomUUID());
-    split.setPickupServicePointId(UUID.randomUUID());
-    split.setRequesterId(UUID.randomUUID());
+    var split = MediatedBatchRequestSplit.builder()
+      .itemId(UUID.randomUUID())
+      .pickupServicePointId(UUID.randomUUID())
+      .requesterId(UUID.randomUUID())
+      .build();
     var servicePoint = new ServicePoint().id(split.getPickupServicePointId().toString());
 
     var requestId = UUID.randomUUID().toString();
@@ -140,10 +142,11 @@ class BatchSplitProcessorTest {
   void execute_negative_shouldThrowExceptionOnSingleTenantEnvWhenNoRequestTypeMatchesForGivenServicePointId() {
     var batch = new MediatedBatchRequest();
     batch.setId(UUID.randomUUID());
-    var split = new MediatedBatchRequestSplit();
-    split.setItemId(UUID.randomUUID());
-    split.setPickupServicePointId(UUID.randomUUID());
-    split.setRequesterId(UUID.randomUUID());
+    var split = MediatedBatchRequestSplit.builder()
+      .itemId(UUID.randomUUID())
+      .pickupServicePointId(UUID.randomUUID())
+      .requesterId(UUID.randomUUID())
+      .build();
 
     when(context.getBatchSplitEntity()).thenReturn(split);
     when(context.getDeploymentEnvType()).thenReturn(EnvironmentType.SINGLE_TENANT);

@@ -81,9 +81,10 @@ class MediatedBatchRequestMapperTest {
     var username = "user";
     var batchEntity = new MediatedBatchRequest();
     batchEntity.setId(batchId);
-    var splitEntity = new MediatedBatchRequestSplit();
-    splitEntity.setMediatedBatchRequest(batchEntity);
-    splitEntity.setStatus(BatchRequestSplitStatus.PENDING);
+    var splitEntity = MediatedBatchRequestSplit.builder()
+      .mediatedBatchRequest(batchEntity)
+      .status(BatchRequestSplitStatus.PENDING)
+      .build();
     splitEntity.setCreatedDate(Timestamp.from(Instant.now()));
     splitEntity.setCreatedByUserId(userId);
     splitEntity.setCreatedByUsername(username);
@@ -122,12 +123,14 @@ class MediatedBatchRequestMapperTest {
   void shouldMapToDetailsDtoList() {
     var batchEntity = new MediatedBatchRequest();
     batchEntity.setId(UUID.randomUUID());
-    var split1 = new MediatedBatchRequestSplit();
-    split1.setMediatedBatchRequest(batchEntity);
-    split1.setStatus(BatchRequestSplitStatus.PENDING);
-    var split2 = new MediatedBatchRequestSplit();
-    split2.setMediatedBatchRequest(batchEntity);
-    split2.setStatus(BatchRequestSplitStatus.PENDING);
+    var split1 = MediatedBatchRequestSplit.builder()
+      .mediatedBatchRequest(batchEntity)
+      .status(BatchRequestSplitStatus.PENDING)
+      .build();
+    var split2 = MediatedBatchRequestSplit.builder()
+      .mediatedBatchRequest(batchEntity)
+      .status(BatchRequestSplitStatus.PENDING)
+      .build();
 
     var detailsList = mapper.toDetailsDtoList(List.of(split1, split2));
 
@@ -188,12 +191,14 @@ class MediatedBatchRequestMapperTest {
     var batchId = UUID.randomUUID();
     var batchEntity = new MediatedBatchRequest();
     batchEntity.setId(batchId);
-    var split1 = new MediatedBatchRequestSplit();
-    split1.setMediatedBatchRequest(batchEntity);
-    split1.setStatus(BatchRequestSplitStatus.PENDING);
-    var split2 = new MediatedBatchRequestSplit();
-    split2.setMediatedBatchRequest(batchEntity);
-    split2.setStatus(BatchRequestSplitStatus.PENDING);
+    var split1 = MediatedBatchRequestSplit.builder()
+      .mediatedBatchRequest(batchEntity)
+      .status(BatchRequestSplitStatus.PENDING)
+      .build();
+    var split2 = MediatedBatchRequestSplit.builder()
+      .mediatedBatchRequest(batchEntity)
+      .status(BatchRequestSplitStatus.PENDING)
+      .build();
 
     var page = Mockito.mock(Page.class);
     Mockito.when(page.getContent()).thenReturn(List.of(split1, split2));

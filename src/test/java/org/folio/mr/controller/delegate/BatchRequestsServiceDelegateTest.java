@@ -98,9 +98,10 @@ class BatchRequestsServiceDelegateTest {
 
   @Test
   void createBatchRequest_negative_shouldFailWithDuplicateItemsError() {
-    var split = new MediatedBatchRequestSplit();
-    split.setItemId(UUID.randomUUID());
-    split.setPickupServicePointId(UUID.randomUUID());
+    var split = MediatedBatchRequestSplit.builder()
+      .itemId(UUID.randomUUID())
+      .pickupServicePointId(UUID.randomUUID())
+      .build();
     var postDto = new MediatedBatchRequestPostDto();
     var batchEntity = mock(MediatedBatchRequest.class);
     var batchSplits = List.of(split, split);
@@ -113,12 +114,14 @@ class BatchRequestsServiceDelegateTest {
 
   @Test
   void createBatchRequest_negative_shouldFailWithItemsCountExceedLimitError() {
-    var split1 = new MediatedBatchRequestSplit();
-    split1.setItemId(UUID.randomUUID());
-    split1.setPickupServicePointId(UUID.randomUUID());
-    var split2 = new MediatedBatchRequestSplit();
-    split2.setItemId(UUID.randomUUID());
-    split2.setPickupServicePointId(UUID.randomUUID());
+    var split1 = MediatedBatchRequestSplit.builder()
+      .itemId(UUID.randomUUID())
+      .pickupServicePointId(UUID.randomUUID())
+      .build();
+    var split2 = MediatedBatchRequestSplit.builder()
+      .itemId(UUID.randomUUID())
+      .pickupServicePointId(UUID.randomUUID())
+      .build();
     var postDto = new MediatedBatchRequestPostDto();
     var batchEntity = mock(MediatedBatchRequest.class);
     var batchSplits = List.of(split1, split2);
