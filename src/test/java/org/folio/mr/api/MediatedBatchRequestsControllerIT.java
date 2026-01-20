@@ -34,6 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -156,17 +158,26 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   @Test
   @SneakyThrows
   void shouldReturnBatchRequestById() {
-    var dto = sampleBatchRequestPostDto(ITEM_IDS[0]).batchId(BATCH_REQUEST_ID1);
-    addStubForSettings();
+    var createdRequest = createAndSaveBatchRequestEntity(BatchRequestStatus.IN_PROGRESS);
+    createAndSaveBatchRequestSplitEntity(createdRequest, BatchRequestSplitStatus.IN_PROGRESS);
+    createAndSaveBatchRequestSplitEntity(createdRequest, BatchRequestSplitStatus.COMPLETED);
+    createAndSaveBatchRequestSplitEntity(createdRequest, BatchRequestSplitStatus.FAILED);
+    createAndSaveBatchRequestSplitEntity(createdRequest, BatchRequestSplitStatus.PENDING);
 
-    createBatchRequests(dto);
+    assertThat(batchRequestRepository.count()).isEqualTo(1);
+    assertThat(batchRequestSplitRepository.count()).isEqualTo(4);
 
     mockMvc.perform(
-      get(URL_MEDIATED_BATCH_REQUESTS + "/" + BATCH_REQUEST_ID1)
-        .headers(defaultHeaders())
-        .contentType(MediaType.APPLICATION_JSON))
+        get(URL_MEDIATED_BATCH_REQUESTS + "/" + BATCH_REQUEST_ID1)
+          .headers(defaultHeaders())
+          .contentType(MediaType.APPLICATION_JSON))
       .andExpect(status().isOk())
-      .andExpect(jsonPath("batchId", is(BATCH_REQUEST_ID1)));
+      .andExpect(jsonPath("batchId", is(BATCH_REQUEST_ID1)))
+      .andExpect(jsonPath("itemRequestsStats.total", is(4)))
+      .andExpect(jsonPath("itemRequestsStats.inProgress", is(1)))
+      .andExpect(jsonPath("itemRequestsStats.completed", is(1)))
+      .andExpect(jsonPath("itemRequestsStats.pending", is(1)))
+      .andExpect(jsonPath("itemRequestsStats.failed", is(1)));
   }
 
   @Test
@@ -619,5 +630,33 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
       .withQueryParam("limit", equalTo("1"))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(jsonResponse(settingsEntries, HttpStatus.SC_OK)));
+  }
+
+  private MediatedBatchRequest createAndSaveBatchRequestEntity(BatchRequestStatus status) {
+    var request = MediatedBatchRequest.builder()
+      .id(UUID.fromString(BATCH_REQUEST_ID1))
+      .requesterId(UUID.fromString(REQUESTER_ID))
+      .status(status)
+      .requestDate(Timestamp.from(Instant.now()))
+      .build();
+
+    return batchRequestRepository.save(request);
+  }
+
+  private void createAndSaveBatchRequestSplitEntity(MediatedBatchRequest batchRequest, BatchRequestSplitStatus status) {
+    var split = MediatedBatchRequestSplit.builder()
+      .id(UUID.randomUUID())
+      .mediatedBatchRequest(batchRequest)
+      .itemId(ITEM_IDS[0])
+      .requesterId(UUID.fromString(REQUESTER_ID))
+      .pickupServicePointId(SERVICE_POINT_IDS[0])
+      .status(status)
+      .build();
+    split.setCreatedDate(Timestamp.from(Instant.now()));
+    split.setCreatedByUserId(UUID.randomUUID());
+    split.setUpdatedDate(Timestamp.from(Instant.now()));
+    split.setUpdatedByUserId(UUID.randomUUID());
+
+    batchRequestSplitRepository.save(split);
   }
 }

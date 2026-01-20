@@ -19,10 +19,12 @@ import org.folio.flow.api.FlowEngine;
 import org.folio.mr.client.SettingsClient;
 import org.folio.mr.domain.dto.MediatedBatchRequestDetailsDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestDto;
+import org.folio.mr.domain.dto.MediatedBatchRequestDtoItemRequestsStats;
 import org.folio.mr.domain.dto.MediatedBatchRequestPostDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestsDto;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
+import org.folio.mr.domain.entity.projection.BatchRequestStatsImpl;
 import org.folio.mr.domain.mapper.MediatedBatchRequestMapper;
 import org.folio.mr.exception.MediatedBatchRequestValidationException;
 import org.folio.mr.service.MediatedBatchRequestFlowProvider;
@@ -135,8 +137,14 @@ class BatchRequestsServiceDelegateTest {
   void getBatchRequestById_positive_shouldReturnDto() {
     var id = UUID.randomUUID();
     var entity = mock(MediatedBatchRequest.class);
-    var expectedDto = mock(MediatedBatchRequestDto.class);
+    var expectedDto = new MediatedBatchRequestDto()
+      .itemRequestsStats(new MediatedBatchRequestDtoItemRequestsStats().total(10).completed(5).failed(5));
+    var stats = new BatchRequestStatsImpl();
+    stats.setTotal(10);
+    stats.setCompleted(5);
+    stats.setFailed(5);
     when(batchRequestsService.getById(id)).thenReturn(entity);
+    when(requestSplitService.getBatchRequestStats(id)).thenReturn(stats);
     when(mapper.toDto(entity)).thenReturn(expectedDto);
 
     var result = delegate.getBatchRequestById(id);
