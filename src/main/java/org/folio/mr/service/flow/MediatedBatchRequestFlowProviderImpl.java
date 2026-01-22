@@ -75,8 +75,7 @@ public class MediatedBatchRequestFlowProviderImpl implements MediatedBatchReques
   private EnvironmentType getEnvironmentType() {
     var tenantId = executionContext.getTenantId();
     if (tenantSupportService.isSecureTenant(tenantId)) {
-      throw new UnsupportedOperationException(
-        "Multi-Item Request is not supported for secure tenant: %s".formatted(tenantId));
+      return EnvironmentType.SECURE_TENANT;
     }
 
     if (tenantSupportService.isCentralTenant(tenantId)) {

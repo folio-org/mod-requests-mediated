@@ -18,9 +18,12 @@ import org.folio.mr.client.CirculationClient;
 import org.folio.mr.client.EcsExternalTlrClient;
 import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.BatchSplitContext;
+import org.folio.mr.domain.RequestType;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsRequestExternal;
 import org.folio.mr.domain.dto.EcsTlr;
+import org.folio.mr.domain.dto.HoldingsRecord;
+import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.ServicePoint;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
@@ -29,6 +32,7 @@ import org.folio.mr.exception.MediatedBatchRequestValidationException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
 import org.folio.mr.service.CirculationRequestService;
+import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.SearchService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
@@ -57,6 +61,8 @@ class BatchSplitProcessorTest {
   private SystemUserScopedExecutionService executionService;
   @Mock
   private CirculationRequestService circulationRequestService;
+  @Mock
+  private InventoryService inventoryService;
 
   private final ArgumentCaptor<MediatedBatchRequestSplit> splitCaptor =
     ArgumentCaptor.forClass(MediatedBatchRequestSplit.class);
@@ -111,8 +117,11 @@ class BatchSplitProcessorTest {
   void execute_positive_shouldCreateSingleTenantRequestWhenInSingleTenantEnv() {
     var batch = new MediatedBatchRequest();
     batch.setId(UUID.randomUUID());
+    var itemId = UUID.randomUUID();
+    var holdingId = UUID.randomUUID().toString();
+    var instanceId = UUID.randomUUID().toString();
     var split = MediatedBatchRequestSplit.builder()
-      .itemId(UUID.randomUUID())
+      .itemId(itemId)
       .pickupServicePointId(UUID.randomUUID())
       .requesterId(UUID.randomUUID())
       .build();
@@ -125,9 +134,12 @@ class BatchSplitProcessorTest {
     when(context.getDeploymentEnvType()).thenReturn(EnvironmentType.SINGLE_TENANT);
     when(context.getBatchRequestId()).thenReturn(batch.getId());
     when(batchRequestRepository.findById(any(UUID.class))).thenReturn(Optional.of(batch));
-    when(circulationRequestService.getItemRequestAllowedServicePoints(split.getRequesterId(), split.getItemId()))
+    when(circulationRequestService.getItemRequestAllowedServicePoints(split.getRequesterId(), itemId))
       .thenReturn(new CirculationClient.AllowedServicePoints(Set.of(), Set.of(), Set.of(servicePoint)));
+    when(inventoryService.fetchItem(itemId.toString())).thenReturn(new Item().holdingsRecordId(holdingId));
+    when(inventoryService.fetchHolding(holdingId)).thenReturn(new HoldingsRecord().instanceId(instanceId));
     when(circulationRequestService.create(any(Request.class))).thenReturn(createdRequest);
+    var valueCaptor = ArgumentCaptor.forClass(Request.class);
 
     processor.execute(context);
 
@@ -136,6 +148,10 @@ class BatchSplitProcessorTest {
     assertEquals(createdRequest.getStatus().getValue(), savedSplit.getRequestStatus());
     assertEquals(createdRequest.getId(), savedSplit.getConfirmedRequestId().toString());
     assertEquals(BatchRequestSplitStatus.COMPLETED, savedSplit.getStatus());
+    verify(circulationRequestService).create(valueCaptor.capture());
+    assertEquals(holdingId, valueCaptor.getValue().getHoldingsRecordId());
+    assertEquals(instanceId, valueCaptor.getValue().getInstanceId());
+    assertEquals(RequestType.RECALL.getValue(), valueCaptor.getValue().getRequestType().getValue());
   }
 
   @Test
@@ -161,21 +177,21 @@ class BatchSplitProcessorTest {
     verifyNoInteractions(splitRepository);
   }
 
-  @Test
-  void execute_negative_shouldThrowUnsupportedOperationErrorInSecureTenantEnv() {
-    var batch = new MediatedBatchRequest();
-    batch.setId(UUID.randomUUID());
-    var split = new MediatedBatchRequestSplit();
-
-    when(context.getBatchSplitEntity()).thenReturn(split);
-    when(context.getDeploymentEnvType()).thenReturn(EnvironmentType.SECURE_TENANT);
-    when(context.getBatchRequestId()).thenReturn(batch.getId());
-    when(batchRequestRepository.findById(any(UUID.class))).thenReturn(Optional.of(batch));
-
-    assertThrows(UnsupportedOperationException.class, () -> processor.execute(context));
-
-    verifyNoInteractions(splitRepository);
-  }
+//  @Test
+//  void execute_negative_shouldThrowUnsupportedOperationErrorInSecureTenantEnv() {
+//    var batch = new MediatedBatchRequest();
+//    batch.setId(UUID.randomUUID());
+//    var split = new MediatedBatchRequestSplit();
+//
+//    when(context.getBatchSplitEntity()).thenReturn(split);
+//    when(context.getDeploymentEnvType()).thenReturn(EnvironmentType.SECURE_TENANT);
+//    when(context.getBatchRequestId()).thenReturn(batch.getId());
+//    when(batchRequestRepository.findById(any(UUID.class))).thenReturn(Optional.of(batch));
+//
+//    assertThrows(UnsupportedOperationException.class, () -> processor.execute(context));
+//
+//    verifyNoInteractions(splitRepository);
+//  }
 
   @Test
   void onStart_positive_shouldSetStatusToInProgressAndSaveEntity() {

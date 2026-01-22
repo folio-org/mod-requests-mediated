@@ -23,11 +23,14 @@ import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.ServicePoint;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
+import org.folio.mr.domain.entity.MediatedRequestEntity;
+import org.folio.mr.exception.HoldingNotFoundException;
 import org.folio.mr.exception.ItemNotFoundException;
 import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
 import org.folio.mr.service.CirculationRequestService;
+import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.SearchService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
@@ -48,6 +51,7 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
   private final EcsExternalTlrClient ecsTlrClient;
   private final SystemUserScopedExecutionService executionService;
   private final CirculationRequestService circulationRequestService;
+  private final InventoryService inventoryService;
 
   @Override
   @Transactional
@@ -106,7 +110,7 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
 
     // secure tenant case
     log.info("createRequest:: creating Secure Tenant Mediated Request");
-    createMediatedRequests();
+    createMediatedRequests(batchRequest, splitEntity);
   }
 
   private void createEcsRequest(MediatedBatchRequest batchEntity, MediatedBatchRequestSplit splitEntity) {
@@ -123,7 +127,7 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
   private EcsRequestExternal buildEcsRequestPostDto(MediatedBatchRequest batch, MediatedBatchRequestSplit split) {
     var itemId = split.getItemId().toString();
     var consortiumItem = searchService.searchItem(itemId)
-      .orElseThrow(() -> new ItemNotFoundException(split.getItemId()));
+      .orElseThrow(() -> new ItemNotFoundException(itemId));
 
     return new EcsRequestExternal(consortiumItem.getInstanceId(), split.getRequesterId().toString(), ITEM,
       FulfillmentPreference.fromValue(DEFAULT_FULFILLMENT_PREFERENCE), batch.getRequestDate())
@@ -151,15 +155,15 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
       .getItemRequestAllowedServicePoints(splitEntity.getRequesterId(), splitEntity.getItemId());
 
     var pickupServicePointId = splitEntity.getPickupServicePointId();
-    if (containsServicePoint(allowedServicePoints.page(), pickupServicePointId)) {
+    if (containsServicePoint(allowedServicePoints.Page(), pickupServicePointId)) {
       return Optional.of(Request.RequestTypeEnum.PAGE);
     }
 
-    if (containsServicePoint(allowedServicePoints.hold(), pickupServicePointId)) {
+    if (containsServicePoint(allowedServicePoints.Hold(), pickupServicePointId)) {
       return Optional.of(Request.RequestTypeEnum.HOLD);
     }
 
-    if (containsServicePoint(allowedServicePoints.recall(), pickupServicePointId)) {
+    if (containsServicePoint(allowedServicePoints.Recall(), pickupServicePointId)) {
       return Optional.of(Request.RequestTypeEnum.RECALL);
     }
 
@@ -181,10 +185,24 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
 
   private Request buildLocalRequestPostDto(MediatedBatchRequestSplit splitEntity, Date requestDate,
                                            Request.RequestTypeEnum requestType) {
+    var itemId = splitEntity.getItemId().toString();
+    var inventoryItem = inventoryService.fetchItem(itemId);
+    if (inventoryItem == null) {
+      throw new ItemNotFoundException(itemId);
+    }
+
+    var holdingsRecordId = inventoryItem.getHoldingsRecordId();
+    var inventoryHolding = inventoryService.fetchHolding(holdingsRecordId);
+    if (inventoryHolding == null) {
+      throw new HoldingNotFoundException(holdingsRecordId);
+    }
+
     return new Request()
       .requestLevel(Request.RequestLevelEnum.ITEM)
       .requestType(requestType)
-      .itemId(splitEntity.getItemId().toString())
+      .itemId(itemId)
+      .holdingsRecordId(holdingsRecordId)
+      .instanceId(inventoryHolding.getInstanceId())
       .requesterId(splitEntity.getRequesterId().toString())
       .fulfillmentPreference(Request.FulfillmentPreferenceEnum.fromValue(DEFAULT_FULFILLMENT_PREFERENCE))
       .pickupServicePointId(splitEntity.getPickupServicePointId().toString())
@@ -192,9 +210,16 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
       .patronComments(splitEntity.getPatronComments());
   }
 
-  private void createMediatedRequests() {
-    throw new UnsupportedOperationException(
-      "Multi-Item Request is not supported in Secure Tenant environment");
+  private void createMediatedRequests(MediatedBatchRequest batchRequest, MediatedBatchRequestSplit splitEntity) {
+    var mediatedRequest = MediatedRequestEntity.builder()
+      .requesterId(batchRequest.getRequesterId())
+      .itemId(splitEntity.getItemId())
+      .pickupServicePointId(splitEntity.getPickupServicePointId())
+      .patronComments(splitEntity.getPatronComments())
+      .requestDate(batchRequest.getRequestDate())
+      .fulfillmentPreference(FulfillmentPreference.HOLD_SHELF)
+      .requestLevel(ITEM)
+      .build();
   }
 
   private void updateBatchRequestSplit(MediatedBatchRequestSplit splitEntity, Request request) {

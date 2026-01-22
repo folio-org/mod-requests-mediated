@@ -2,7 +2,6 @@ package org.folio.mr.service.flow;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -60,13 +59,13 @@ class MediatedBatchRequestFlowProviderTest {
     assertEquals("DynamicStage", flow.getStages().get(1).getStageType());
   }
 
-  @Test
-  void createFlow_negative_shouldThrowNotSupportedErrorForSecureTenant() {
-    var batchId = UUID.randomUUID();
-    when(executionContext.getTenantId()).thenReturn("secureTenant");
-    when(tenantSupportService.isSecureTenant(any(String.class))).thenReturn(true);
-
-    assertThrows(UnsupportedOperationException.class, () -> provider.createFlow(batchId),
-      "Multi-Item Request is not supported for secure tenant: secureTenant");
-  }
+//  @Test
+//  void createFlow_negative_shouldThrowNotSupportedErrorForSecureTenant() {
+//    var batchId = UUID.randomUUID();
+//    when(executionContext.getTenantId()).thenReturn("secureTenant");
+//    when(tenantSupportService.isSecureTenant(any(String.class))).thenReturn(true);
+//
+//    assertThrows(UnsupportedOperationException.class, () -> provider.createFlow(batchId),
+//      "Multi-Item Request is not supported for secure tenant: secureTenant");
+//  }
 }

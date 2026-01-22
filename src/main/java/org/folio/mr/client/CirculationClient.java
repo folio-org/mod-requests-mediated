@@ -31,5 +31,5 @@ public interface CirculationClient {
     @RequestParam("operation") String operation,
     @RequestParam("itemId") String itemId);
 
-  record AllowedServicePoints(Set<ServicePoint> page, Set<ServicePoint> hold, Set<ServicePoint> recall) { }
+  record AllowedServicePoints(Set<ServicePoint> Page, Set<ServicePoint> Hold, Set<ServicePoint> Recall) { }
 }
