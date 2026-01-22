@@ -60,7 +60,7 @@ To make a post call to mod-settings, user should have below permissions.
 POST https://{okapi-url}/settings/entries
 {
   "id": "65de6432-be11-48ba-9686-a65101634040",
-  "scope": "mod-requests-mediated",
+  "scope": "mod-requests-mediated.manage",
   "key": "multiItemBatchRequestItemsValidation",
   "value": {
     "maxAllowedItemsCount": 100

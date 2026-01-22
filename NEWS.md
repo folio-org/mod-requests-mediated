@@ -6,6 +6,7 @@
 * Implement batch request execution ([MODREQMED-162](https://folio-org.atlassian.net/browse/MODREQMED-162))
 * Add endpoint for batch request details collection retrieval by query ([MODREQMED-190](https://folio-org.atlassian.net/browse/MODREQMED-190))
 * Add validation for max number of items in Mediated Batch Request creation ([MODREQMED-161](https://folio-org.atlassian.net/browse/MODREQMED-161))
+* Extend Get Mediated Batch Request by id endpoint with items requests stats info ([MODREQMED-164](https://folio-org.atlassian.net/browse/MODREQMED-164))
 
 ## 1.2.0 2025-03-13
 * Upgrade to Java 21, folio-spring-support 9.0.0 (MODREQMED-97)

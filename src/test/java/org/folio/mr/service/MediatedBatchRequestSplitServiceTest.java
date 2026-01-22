@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
+import org.folio.mr.domain.entity.projection.BatchRequestStats;
 import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
@@ -95,5 +96,16 @@ class MediatedBatchRequestSplitServiceTest {
     var result = service.getAll(query, offset, limit);
 
     assertEquals(expected, result);
+  }
+
+  @Test
+  void shouldGetBatchRequestStats() {
+    var batchId = UUID.randomUUID();
+    var expectedStats = mock(BatchRequestStats.class);
+    when(splitRepository.findMediatedBatchRequestStats(batchId)).thenReturn(expectedStats);
+
+    var result = service.getBatchRequestStats(batchId);
+
+    assertEquals(expectedStats, result);
   }
 }

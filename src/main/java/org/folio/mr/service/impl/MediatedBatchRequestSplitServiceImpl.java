@@ -7,6 +7,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
+import org.folio.mr.domain.entity.projection.BatchRequestStats;
 import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
@@ -47,6 +48,11 @@ public class MediatedBatchRequestSplitServiceImpl implements MediatedBatchReques
       offset, limit, query);
 
     return findEntities(query, offset, limit);
+  }
+
+  @Override
+  public BatchRequestStats getBatchRequestStats(UUID batchId) {
+    return repository.findMediatedBatchRequestStats(batchId);
   }
 
   private Page<MediatedBatchRequestSplit> findEntities(String query, Integer offset, Integer limit) {

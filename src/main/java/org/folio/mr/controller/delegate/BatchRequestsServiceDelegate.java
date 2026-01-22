@@ -11,6 +11,7 @@ import org.folio.flow.api.FlowEngine;
 import org.folio.mr.client.SettingsClient;
 import org.folio.mr.domain.dto.MediatedBatchRequestDetailsDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestDto;
+import org.folio.mr.domain.dto.MediatedBatchRequestDtoItemRequestsStats;
 import org.folio.mr.domain.dto.MediatedBatchRequestPostDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestsDto;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
@@ -69,8 +70,17 @@ public class BatchRequestsServiceDelegate {
     log.debug("getBatchRequestById:: parameters id: {}", id);
 
     var entity = batchRequestsService.getById(id);
+    var stats = requestSplitService.getBatchRequestStats(id);
 
-    return mapper.toDto(entity);
+    var dto = mapper.toDto(entity);
+    dto.setItemRequestsStats(new MediatedBatchRequestDtoItemRequestsStats()
+      .total(stats.getTotal())
+      .pending(stats.getPending())
+      .inProgress(stats.getInProgress())
+      .completed(stats.getCompleted())
+      .failed(stats.getFailed()));
+
+    return dto;
   }
 
   public MediatedBatchRequestDetailsDto getBatchRequestDetailsByBatchId(UUID batchId, Integer offset, Integer limit) {

@@ -48,9 +48,10 @@ class BatchFailedFlowFinalizerTest {
     var entity = new MediatedBatchRequest();
     entity.setId(batchId);
     var split1 = new MediatedBatchRequestSplit();
-    var split2 = new MediatedBatchRequestSplit();
-    split2.setStatus(BatchRequestSplitStatus.COMPLETED);
-    split2.setConfirmedRequestId(UUID.randomUUID());
+    var split2 = MediatedBatchRequestSplit.builder()
+      .status(BatchRequestSplitStatus.COMPLETED)
+      .confirmedRequestId(UUID.randomUUID())
+      .build();
 
     when(context.getBatchRequestId()).thenReturn(batchId);
     when(context.getBatchRequestFailedMessage()).thenReturn("batch request failed");

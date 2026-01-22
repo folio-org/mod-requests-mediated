@@ -46,13 +46,14 @@ class MediatedBatchRequestSplitRepositoryIT extends BaseIT {
       .status(BatchRequestStatus.fromValue("In progress"))
       .requestDate(requestDate)
       .build();
-    var requestSplit = new MediatedBatchRequestSplit();
-    requestSplit.setId(randomUUID);
-    requestSplit.setMediatedBatchRequest(batch);
-    requestSplit.setRequesterId(randomUUID);
-    requestSplit.setItemId(itemId);
-    requestSplit.setPickupServicePointId(pickupServicePointId);
-    requestSplit.setStatus(BatchRequestSplitStatus.fromValue("Completed"));
+    var requestSplit = MediatedBatchRequestSplit.builder()
+      .id(randomUUID)
+      .itemId(itemId)
+      .pickupServicePointId(pickupServicePointId)
+      .mediatedBatchRequest(batch)
+      .requesterId(randomUUID)
+      .status(BatchRequestSplitStatus.fromValue("Completed"))
+      .build();
     when(context.getUserId()).thenReturn(userId);
 
     var savedBatch = batchRequestRepository.save(batch);

@@ -14,6 +14,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,7 @@ import org.springframework.data.domain.Persistable;
 
 @Getter
 @Setter
+@Builder
 @ToString(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
