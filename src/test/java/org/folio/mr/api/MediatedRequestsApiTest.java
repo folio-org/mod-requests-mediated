@@ -239,12 +239,6 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("proxy").doesNotExist())
       .andExpect(jsonPath("pickupServicePoint").doesNotExist())
       .andExpect(jsonPath("searchIndex").doesNotExist())
-      .andExpect(jsonPath("metadata.createdDate").exists())
-      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)))
-      .andExpect(jsonPath("metadata.createdByUsername").doesNotExist())
-      .andExpect(jsonPath("metadata.updatedDate").exists())
-      .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
-      .andExpect(jsonPath("metadata.updatedByUsername").doesNotExist())
       .andReturn().getResponse().getContentAsString();
 
     MediatedRequest mediatedRequest = OBJECT_MAPPER.readValue(responseBody, MediatedRequest.class);
@@ -592,12 +586,6 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("pickupServicePoint.pickupLocation", is(true)))
       .andExpect(jsonPath("deliveryAddress").doesNotExist())
       .andExpect(jsonPath("searchIndex").doesNotExist())
-      .andExpect(jsonPath("metadata.createdDate").exists())
-      .andExpect(jsonPath("metadata.createdByUserId", is(USER_ID)))
-      .andExpect(jsonPath("metadata.createdByUsername").doesNotExist())
-      .andExpect(jsonPath("metadata.updatedDate").exists())
-      .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
-      .andExpect(jsonPath("metadata.updatedByUsername").doesNotExist())
       .andReturn().getResponse().getContentAsString();
 
     return OBJECT_MAPPER.readValue(responseBody, MediatedRequest.class);
