@@ -25,11 +25,13 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.With;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Table(name = "mediated_request")
 @Entity
 @IgnoreCase
@@ -37,7 +39,7 @@ import lombok.With;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class MediatedRequestEntity {
+public class MediatedRequestEntity extends MetadataEntity {
   static {  // delete for Trillium, this is only needed for Ramsons and Sunflower
     Cql2JpaCriteria.setCaseAccentsHandlingEnabled(true);
   }
@@ -145,25 +147,25 @@ public class MediatedRequestEntity {
   private String mediatedRequestStatusText;
 
   private String fulfillmentPreferenceText;
-
-  // Metadata
-
-  @Column(name = "created_date")
-  private Date createdDate;
-
-  @Column(name = "created_by_user_id")
-  private UUID createdByUserId;
-
-  @Column(name = "created_by_username")
-  private String createdByUsername;
-
-  @Column(name = "updated_date")
-  private Date updatedDate;
-
-  @Column(name = "updated_by_user_id")
-  private UUID updatedByUserId;
-
-  @Column(name = "updated_by_username")
-  private String updatedByUsername;
+//
+//  // Metadata
+//
+//  @Column(name = "created_date")
+//  private Date createdDate;
+//
+//  @Column(name = "created_by_user_id")
+//  private UUID createdByUserId;
+//
+//  @Column(name = "created_by_username")
+//  private String createdByUsername;
+//
+//  @Column(name = "updated_date")
+//  private Date updatedDate;
+//
+//  @Column(name = "updated_by_user_id")
+//  private UUID updatedByUserId;
+//
+//  @Column(name = "updated_by_username")
+//  private String updatedByUsername;
 
 }

@@ -3,6 +3,7 @@ package org.folio.mr.service.impl;
 import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.folio.mr.domain.dto.Metadata;
 import org.folio.mr.exception.ExceptionFactory;

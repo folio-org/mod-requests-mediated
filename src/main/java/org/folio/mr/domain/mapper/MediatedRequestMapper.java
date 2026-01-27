@@ -85,13 +85,13 @@ public interface MediatedRequestMapper {
   @Mapping(target = "callNumberSuffix", source = "searchIndex.callNumberComponents.suffix")
   @Mapping(target = "shelvingOrder", source = "searchIndex.shelvingOrder")
   @Mapping(target = "pickupServicePointName", source = "searchIndex.pickupServicePointName")
-  // Metadata
-  @Mapping(target = "createdDate", source = "metadata.createdDate")
-  @Mapping(target = "createdByUserId", source = "metadata.createdByUserId", qualifiedByName = "StringToUuidSafe")
-  @Mapping(target = "createdByUsername", source = "metadata.createdByUsername")
-  @Mapping(target = "updatedDate", source = "metadata.updatedDate")
-  @Mapping(target = "updatedByUserId", source = "metadata.updatedByUserId", qualifiedByName = "StringToUuidSafe")
-  @Mapping(target = "updatedByUsername", source = "metadata.updatedByUsername")
+  // Metadata - Ignore these fields and let JPA auditing handle them automatically
+  @Mapping(target = "createdDate", ignore = true)
+  @Mapping(target = "createdByUserId", ignore = true)
+  @Mapping(target = "createdByUsername", ignore = true)
+  @Mapping(target = "updatedDate", ignore = true)
+  @Mapping(target = "updatedByUserId", ignore = true)
+  @Mapping(target = "updatedByUsername", ignore = true)
   MediatedRequestEntity mapDtoToEntity(MediatedRequest mediatedRequest);
 
   default <T, V> T mapEnum(V v, Function<V, String> valueGetter, Function <String, T> mapper) {

@@ -65,7 +65,6 @@ import org.folio.mr.domain.dto.Users;
 import org.folio.mr.service.BulkFetchingService;
 import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestDetailsService;
-import org.folio.mr.service.MetadataService;
 import org.folio.mr.service.UserService;
 import org.folio.mr.service.impl.MediatedRequestDetailsServiceImpl.MediatedRequestContext.MediatedRequestContextBuilder;
 import org.folio.spring.service.SystemUserScopedExecutionService;
@@ -85,7 +84,6 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
 
   private final InventoryService inventoryService;
   private final UserService userService;
-  private final MetadataService metadataService;
   private final SystemUserScopedExecutionService executionService;
   private final SearchClient searchClient;
   private final SearchInstancesClient searchInstancesClient;
@@ -117,7 +115,8 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     addFulfillmentDetails(context);
     addSearchIndex(context);
 
-    metadataService.updateMetadata(request);
+    // Metadata is now handled by JPA auditing in MediatedRequestEntity
+    // No need to manually update metadata
 
     return request;
   }
@@ -136,7 +135,8 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     addItem(context);
     addSearchIndex(context);
 
-    metadataService.updateMetadata(request);
+    // Metadata is now handled by JPA auditing in MediatedRequestEntity
+    // No need to manually update metadata
 
     return request;
   }

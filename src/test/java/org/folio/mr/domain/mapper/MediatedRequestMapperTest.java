@@ -2,6 +2,7 @@ package org.folio.mr.domain.mapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.UUID;
 
@@ -85,19 +86,30 @@ class MediatedRequestMapperTest {
     assertEquals("suf", entity.getCallNumberSuffix());
     assertEquals("F 416 H37 A2 59001", entity.getShelvingOrder());
     assertEquals("Circ Desk 1", entity.getPickupServicePointName());
-    /// Metadata
-    assertEquals(CREATED_DATE, entity.getCreatedDate());
-    assertEquals(CREATED_BY_USER_ID, entity.getCreatedByUserId().toString());
-    assertEquals("created-by", entity.getCreatedByUsername());
-    assertEquals(UPDATED_DATE, entity.getUpdatedDate());
-    assertEquals(UPDATED_BY_USER_ID, entity.getUpdatedByUserId().toString());
-    assertEquals("updated-by", entity.getUpdatedByUsername());
+    // Metadata fields are now ignored in DTO-to-Entity mapping (managed by JPA auditing)
+    // They will be null after mapping and automatically set when entity is persisted
+    assertEquals(null, entity.getCreatedDate());
+    assertEquals(null, entity.getCreatedByUserId());
+    assertEquals(null, entity.getCreatedByUsername());
+    assertEquals(null, entity.getUpdatedDate());
+    assertEquals(null, entity.getUpdatedByUserId());
+    assertEquals(null, entity.getUpdatedByUsername());
   }
 
   @Test
   void testEntityToDtoMapping() {
     MediatedRequestMapperImpl mapper = new MediatedRequestMapperImpl();
     var entity = mapper.mapDtoToEntity(buildMediatedRequest());
+
+    // Since metadata fields are now ignored in DTO-to-Entity mapping (managed by JPA auditing),
+    // we need to manually set them on the entity to test Entity-to-DTO mapping
+    entity.setCreatedDate(new Timestamp(CREATED_DATE.getTime()));
+    entity.setCreatedByUserId(UUID.fromString(CREATED_BY_USER_ID));
+    entity.setCreatedByUsername("created-by");
+    entity.setUpdatedDate(new Timestamp(UPDATED_DATE.getTime()));
+    entity.setUpdatedByUserId(UUID.fromString(UPDATED_BY_USER_ID));
+    entity.setUpdatedByUsername("updated-by");
+
     var dto = mapper.mapEntityToDto(entity);
 
     assertEquals(MediatedRequest.RequestLevelEnum.TITLE, dto.getRequestLevel());
