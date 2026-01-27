@@ -24,6 +24,7 @@ import org.folio.mr.domain.dto.EcsRequestExternal;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.HoldingsRecord;
 import org.folio.mr.domain.dto.Item;
+import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.ServicePoint;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
@@ -32,7 +33,9 @@ import org.folio.mr.exception.MediatedBatchRequestValidationException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
 import org.folio.mr.service.CirculationRequestService;
+import org.folio.mr.service.ConsortiumService;
 import org.folio.mr.service.InventoryService;
+import org.folio.mr.service.MediatedRequestsService;
 import org.folio.mr.service.SearchService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
@@ -63,6 +66,10 @@ class BatchSplitProcessorTest {
   private CirculationRequestService circulationRequestService;
   @Mock
   private InventoryService inventoryService;
+  @Mock
+  private MediatedRequestsService mediatedRequestsService;
+  @Mock
+  private ConsortiumService consortiumService;
 
   private final ArgumentCaptor<MediatedBatchRequestSplit> splitCaptor =
     ArgumentCaptor.forClass(MediatedBatchRequestSplit.class);
@@ -177,22 +184,6 @@ class BatchSplitProcessorTest {
     verifyNoInteractions(splitRepository);
   }
 
-//  @Test
-//  void execute_negative_shouldThrowUnsupportedOperationErrorInSecureTenantEnv() {
-//    var batch = new MediatedBatchRequest();
-//    batch.setId(UUID.randomUUID());
-//    var split = new MediatedBatchRequestSplit();
-//
-//    when(context.getBatchSplitEntity()).thenReturn(split);
-//    when(context.getDeploymentEnvType()).thenReturn(EnvironmentType.SECURE_TENANT);
-//    when(context.getBatchRequestId()).thenReturn(batch.getId());
-//    when(batchRequestRepository.findById(any(UUID.class))).thenReturn(Optional.of(batch));
-//
-//    assertThrows(UnsupportedOperationException.class, () -> processor.execute(context));
-//
-//    verifyNoInteractions(splitRepository);
-//  }
-
   @Test
   void onStart_positive_shouldSetStatusToInProgressAndSaveEntity() {
     var split = new MediatedBatchRequestSplit();
@@ -251,5 +242,87 @@ class BatchSplitProcessorTest {
     assertEquals(BatchRequestSplitStatus.FAILED, split.getStatus());
     assertEquals("Failed to create request for item %s".formatted(split.getItemId()), split.getErrorDetails());
     verify(splitRepository).save(split);
+  }
+
+  // Creating Requests in Secure Tenant environment
+
+  @Test
+  void execute_positive_shouldCreateMediatedRequestsWithSecureTenantInNonEcsEnvWithLocalItem() {
+    var batch = MediatedBatchRequest.builder()
+      .id(UUID.randomUUID()).requesterId(UUID.randomUUID()).build();
+    var itemId = UUID.randomUUID().toString();
+    var holdingId = UUID.randomUUID().toString();
+    var instanceId = UUID.randomUUID().toString();
+    var split = MediatedBatchRequestSplit.builder()
+      .itemId(UUID.fromString(itemId))
+      .pickupServicePointId(UUID.randomUUID())
+      .requesterId(UUID.randomUUID())
+      .build();
+    var savedMediatedRequest = new MediatedRequest().id(UUID.randomUUID().toString());
+    var item = new Item().id(itemId).holdingsRecordId(holdingId);
+    var holding = new HoldingsRecord().id(holdingId).instanceId(instanceId);
+
+    var tenantId = "secure-tenant";
+    when(executionContext.getTenantId()).thenReturn(tenantId);
+    when(consortiumService.getCentralTenantId(tenantId)).thenReturn(Optional.empty());
+    when(inventoryService.fetchItem(itemId)).thenReturn(item);
+    when(inventoryService.fetchHolding(holdingId)).thenReturn(holding);
+
+    when(context.getBatchSplitEntity()).thenReturn(split);
+    when(context.getDeploymentEnvType()).thenReturn(EnvironmentType.SECURE_TENANT);
+    when(context.getBatchRequestId()).thenReturn(batch.getId());
+    when(batchRequestRepository.findById(any(UUID.class))).thenReturn(Optional.of(batch));
+    when(mediatedRequestsService.post(any(MediatedRequest.class))).thenReturn(savedMediatedRequest);
+    var mediatedRequestCaptor = ArgumentCaptor.forClass(MediatedRequest.class);
+
+    processor.execute(context);
+
+    verify(mediatedRequestsService).post(mediatedRequestCaptor.capture());
+    var mediatedRequest = mediatedRequestCaptor.getValue();
+    assertEquals(mediatedRequest.getItemId(), itemId);
+    assertEquals(split.getPickupServicePointId().toString(), mediatedRequest.getPickupServicePointId());
+    assertEquals(instanceId, mediatedRequest.getInstanceId());
+
+    verify(splitRepository).save(splitCaptor.capture());
+    assertEquals(BatchRequestSplitStatus.COMPLETED, splitCaptor.getValue().getStatus());
+    assertEquals(savedMediatedRequest.getId(), split.getConfirmedRequestId().toString());
+  }
+
+  @Test
+  void execute_positive_shouldCreateMediatedRequestsWithSecureTenantInEcsEnv() {
+    var batch = MediatedBatchRequest.builder()
+      .id(UUID.randomUUID()).requesterId(UUID.randomUUID()).build();
+    var itemId = UUID.randomUUID().toString();
+    var instanceId = UUID.randomUUID().toString();
+    var split = MediatedBatchRequestSplit.builder()
+      .itemId(UUID.fromString(itemId))
+      .pickupServicePointId(UUID.randomUUID())
+      .requesterId(UUID.randomUUID())
+      .build();
+    var savedMediatedRequest = new MediatedRequest().id(UUID.randomUUID().toString());
+
+    var tenantId = "secure-tenant";
+    when(executionContext.getTenantId()).thenReturn(tenantId);
+    when(consortiumService.getCentralTenantId(tenantId)).thenReturn(Optional.of("central"));
+    when(searchService.searchItem(itemId)).thenReturn(Optional.of(new ConsortiumItem().instanceId(instanceId)));
+
+    when(context.getBatchSplitEntity()).thenReturn(split);
+    when(context.getDeploymentEnvType()).thenReturn(EnvironmentType.SECURE_TENANT);
+    when(context.getBatchRequestId()).thenReturn(batch.getId());
+    when(batchRequestRepository.findById(any(UUID.class))).thenReturn(Optional.of(batch));
+    when(mediatedRequestsService.post(any(MediatedRequest.class))).thenReturn(savedMediatedRequest);
+    var mediatedRequestCaptor = ArgumentCaptor.forClass(MediatedRequest.class);
+
+    processor.execute(context);
+
+    verify(mediatedRequestsService).post(mediatedRequestCaptor.capture());
+    var mediatedRequest = mediatedRequestCaptor.getValue();
+    assertEquals(mediatedRequest.getItemId(), itemId);
+    assertEquals(split.getPickupServicePointId().toString(), mediatedRequest.getPickupServicePointId());
+    assertEquals(instanceId, mediatedRequest.getInstanceId());
+
+    verify(splitRepository).save(splitCaptor.capture());
+    assertEquals(BatchRequestSplitStatus.COMPLETED, splitCaptor.getValue().getStatus());
+    assertEquals(savedMediatedRequest.getId(), split.getConfirmedRequestId().toString());
   }
 }
