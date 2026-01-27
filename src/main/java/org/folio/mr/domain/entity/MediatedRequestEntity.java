@@ -147,25 +147,5 @@ public class MediatedRequestEntity extends MetadataEntity {
   private String mediatedRequestStatusText;
 
   private String fulfillmentPreferenceText;
-//
-//  // Metadata
-//
-//  @Column(name = "created_date")
-//  private Date createdDate;
-//
-//  @Column(name = "created_by_user_id")
-//  private UUID createdByUserId;
-//
-//  @Column(name = "created_by_username")
-//  private String createdByUsername;
-//
-//  @Column(name = "updated_date")
-//  private Date updatedDate;
-//
-//  @Column(name = "updated_by_user_id")
-//  private UUID updatedByUserId;
-//
-//  @Column(name = "updated_by_username")
-//  private String updatedByUsername;
 
 }

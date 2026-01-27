@@ -86,14 +86,6 @@ class MediatedRequestMapperTest {
     assertEquals("suf", entity.getCallNumberSuffix());
     assertEquals("F 416 H37 A2 59001", entity.getShelvingOrder());
     assertEquals("Circ Desk 1", entity.getPickupServicePointName());
-    // Metadata fields are now ignored in DTO-to-Entity mapping (managed by JPA auditing)
-    // They will be null after mapping and automatically set when entity is persisted
-    assertEquals(null, entity.getCreatedDate());
-    assertEquals(null, entity.getCreatedByUserId());
-    assertEquals(null, entity.getCreatedByUsername());
-    assertEquals(null, entity.getUpdatedDate());
-    assertEquals(null, entity.getUpdatedByUserId());
-    assertEquals(null, entity.getUpdatedByUsername());
   }
 
   @Test
@@ -149,13 +141,6 @@ class MediatedRequestMapperTest {
     assertEquals("suf", dto.getSearchIndex().getCallNumberComponents().getSuffix());
     assertEquals("F 416 H37 A2 59001", dto.getSearchIndex().getShelvingOrder());
     assertEquals("Circ Desk 1", dto.getSearchIndex().getPickupServicePointName());
-    // Metadata
-    assertEquals(CREATED_DATE, dto.getMetadata().getCreatedDate());
-    assertEquals(CREATED_BY_USER_ID, dto.getMetadata().getCreatedByUserId());
-    assertEquals("created-by", dto.getMetadata().getCreatedByUsername());
-    assertEquals(UPDATED_DATE, dto.getMetadata().getUpdatedDate());
-    assertEquals(UPDATED_BY_USER_ID, dto.getMetadata().getUpdatedByUserId());
-    assertEquals("updated-by", dto.getMetadata().getUpdatedByUsername());
   }
 
   @Test

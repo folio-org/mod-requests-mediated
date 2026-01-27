@@ -115,9 +115,6 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     addFulfillmentDetails(context);
     addSearchIndex(context);
 
-    // Metadata is now handled by JPA auditing in MediatedRequestEntity
-    // No need to manually update metadata
-
     return request;
   }
 
@@ -134,9 +131,6 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
     addInstance(context);
     addItem(context);
     addSearchIndex(context);
-
-    // Metadata is now handled by JPA auditing in MediatedRequestEntity
-    // No need to manually update metadata
 
     return request;
   }

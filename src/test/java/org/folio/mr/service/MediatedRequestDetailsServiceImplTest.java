@@ -71,9 +71,6 @@ class MediatedRequestDetailsServiceImplTest {
   private InventoryService inventoryService;
 
   @Mock
-  private MetadataService metadataService;
-
-  @Mock
   private SearchInstancesClient searchInstancesClient;
 
   @Mock
