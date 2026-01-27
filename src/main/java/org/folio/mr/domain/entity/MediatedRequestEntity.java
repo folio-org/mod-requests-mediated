@@ -15,6 +15,7 @@ import org.folio.mr.domain.converter.RequestTypeJdbcType;
 import org.folio.spring.cql.Cql2JpaCriteria;
 import org.folio.spring.cql.IgnoreCase;
 import org.hibernate.annotations.JdbcType;
+import org.springframework.data.domain.Persistable;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -22,7 +23,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -39,9 +43,18 @@ import lombok.With;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class MediatedRequestEntity extends MetadataEntity {
+public class MediatedRequestEntity extends MetadataEntity implements Persistable<UUID>, Identifiable<UUID> {
   static {  // delete for Trillium, this is only needed for Ramsons and Sunflower
     Cql2JpaCriteria.setCaseAccentsHandlingEnabled(true);
+  }
+
+  @Transient
+  private boolean isNew = true;
+
+  @PostLoad
+  @PrePersist
+  void markNotNew() {
+    this.isNew = false;
   }
 
   @Id
