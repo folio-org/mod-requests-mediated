@@ -160,15 +160,15 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
       .getItemRequestAllowedServicePoints(splitEntity.getRequesterId(), splitEntity.getItemId());
 
     var pickupServicePointId = splitEntity.getPickupServicePointId();
-    if (containsServicePoint(allowedServicePoints.Page(), pickupServicePointId)) {
+    if (containsServicePoint(allowedServicePoints.page(), pickupServicePointId)) {
       return Optional.of(Request.RequestTypeEnum.PAGE);
     }
 
-    if (containsServicePoint(allowedServicePoints.Hold(), pickupServicePointId)) {
+    if (containsServicePoint(allowedServicePoints.hold(), pickupServicePointId)) {
       return Optional.of(Request.RequestTypeEnum.HOLD);
     }
 
-    if (containsServicePoint(allowedServicePoints.Recall(), pickupServicePointId)) {
+    if (containsServicePoint(allowedServicePoints.recall(), pickupServicePointId)) {
       return Optional.of(Request.RequestTypeEnum.RECALL);
     }
 
@@ -228,15 +228,15 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
   }
 
   private String getHoldingIdForItem(String itemId) {
-    var item = Optional.ofNullable(inventoryService.fetchItem(itemId))
-      .orElseThrow(() -> new ItemNotFoundException(itemId));
-    return item.getHoldingsRecordId();
+    return Optional.ofNullable(inventoryService.fetchItem(itemId))
+      .orElseThrow(() -> new ItemNotFoundException(itemId))
+      .getHoldingsRecordId();
   }
 
   private String getInstanceIdForHolding(String holdingId) {
-    var holding = Optional.ofNullable(inventoryService.fetchHolding(holdingId))
-      .orElseThrow(() -> new HoldingNotFoundException(holdingId));
-    return holding.getInstanceId();
+    return Optional.ofNullable(inventoryService.fetchHolding(holdingId))
+      .orElseThrow(() -> new HoldingNotFoundException(holdingId))
+      .getInstanceId();
   }
 
   /**

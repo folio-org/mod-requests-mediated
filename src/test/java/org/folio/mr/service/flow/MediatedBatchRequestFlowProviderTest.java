@@ -59,13 +59,20 @@ class MediatedBatchRequestFlowProviderTest {
     assertEquals("DynamicStage", flow.getStages().get(1).getStageType());
   }
 
-//  @Test
-//  void createFlow_negative_shouldThrowNotSupportedErrorForSecureTenant() {
-//    var batchId = UUID.randomUUID();
-//    when(executionContext.getTenantId()).thenReturn("secureTenant");
-//    when(tenantSupportService.isSecureTenant(any(String.class))).thenReturn(true);
-//
-//    assertThrows(UnsupportedOperationException.class, () -> provider.createFlow(batchId),
-//      "Multi-Item Request is not supported for secure tenant: secureTenant");
-//  }
+  @Test
+  void createFlow_negative_shouldThrowNotSupportedErrorForSecureTenant() {
+    var batchId = UUID.randomUUID();
+    when(executionContext.getTenantId()).thenReturn("secureTenant");
+    when(tenantSupportService.isSecureTenant(any(String.class))).thenReturn(true);
+
+    var flow = provider.createFlow(batchId);
+
+    assertNotNull(flow);
+    assertEquals("BatchRequestFlow/" + batchId, flow.getId());
+    assertEquals(batchId, flow.getFlowParameters().get(BatchContext.PARAM_BATCH_ID));
+    assertEquals(EnvironmentType.SECURE_TENANT, flow.getFlowParameters().get(BatchContext.PARAM_DEPLOYMENT_ENV_TYPE));
+    assertEquals(3, flow.getStages().size());
+    assertEquals("BatchSplitEntitiesDynamicStage", flow.getStages().get(1).getStageId());
+    assertEquals("DynamicStage", flow.getStages().get(1).getStageType());
+  }
 }
