@@ -375,25 +375,19 @@ class MediatedRequestsApiTest extends BaseIT {
       UUID.fromString(requestId))
       .orElseThrow(() -> new AssertionError("Failed to find mediated request in DB"));
     assertThat("Created date must remain unchanged after update",
-      entityAfterUpdate.getCreatedDate().getTime(),
-      is(originalCreatedTime));
+      entityAfterUpdate.getCreatedDate().getTime(), is(originalCreatedTime));
     assertThat("Updated date must be greater than created date",
-      entityAfterUpdate.getUpdatedDate().getTime(),
-      greaterThan(originalCreatedTime));
+      entityAfterUpdate.getUpdatedDate().getTime(), greaterThan(originalCreatedTime));
     assertThat("Updated date must be greater than original updated date",
-      entityAfterUpdate.getUpdatedDate().getTime(),
-      greaterThan(originalUpdatedTime));
+      entityAfterUpdate.getUpdatedDate().getTime(), greaterThan(originalUpdatedTime));
     assertThat("Created by user ID must remain unchanged after update",
-      entityAfterUpdate.getCreatedByUserId(),
-      is(entityAfterCreate.getCreatedByUserId()));
+      entityAfterUpdate.getCreatedByUserId(), is(entityAfterCreate.getCreatedByUserId()));
     assertThat("Updated by user ID must be current user",
-      entityAfterUpdate.getUpdatedByUserId(),
-      is(UUID.fromString(USER_ID)));
+      entityAfterUpdate.getUpdatedByUserId(), is(UUID.fromString(USER_ID)));
     assertThat(entityAfterUpdate.getCreatedByUsername(), nullValue());
     assertThat(entityAfterUpdate.getUpdatedByUsername(), nullValue());
     assertThat("Patron comments must be updated",
-      entityAfterUpdate.getPatronComments(),
-      is("Updated patron comment to verify metadata timestamps"));
+      entityAfterUpdate.getPatronComments(), is("Updated patron comment to verify metadata timestamps"));
   }
 
   @ParameterizedTest
