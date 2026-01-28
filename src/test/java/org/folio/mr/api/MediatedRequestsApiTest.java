@@ -15,6 +15,7 @@ import static org.folio.mr.util.TestUtils.dateToString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.emptyIterable;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.iterableWithSize;
@@ -312,6 +313,87 @@ class MediatedRequestsApiTest extends BaseIT {
         HttpStatus.SC_OK)));
 
     postRequest(request).andExpect(status().isCreated());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldCreateMetadataOnPostAndUpdateOnlyUpdatedDateOnPut() {
+    // Create mediated request via POST
+    Date requestDate = new Date();
+    String instanceId = INSTANCE_ID_1;
+    MediatedRequest request = new MediatedRequest()
+      .requestLevel(TITLE)
+      .requestType(HOLD)
+      .fulfillmentPreference(DELIVERY)
+      .deliveryAddressTypeId("93d3d88d-499b-45d0-9bc7-ac73c3a19880")
+      .requestDate(requestDate)
+      .requesterId(REQUESTER_ID)
+      .instanceId(instanceId);
+
+    wireMockServer.stubFor(WireMock.get(urlMatching("/search/instances" + ".*"))
+      .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM))
+      .willReturn(jsonResponse(new SearchInstancesResponse().addInstancesItem(
+        new SearchInstance()
+          .id(instanceId)
+          .tenantId(TENANT_ID_CONSORTIUM)),
+        HttpStatus.SC_OK)));
+
+    String createResponseBody = postRequest(request)
+      .andExpect(status().isCreated())
+      .andExpect(jsonPath("id", matchesPattern(UUID_PATTEN)))
+      .andExpect(jsonPath("requestLevel", is("Title")))
+      .andExpect(jsonPath("requestType", is("Hold")))
+      .andReturn().getResponse().getContentAsString();
+
+    MediatedRequest createdRequest = OBJECT_MAPPER.readValue(createResponseBody,
+      MediatedRequest.class);
+    String requestId = createdRequest.getId();
+
+    // Verify metadata was created in database
+    MediatedRequestEntity entityAfterCreate = mediatedRequestsRepository.findById(
+      UUID.fromString(requestId))
+      .orElseThrow(() -> new AssertionError("Failed to find mediated request in DB"));
+
+    assertThat(entityAfterCreate.getCreatedDate(), notNullValue());
+    assertThat(entityAfterCreate.getUpdatedDate(), notNullValue());
+    assertThat(entityAfterCreate.getCreatedByUserId(), is(UUID.fromString(USER_ID)));
+    assertThat(entityAfterCreate.getUpdatedByUserId(), is(UUID.fromString(USER_ID)));
+    assertThat(entityAfterCreate.getCreatedByUsername(), nullValue());
+    assertThat(entityAfterCreate.getUpdatedByUsername(), nullValue());
+    long originalCreatedTime = entityAfterCreate.getCreatedDate().getTime();
+    long originalUpdatedTime = entityAfterCreate.getUpdatedDate().getTime();
+
+    Thread.sleep(1000);
+
+    // Update mediated request via PUT
+    createdRequest.setPatronComments("Updated patron comment to verify metadata timestamps");
+    putRequest(createdRequest)
+      .andExpect(status().isNoContent());
+
+    // Verify metadata behavior in database after update
+    MediatedRequestEntity entityAfterUpdate = mediatedRequestsRepository.findById(
+      UUID.fromString(requestId))
+      .orElseThrow(() -> new AssertionError("Failed to find mediated request in DB"));
+    assertThat("Created date must remain unchanged after update",
+      entityAfterUpdate.getCreatedDate().getTime(),
+      is(originalCreatedTime));
+    assertThat("Updated date must be greater than created date",
+      entityAfterUpdate.getUpdatedDate().getTime(),
+      greaterThan(originalCreatedTime));
+    assertThat("Updated date must be greater than original updated date",
+      entityAfterUpdate.getUpdatedDate().getTime(),
+      greaterThan(originalUpdatedTime));
+    assertThat("Created by user ID must remain unchanged after update",
+      entityAfterUpdate.getCreatedByUserId(),
+      is(entityAfterCreate.getCreatedByUserId()));
+    assertThat("Updated by user ID must be current user",
+      entityAfterUpdate.getUpdatedByUserId(),
+      is(UUID.fromString(USER_ID)));
+    assertThat(entityAfterUpdate.getCreatedByUsername(), nullValue());
+    assertThat(entityAfterUpdate.getUpdatedByUsername(), nullValue());
+    assertThat("Patron comments must be updated",
+      entityAfterUpdate.getPatronComments(),
+      is("Updated patron comment to verify metadata timestamps"));
   }
 
   @ParameterizedTest
@@ -643,11 +725,6 @@ class MediatedRequestsApiTest extends BaseIT {
   }
 
   private static final String INSTANCE_TITLE_2 = "Lorem ipsum dolor sit amet, consectetur " +
-    "adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim " +
-    "ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo " +
-    "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
-    "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui " +
-    "officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur " +
     "adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim " +
     "ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo " +
     "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
