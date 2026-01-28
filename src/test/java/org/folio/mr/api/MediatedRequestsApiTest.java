@@ -363,8 +363,6 @@ class MediatedRequestsApiTest extends BaseIT {
     long originalCreatedTime = entityAfterCreate.getCreatedDate().getTime();
     long originalUpdatedTime = entityAfterCreate.getUpdatedDate().getTime();
 
-    Thread.sleep(1000);
-
     // Update mediated request via PUT
     createdRequest.setPatronComments("Updated patron comment to verify metadata timestamps");
     putRequest(createdRequest)
@@ -386,8 +384,8 @@ class MediatedRequestsApiTest extends BaseIT {
       entityAfterUpdate.getUpdatedByUserId(), is(UUID.fromString(USER_ID)));
     assertThat(entityAfterUpdate.getCreatedByUsername(), nullValue());
     assertThat(entityAfterUpdate.getUpdatedByUsername(), nullValue());
-    assertThat("Patron comments must be updated",
-      entityAfterUpdate.getPatronComments(), is("Updated patron comment to verify metadata timestamps"));
+    assertThat("Patron comments must be updated", entityAfterUpdate.getPatronComments(),
+      is("Updated patron comment to verify metadata timestamps"));
   }
 
   @ParameterizedTest
