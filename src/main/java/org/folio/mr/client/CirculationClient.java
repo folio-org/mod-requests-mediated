@@ -1,5 +1,6 @@
 package org.folio.mr.client;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Set;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.ServicePoint;
@@ -31,5 +32,5 @@ public interface CirculationClient {
     @RequestParam("operation") String operation,
     @RequestParam("itemId") String itemId);
 
-  record AllowedServicePoints(Set<ServicePoint> page, Set<ServicePoint> hold, Set<ServicePoint> recall) { }
+  record AllowedServicePoints(@JsonProperty("Page") Set<ServicePoint> page, @JsonProperty("Hold") Set<ServicePoint> hold, @JsonProperty("Recall") Set<ServicePoint> recall) { }
 }
