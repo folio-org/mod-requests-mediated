@@ -52,13 +52,6 @@ public interface MediatedRequestMapper {
   @Mapping(target = "searchIndex.callNumberComponents.suffix", source="callNumberSuffix")
   @Mapping(target = "searchIndex.shelvingOrder", source="shelvingOrder")
   @Mapping(target = "searchIndex.pickupServicePointName", source="pickupServicePointName")
-  // Metadata
-  @Mapping(target = "metadata.createdDate", source = "createdDate")
-  @Mapping(target = "metadata.createdByUserId", source="createdByUserId", qualifiedByName = "UuidToStringSafe")
-  @Mapping(target = "metadata.createdByUsername", source = "createdByUsername")
-  @Mapping(target = "metadata.updatedDate", source = "updatedDate")
-  @Mapping(target = "metadata.updatedByUserId", source="updatedByUserId", qualifiedByName = "UuidToStringSafe")
-  @Mapping(target = "metadata.updatedByUsername", source = "updatedByUsername")
   MediatedRequest mapEntityToDto(MediatedRequestEntity mediatedRequestEntity);
 
   @Mapping(target = "id", qualifiedByName = "StringToUuidSafe")
@@ -85,13 +78,6 @@ public interface MediatedRequestMapper {
   @Mapping(target = "callNumberSuffix", source = "searchIndex.callNumberComponents.suffix")
   @Mapping(target = "shelvingOrder", source = "searchIndex.shelvingOrder")
   @Mapping(target = "pickupServicePointName", source = "searchIndex.pickupServicePointName")
-  // Metadata
-  @Mapping(target = "createdDate", source = "metadata.createdDate")
-  @Mapping(target = "createdByUserId", source = "metadata.createdByUserId", qualifiedByName = "StringToUuidSafe")
-  @Mapping(target = "createdByUsername", source = "metadata.createdByUsername")
-  @Mapping(target = "updatedDate", source = "metadata.updatedDate")
-  @Mapping(target = "updatedByUserId", source = "metadata.updatedByUserId", qualifiedByName = "StringToUuidSafe")
-  @Mapping(target = "updatedByUsername", source = "metadata.updatedByUsername")
   MediatedRequestEntity mapDtoToEntity(MediatedRequest mediatedRequest);
 
   default <T, V> T mapEnum(V v, Function<V, String> valueGetter, Function <String, T> mapper) {
