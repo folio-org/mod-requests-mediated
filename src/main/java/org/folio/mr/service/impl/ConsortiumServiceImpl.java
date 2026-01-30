@@ -1,11 +1,11 @@
 package org.folio.mr.service.impl;
 
+import java.util.Optional;
 import org.folio.mr.client.UserTenantsClient;
 import org.folio.mr.domain.dto.UserTenant;
 import org.folio.mr.service.ConsortiumService;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -43,5 +43,13 @@ public class ConsortiumServiceImpl implements ConsortiumService {
 
     log.info("getCurrentTenantId:: current tenant ID: {}", currentTenantId);
     return currentTenantId;
+  }
+
+  @Override
+  public Optional<String> getCentralTenantId(String tenantId) {
+    return Optional.ofNullable(userTenantsClient.getUserTenants(tenantId))
+      .flatMap(tenantsResponse -> tenantsResponse.getUserTenants().stream()
+        .findFirst()
+        .map(UserTenant::getCentralTenantId));
   }
 }
