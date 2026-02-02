@@ -86,6 +86,13 @@ class MediatedRequestMapperTest {
     assertEquals("suf", entity.getCallNumberSuffix());
     assertEquals("F 416 H37 A2 59001", entity.getShelvingOrder());
     assertEquals("Circ Desk 1", entity.getPickupServicePointName());
+    /// Metadata
+    assertEquals(CREATED_DATE, entity.getCreatedDate());
+    assertEquals(CREATED_BY_USER_ID, entity.getCreatedByUserId().toString());
+    assertEquals("created-by", entity.getCreatedByUsername());
+    assertEquals(UPDATED_DATE, entity.getUpdatedDate());
+    assertEquals(UPDATED_BY_USER_ID, entity.getUpdatedByUserId().toString());
+    assertEquals("updated-by", entity.getUpdatedByUsername());
   }
 
   @Test
@@ -141,6 +148,13 @@ class MediatedRequestMapperTest {
     assertEquals("suf", dto.getSearchIndex().getCallNumberComponents().getSuffix());
     assertEquals("F 416 H37 A2 59001", dto.getSearchIndex().getShelvingOrder());
     assertEquals("Circ Desk 1", dto.getSearchIndex().getPickupServicePointName());
+    // Metadata
+    assertEquals(CREATED_DATE, dto.getMetadata().getCreatedDate());
+    assertEquals(CREATED_BY_USER_ID, dto.getMetadata().getCreatedByUserId());
+    assertEquals("created-by", dto.getMetadata().getCreatedByUsername());
+    assertEquals(UPDATED_DATE, dto.getMetadata().getUpdatedDate());
+    assertEquals(UPDATED_BY_USER_ID, dto.getMetadata().getUpdatedByUserId());
+    assertEquals("updated-by", dto.getMetadata().getUpdatedByUsername());
   }
 
   @Test
