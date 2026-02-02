@@ -1,12 +1,10 @@
 package org.folio.mr.service.impl;
 
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
-import org.folio.mr.client.UserTenantsClient;
 import org.folio.mr.config.TenantConfig;
-import org.folio.mr.domain.dto.UserTenant;
+import org.folio.mr.service.ConsortiumService;
 import org.folio.mr.service.TenantSupportService;
 import org.springframework.stereotype.Service;
 
@@ -16,15 +14,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TenantSupportServiceImpl implements TenantSupportService {
 
-  private final UserTenantsClient userTenantsClient;
+  private final ConsortiumService consortiumService;
   private final TenantConfig tenantConfig;
 
   @Override
   public boolean isCentralTenant(String tenantId) {
-    return Optional.ofNullable(userTenantsClient.getUserTenants(tenantId))
-      .flatMap(tenantsResponse -> tenantsResponse.getUserTenants().stream()
-        .findFirst()
-        .map(UserTenant::getCentralTenantId))
+    return consortiumService.getCentralTenantId(tenantId)
       .filter(centralTenantId -> centralTenantId.equals(tenantId))
       .isPresent();
   }
