@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
+import lombok.Builder;
 import org.folio.mr.domain.FulfillmentPreference;
 import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.RequestLevel;
@@ -36,6 +37,7 @@ import lombok.With;
 @Entity
 @IgnoreCase
 @With
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString

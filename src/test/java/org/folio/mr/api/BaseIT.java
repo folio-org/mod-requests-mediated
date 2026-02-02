@@ -1,6 +1,5 @@
 package org.folio.mr.api;
 
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -15,19 +14,21 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
+import org.folio.mr.support.DatabaseHelper;
 import org.folio.mr.util.DbInitializer;
 import org.folio.mr.util.MockHelper;
 import org.folio.mr.util.TestUtils;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.scope.FolioExecutionContextSetter;
+import org.folio.spring.testing.extension.impl.OkapiConfiguration;
+import org.folio.spring.testing.extension.impl.OkapiExtension;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.folio.test.extensions.EnablePostgres;
 import org.hamcrest.Matcher;
@@ -36,21 +37,25 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.util.TestSocketUtils;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -79,6 +84,7 @@ import lombok.SneakyThrows;
 })
 @AutoConfigureMockMvc
 @Testcontainers
+@Import(BaseIT.DbHelperTestConfiguration.class)
 public class BaseIT {
   protected static final String TOKEN = "test_token";
   protected static final String TENANT_ID_CONSORTIUM = "consortium";
@@ -88,30 +94,42 @@ public class BaseIT {
   protected static final String USER_ID = randomId();
   protected static final String HEADER_TENANT = "x-okapi-tenant";
   private static final String FOLIO_ENVIRONMENT = "folio";
-  private static final int WIRE_MOCK_PORT = TestSocketUtils.findAvailableTcpPort();
-  protected static WireMockServer wireMockServer =
-    new WireMockServer(wireMockConfig().port(WIRE_MOCK_PORT).notifier(new Slf4jNotifier(true)));
   protected static final String REQUEST_KAFKA_TOPIC_NAME = buildTopicName("circulation", "request");
   protected static final String ITEM_KAFKA_TOPIC_NAME = buildTopicName("inventory", "item");
   private static final String[] KAFKA_TOPICS = {REQUEST_KAFKA_TOPIC_NAME, ITEM_KAFKA_TOPIC_NAME};
-  private FolioExecutionContextSetter contextSetter;
-  protected static MockHelper mockHelper;
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
     .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-  @Autowired
-  private WebTestClient webClient;
+  protected static WebTestClient webClient;
+
+  protected static OkapiConfiguration okapi;
+
+  protected static AdminClient kafkaAdminClient;
+
+  protected static WireMockServer wireMockServer;
+
+  protected static MockHelper mockHelper;
+
+  protected static DatabaseHelper databaseHelper;
+
+  protected FolioExecutionContextSetter contextSetter;
+
+  @RegisterExtension
+  static OkapiExtension okapiExtension = new OkapiExtension();
 
   @Autowired
   protected MockMvc mockMvc;
 
   @Autowired
   private FolioModuleMetadata moduleMetadata;
-  protected static AdminClient kafkaAdminClient;
+
   @Autowired
   protected KafkaTemplate<String, String> kafkaTemplate;
+
+  @Autowired
+  protected JdbcTemplate jdbcTemplate;
 
   @Container
   private static final KafkaContainer kafka = new KafkaContainer(
@@ -121,14 +139,28 @@ public class BaseIT {
   @DynamicPropertySource
   static void overrideProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
-    registry.add("folio.okapi-url", wireMockServer::baseUrl);
+    registry.add("folio.okapi-url", okapi::getOkapiUrl);
+  }
+
+  @SneakyThrows
+  protected static void setUpTenant() {
+    setUpTenant(TENANT_ID_CONSORTIUM);
+  }
+
+  @SneakyThrows
+  protected static void setUpTenant(String tenantId) {
+    var httpHeaders = new HttpHeaders();
+    httpHeaders.setContentType(APPLICATION_JSON);
+    httpHeaders.add(XOkapiHeaders.TENANT, tenantId);
+    httpHeaders.add(XOkapiHeaders.USER_ID, USER_ID);
+    httpHeaders.add(XOkapiHeaders.URL, okapi.getOkapiUrl());
+
+    var tenantAttributes = new TenantAttributes().moduleTo("mod-requests-mediated");
+    doPostWithTenant("/_/tenant", tenantAttributes, tenantId, httpHeaders);
   }
 
   @BeforeEach
   void beforeEachTest() {
-    doPost("/_/tenant", asJsonString(new TenantAttributes().moduleTo("mod-requests-mediated")))
-      .expectStatus().isNoContent();
-
     contextSetter = initFolioContext();
     wireMockServer.resetAll();
   }
@@ -139,13 +171,18 @@ public class BaseIT {
   }
 
   @BeforeAll
-  static void setUp() {
-    wireMockServer.start();
+  static void setUp(@Autowired WebTestClient webClient, @Autowired DatabaseHelper databaseHelper) {
+    BaseIT.webClient = webClient;
+
+    wireMockServer = okapi.wireMockServer();
     mockHelper = new MockHelper(wireMockServer);
+    BaseIT.databaseHelper = databaseHelper;
 
     kafkaAdminClient = KafkaAdminClient.create(Map.of(
       ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers()));
     createKafkaTopics(KAFKA_TOPICS);
+
+    setUpTenant();
   }
 
   @AfterAll
@@ -166,11 +203,17 @@ public class BaseIT {
   }
 
   protected FolioExecutionContextSetter initFolioContext() {
-    HashMap<String, Collection<String>> headers = new HashMap<>(defaultHeaders().entrySet()
+    return initFolioContext(TENANT_ID_CONSORTIUM);
+  }
+
+  protected FolioExecutionContextSetter initFolioContext(String tenantId) {
+    var headers = defaultHeaders();
+    headers.set(XOkapiHeaders.TENANT, tenantId);
+    HashMap<String, Collection<String>> headersMap = new HashMap<>(headers.entrySet()
       .stream()
       .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
-    return new FolioExecutionContextSetter(moduleMetadata, headers);
+    return new FolioExecutionContextSetter(moduleMetadata, headersMap);
   }
 
   public static HttpHeaders defaultHeaders() {
@@ -190,15 +233,15 @@ public class BaseIT {
     return OBJECT_MAPPER.writeValueAsString(value);
   }
 
-  protected WebTestClient.RequestBodySpec buildRequest(HttpMethod method, String uri) {
+  protected static WebTestClient.RequestBodySpec buildRequest(HttpMethod method, String uri, HttpHeaders headers) {
     return webClient.method(method)
       .uri(uri)
       .accept(APPLICATION_JSON)
       .contentType(APPLICATION_JSON)
-      .header(XOkapiHeaders.TENANT, TENANT_ID_CONSORTIUM)
-      .header(XOkapiHeaders.URL, wireMockServer.baseUrl())
+      .header(XOkapiHeaders.TENANT, headers.getFirst(XOkapiHeaders.TENANT))
+      .header(XOkapiHeaders.URL, okapi.getOkapiUrl())
       .header(XOkapiHeaders.TOKEN, TOKEN)
-      .header(XOkapiHeaders.USER_ID, USER_ID);
+      .header(XOkapiHeaders.USER_ID, headers.getFirst(XOkapiHeaders.USER_ID));
   }
 
   protected WebTestClient.ResponseSpec doPost(String url, Object payload) {
@@ -206,11 +249,15 @@ public class BaseIT {
   }
 
   protected WebTestClient.ResponseSpec doPostWithTenant(String url, Object payload, String tenantId) {
-    return doPostWithToken(url, payload, TestUtils.buildToken(tenantId));
+    return doPostWithToken(url, payload, TestUtils.buildToken(tenantId), defaultHeaders());
   }
 
-  protected WebTestClient.ResponseSpec doPostWithToken(String url, Object payload, String token) {
-    return buildRequest(HttpMethod.POST, url)
+  protected static WebTestClient.ResponseSpec doPostWithTenant(String url, Object payload, String tenantId, HttpHeaders headers) {
+    return doPostWithToken(url, payload, TestUtils.buildToken(tenantId), headers);
+  }
+
+  protected static WebTestClient.ResponseSpec doPostWithToken(String url, Object payload, String token, HttpHeaders headers) {
+    return buildRequest(HttpMethod.POST, url, headers)
       .cookie("folioAccessToken", token)
       .body(BodyInserters.fromValue(payload))
       .exchange();
@@ -269,5 +316,14 @@ public class BaseIT {
 
   protected ResultMatcher errorCodeMatch(Matcher<String> code) {
     return jsonPath("$.errors.[0].code", code);
+  }
+
+  @TestConfiguration
+  public static class DbHelperTestConfiguration {
+
+    @Bean
+    public DatabaseHelper databaseHelper(JdbcTemplate jdbcTemplate, FolioModuleMetadata moduleMetadata) {
+      return new DatabaseHelper(moduleMetadata, jdbcTemplate);
+    }
   }
 }

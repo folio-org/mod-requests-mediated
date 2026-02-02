@@ -18,16 +18,22 @@ import org.folio.mr.client.EcsExternalTlrClient;
 import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.BatchSplitContext;
 import org.folio.mr.domain.FulfillmentPreference;
+import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsRequestExternal;
+import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.dto.ServicePoint;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
+import org.folio.mr.exception.HoldingNotFoundException;
 import org.folio.mr.exception.ItemNotFoundException;
 import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
 import org.folio.mr.service.CirculationRequestService;
+import org.folio.mr.service.ConsortiumService;
+import org.folio.mr.service.InventoryService;
+import org.folio.mr.service.MediatedRequestsService;
 import org.folio.mr.service.SearchService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.service.SystemUserScopedExecutionService;
@@ -48,6 +54,9 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
   private final EcsExternalTlrClient ecsTlrClient;
   private final SystemUserScopedExecutionService executionService;
   private final CirculationRequestService circulationRequestService;
+  private final InventoryService inventoryService;
+  private final MediatedRequestsService mediatedRequestsService;
+  private final ConsortiumService consortiumService;
 
   @Override
   @Transactional
@@ -106,7 +115,7 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
 
     // secure tenant case
     log.info("createRequest:: creating Secure Tenant Mediated Request");
-    createMediatedRequests();
+    createMediatedRequest(batchRequest, splitEntity);
   }
 
   private void createEcsRequest(MediatedBatchRequest batchEntity, MediatedBatchRequestSplit splitEntity) {
@@ -123,7 +132,7 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
   private EcsRequestExternal buildEcsRequestPostDto(MediatedBatchRequest batch, MediatedBatchRequestSplit split) {
     var itemId = split.getItemId().toString();
     var consortiumItem = searchService.searchItem(itemId)
-      .orElseThrow(() -> new ItemNotFoundException(split.getItemId()));
+      .orElseThrow(() -> new ItemNotFoundException(itemId));
 
     return new EcsRequestExternal(consortiumItem.getInstanceId(), split.getRequesterId().toString(), ITEM,
       FulfillmentPreference.fromValue(DEFAULT_FULFILLMENT_PREFERENCE), batch.getRequestDate())
@@ -181,10 +190,16 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
 
   private Request buildLocalRequestPostDto(MediatedBatchRequestSplit splitEntity, Date requestDate,
                                            Request.RequestTypeEnum requestType) {
+    var itemId = splitEntity.getItemId().toString();
+    var holdingsRecordId = getHoldingIdForItem(itemId);
+    var instanceId = getInstanceIdForHolding(holdingsRecordId);
+
     return new Request()
       .requestLevel(Request.RequestLevelEnum.ITEM)
       .requestType(requestType)
-      .itemId(splitEntity.getItemId().toString())
+      .itemId(itemId)
+      .holdingsRecordId(holdingsRecordId)
+      .instanceId(instanceId)
       .requesterId(splitEntity.getRequesterId().toString())
       .fulfillmentPreference(Request.FulfillmentPreferenceEnum.fromValue(DEFAULT_FULFILLMENT_PREFERENCE))
       .pickupServicePointId(splitEntity.getPickupServicePointId().toString())
@@ -192,9 +207,58 @@ public class BatchSplitProcessor implements Stage<BatchSplitContext> {
       .patronComments(splitEntity.getPatronComments());
   }
 
-  private void createMediatedRequests() {
-    throw new UnsupportedOperationException(
-      "Multi-Item Request is not supported in Secure Tenant environment");
+  private void createMediatedRequest(MediatedBatchRequest batchRequest, MediatedBatchRequestSplit splitEntity) {
+    var itemId = splitEntity.getItemId().toString();
+    var instanceId = searchInstanceIdForItem(itemId);
+    var mediatedRequest = new MediatedRequest()
+      .requesterId(batchRequest.getRequesterId().toString())
+      .itemId(itemId)
+      .instanceId(instanceId)
+      .pickupServicePointId(splitEntity.getPickupServicePointId().toString())
+      .patronComments(splitEntity.getPatronComments())
+      .requestDate(batchRequest.getRequestDate())
+      .fulfillmentPreference(MediatedRequest.FulfillmentPreferenceEnum.HOLD_SHELF)
+      .requestLevel(MediatedRequest.RequestLevelEnum.ITEM);
+
+    var createdMediatedRequest = mediatedRequestsService.post(mediatedRequest);
+
+    splitEntity.setConfirmedRequestId(UUID.fromString(createdMediatedRequest.getId()));
+    splitEntity.setStatus(BatchRequestSplitStatus.COMPLETED);
+    batchRequestSplitRepository.save(splitEntity);
+  }
+
+  private String getHoldingIdForItem(String itemId) {
+    return Optional.ofNullable(inventoryService.fetchItem(itemId))
+      .orElseThrow(() -> new ItemNotFoundException(itemId))
+      .getHoldingsRecordId();
+  }
+
+  private String getInstanceIdForHolding(String holdingId) {
+    return Optional.ofNullable(inventoryService.fetchHolding(holdingId))
+      .orElseThrow(() -> new HoldingNotFoundException(holdingId))
+      .getInstanceId();
+  }
+
+  /**
+   * Performs search to find instance ID for the given item ID. The Item might belong to any tenant in the consortium or
+   * may exist in the current (secure/local)tenant.
+   * @param itemId ID of the item
+   * @return ID of the instance the item belongs to
+   */
+  private String searchInstanceIdForItem(String itemId) {
+    var centralTenantId = consortiumService.getCentralTenantId(executionContext.getTenantId());
+
+    if (centralTenantId.isPresent()) {
+      log.debug("Searching for item {} in consortium with central tenantId {}", itemId, centralTenantId.get());
+      return searchService.searchItem(itemId)
+        .map(ConsortiumItem::getInstanceId)
+        .orElse(null);
+    }
+
+    // it is Non-ECS env so item must be in the local tenant
+    log.debug("Searching for item {} in local tenant {}", itemId, executionContext.getTenantId());
+    var holdingId = getHoldingIdForItem(itemId);
+    return getInstanceIdForHolding(holdingId);
   }
 
   private void updateBatchRequestSplit(MediatedBatchRequestSplit splitEntity, Request request) {
