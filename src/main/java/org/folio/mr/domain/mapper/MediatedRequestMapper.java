@@ -1,5 +1,6 @@
 package org.folio.mr.domain.mapper;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -52,6 +53,13 @@ public interface MediatedRequestMapper {
   @Mapping(target = "searchIndex.callNumberComponents.suffix", source="callNumberSuffix")
   @Mapping(target = "searchIndex.shelvingOrder", source="shelvingOrder")
   @Mapping(target = "searchIndex.pickupServicePointName", source="pickupServicePointName")
+  // Metadata
+  @Mapping(target = "metadata.createdDate", source = "createdDate")
+  @Mapping(target = "metadata.createdByUserId", source="createdByUserId", qualifiedByName = "UuidToStringSafe")
+  @Mapping(target = "metadata.createdByUsername", source = "createdByUsername")
+  @Mapping(target = "metadata.updatedDate", source = "updatedDate")
+  @Mapping(target = "metadata.updatedByUserId", source="updatedByUserId", qualifiedByName = "UuidToStringSafe")
+  @Mapping(target = "metadata.updatedByUsername", source = "updatedByUsername")
   MediatedRequest mapEntityToDto(MediatedRequestEntity mediatedRequestEntity);
 
   @Mapping(target = "id", qualifiedByName = "StringToUuidSafe")

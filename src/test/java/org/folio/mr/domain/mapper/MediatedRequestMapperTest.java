@@ -40,6 +40,8 @@ class MediatedRequestMapperTest {
   private static final String CREATED_BY_USER_ID = UUID.randomUUID().toString();
   private static final Date UPDATED_DATE = new Date();
   private static final String UPDATED_BY_USER_ID = UUID.randomUUID().toString();
+  private static final String CREATED_BY = "created-by";
+  private static final String UPDATED_BY = "updated-by";
 
   @Test
   void testDtoToEntityMapping() {
@@ -97,10 +99,10 @@ class MediatedRequestMapperTest {
     // we need to manually set them on the entity to test Entity-to-DTO mapping
     entity.setCreatedDate(new Timestamp(CREATED_DATE.getTime()));
     entity.setCreatedByUserId(UUID.fromString(CREATED_BY_USER_ID));
-    entity.setCreatedByUsername("created-by");
+    entity.setCreatedByUsername(CREATED_BY);
     entity.setUpdatedDate(new Timestamp(UPDATED_DATE.getTime()));
     entity.setUpdatedByUserId(UUID.fromString(UPDATED_BY_USER_ID));
-    entity.setUpdatedByUsername("updated-by");
+    entity.setUpdatedByUsername(UPDATED_BY);
 
     var dto = mapper.mapEntityToDto(entity);
 
@@ -141,6 +143,13 @@ class MediatedRequestMapperTest {
     assertEquals("suf", dto.getSearchIndex().getCallNumberComponents().getSuffix());
     assertEquals("F 416 H37 A2 59001", dto.getSearchIndex().getShelvingOrder());
     assertEquals("Circ Desk 1", dto.getSearchIndex().getPickupServicePointName());
+    // Metadata
+    assertEquals(CREATED_DATE, dto.getMetadata().getCreatedDate());
+    assertEquals(CREATED_BY_USER_ID, dto.getMetadata().getCreatedByUserId());
+    assertEquals(CREATED_BY, dto.getMetadata().getCreatedByUsername());
+    assertEquals(UPDATED_DATE, dto.getMetadata().getUpdatedDate());
+    assertEquals(UPDATED_BY_USER_ID, dto.getMetadata().getUpdatedByUserId());
+    assertEquals(UPDATED_BY, dto.getMetadata().getUpdatedByUsername());
   }
 
   @Test
@@ -207,9 +216,9 @@ class MediatedRequestMapperTest {
       .metadata(new Metadata()
         .createdDate(CREATED_DATE)
         .createdByUserId(CREATED_BY_USER_ID)
-        .createdByUsername("created-by")
+        .createdByUsername(CREATED_BY)
         .updatedDate(UPDATED_DATE)
         .updatedByUserId(UPDATED_BY_USER_ID)
-        .updatedByUsername("updated-by"));
+        .updatedByUsername(UPDATED_BY));
   }
 }
