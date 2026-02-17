@@ -15,6 +15,7 @@ import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
 
 @Log4j2
@@ -24,6 +25,7 @@ public class BatchFlowInitializer extends AbstractBatchRequestStage {
 
   private final MediatedBatchRequestRepository repository;
   private final MediatedBatchRequestSplitRepository batchRequestSplitRepository;
+  private final FolioExecutionContext executionContext;
 
   @Override
   public void execute(BatchContext batchContext) {
@@ -43,7 +45,7 @@ public class BatchFlowInitializer extends AbstractBatchRequestStage {
     var batchId = context.getBatchRequestId();
     var batchEntity = repository.findById(batchId)
       .orElseThrow(() -> {
-        log.error("Batch entity with id: {} was not found", batchId);
+        log.error("Batch entity with id: {} was not found in tenant {}", batchId, executionContext.getTenantId());
         return new MediatedBatchRequestNotFoundException(batchId);
       });
 
