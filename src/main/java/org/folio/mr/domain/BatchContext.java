@@ -1,17 +1,19 @@
 package org.folio.mr.domain;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.folio.flow.api.AbstractStageContextWrapper;
 import org.folio.flow.api.StageContext;
-import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.folio.mr.service.flow.EnvironmentType;
 
 
 public class BatchContext extends AbstractStageContextWrapper {
   public static final String PARAM_BATCH_ID = "mediatedBatchRequestId";
-  public static final String PARAM_BATCH_SPLIT_ENTITIES = "mediatedBatchSplitEntities";
+  public static final String PARAM_OKAPI_HEADERS = "okapiHeaders";
+  public static final String PARAM_BATCH_SPLIT_ENTITY_IDS = "mediatedBatchSplitEntityIds";
   public static final String PARAM_BATCH_PROCESS_FAILED_MESSAGE = "mediatedBatchProcessFailedMessages";
   public static final String PARAM_DEPLOYMENT_ENV_TYPE = "deploymentEnvType";
 
@@ -27,13 +29,13 @@ public class BatchContext extends AbstractStageContextWrapper {
     return context.getFlowParameter(PARAM_DEPLOYMENT_ENV_TYPE);
   }
 
-  public BatchContext withBatchSplitEntities(Map<UUID, MediatedBatchRequestSplit> batchSplitEntities) {
-    context.put(PARAM_BATCH_SPLIT_ENTITIES, batchSplitEntities);
+  public BatchContext withBatchSplitEntityIds(List<UUID> batchSplitEntityIds) {
+    context.put(PARAM_BATCH_SPLIT_ENTITY_IDS, batchSplitEntityIds);
     return this;
   }
 
-  public Map<UUID, MediatedBatchRequestSplit> getBatchSplitEntitiesById() {
-    return context.get(PARAM_BATCH_SPLIT_ENTITIES);
+  public List<UUID> getBatchSplitEntityIds() {
+    return context.get(PARAM_BATCH_SPLIT_ENTITY_IDS);
   }
 
   public void setBatchRequestFailedMessage(String failureMessage) {
@@ -44,5 +46,9 @@ public class BatchContext extends AbstractStageContextWrapper {
     return Optional.ofNullable(context.get(PARAM_BATCH_PROCESS_FAILED_MESSAGE))
       .map(Object::toString)
       .orElse("");
+  }
+
+  public Map<String, Collection<String>> getOkapiHeaders() {
+    return context.getFlowParameter(PARAM_OKAPI_HEADERS);
   }
 }

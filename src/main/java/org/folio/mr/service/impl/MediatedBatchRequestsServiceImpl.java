@@ -3,57 +3,87 @@ package org.folio.mr.service.impl;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.mr.support.ServiceUtils.initId;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.mr.domain.entity.MediatedBatchRequest;
-import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
-import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
-import org.folio.mr.repository.MediatedBatchRequestRepository;
-import org.folio.mr.service.MediatedBatchRequestSplitService;
-import org.folio.mr.service.MediatedBatchRequestsService;
-import org.folio.spring.data.OffsetRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.folio.mr.config.BatchRequestExecutionProperties;
+import org.folio.mr.domain.BatchRequestStatus;
+import org.folio.mr.domain.dto.MediatedBatchRequestDto;
+import org.folio.mr.domain.dto.MediatedBatchRequestDto.MediatedRequestStatusEnum;
+import org.folio.mr.domain.dto.MediatedBatchRequestPostDto;
+import org.folio.mr.domain.entity.MediatedBatchRequest;
+import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
+import org.folio.mr.domain.mapper.MediatedBatchRequestMapper;
+import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
+import org.folio.mr.exception.MediatedBatchRequestValidationException;
+import org.folio.mr.repository.MediatedBatchRequestRepository;
+import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
+import org.folio.mr.service.MediatedBatchRequestsService;
+import org.folio.spring.data.OffsetRequest;
 
 @Log4j2
 @Service
 @RequiredArgsConstructor
 public class MediatedBatchRequestsServiceImpl implements MediatedBatchRequestsService {
 
+  private final MediatedBatchRequestMapper mapper;
   private final MediatedBatchRequestRepository repository;
-  private final MediatedBatchRequestSplitService requestSplitService;
+  private final MediatedBatchRequestSplitRepository batchRequestSplitRepository;
+  private final BatchRequestExecutionProperties executionProperties;
 
   @Override
   @Transactional
-  public MediatedBatchRequest create(MediatedBatchRequest batchRequestEntity, List<MediatedBatchRequestSplit> batchSplits) {
+  public MediatedBatchRequestDto create(MediatedBatchRequestPostDto batchRequestDto) {
+    var batchRequestEntity = mapper.mapPostDtoToEntity(batchRequestDto);
+    var batchSplits = mapper.mapPostDtoToSplitEntities(batchRequestDto);
     log.debug("create:: Attempting to create Mediated Batch Request: {}", batchRequestEntity);
+
+    var entityId = batchRequestEntity.getId();
+    if (entityId != null && repository.existsById(entityId)) {
+      throw MediatedBatchRequestValidationException.requestExistsException(entityId);
+    }
 
     initId(batchRequestEntity);
 
     var saved = repository.save(batchRequestEntity);
 
     updateRequestSplitEntities(saved, batchSplits);
-    requestSplitService.create(batchSplits);
+    batchRequestSplitRepository.saveAll(batchSplits);
 
-    return saved;
+    return mapper.toDto(saved);
   }
 
   @Override
-  public Page<MediatedBatchRequest> getAll(String query, Integer offset, Integer limit) {
+  public Page<MediatedBatchRequestDto> getAll(String query, Integer offset, Integer limit) {
     log.debug("getAll:: Attempts to find all Mediated Batch Requests by [offset: {}, limit: {}, query: {}]",
       offset, limit, query);
 
-    return findEntities(query, offset, limit);
+    return findEntities(query, offset, limit).map(mapper::toDto);
   }
 
   @Override
-  public MediatedBatchRequest getById(UUID id) {
+  public MediatedBatchRequestDto getById(UUID id) {
     log.debug("getById:: Loading Mediated Batch Request by ID [id: {}]", id);
+    return mapper.toDto(getEntityById(id));
+  }
 
+  @Override
+  @Transactional
+  public void updateStatusById(UUID id, MediatedRequestStatusEnum status) {
+    log.debug("updateStatusById:: Updating status for entity: {}", id);
+    var entity = getEntityById(id);
+    entity.setStatus(BatchRequestStatus.fromValue(status.getValue()));
+    repository.save(entity);
+  }
+
+  private MediatedBatchRequest getEntityById(UUID id) {
     return repository.findById(id)
       .orElseThrow(() -> new MediatedBatchRequestNotFoundException(id));
   }

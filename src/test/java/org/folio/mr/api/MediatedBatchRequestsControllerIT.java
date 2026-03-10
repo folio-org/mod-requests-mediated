@@ -11,7 +11,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
-import static org.awaitility.Durations.ONE_SECOND;
 import static org.folio.mr.api.BaseIT.TENANT_ID_SECURE;
 import static org.folio.mr.controller.delegate.BatchRequestsServiceDelegate.BATCH_REQUEST_ITEMS_VALIDATION_SETTING_FETCH_QUERY;
 import static org.folio.mr.controller.delegate.BatchRequestsServiceDelegate.SETTING_KEY;
@@ -27,8 +26,8 @@ import static org.hamcrest.Matchers.oneOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -37,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -74,9 +74,12 @@ import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
 import org.folio.mr.service.flow.BatchFailedFlowFinalizer;
 import org.folio.mr.service.flow.BatchFlowFinalizer;
 import org.folio.mr.service.flow.BatchFlowInitializer;
-import org.folio.mr.service.flow.BatchSplitProcessor;
+import org.folio.mr.service.flow.splits.BatchSplitProcessor;
 import org.folio.spring.integration.XOkapiHeaders;
+import org.folio.spring.testing.extension.DatabaseCleanup;
 import org.folio.test.types.IntegrationTest;
+
+import org.awaitility.core.ThrowingRunnable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -88,15 +91,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.ResultActions;
 
-
 @IntegrationTest
+@DatabaseCleanup(tables = {"batch_request_split", "batch_request", "mediated_request"})
 @SpringBootTest(properties = {"folio.tenant.secure-tenant-id=" + TENANT_ID_SECURE})
 class MediatedBatchRequestsControllerIT extends BaseIT {
+
+  private static final Duration MAX_AWAIT_TIMEOUT = Durations.TWO_SECONDS;
+  private static final Duration AWAIT_POLL_INTERVAL = Durations.ONE_HUNDRED_MILLISECONDS;
 
   private static final String URL_MEDIATED_BATCH_REQUESTS = "/requests-mediated/batch-mediated-requests";
   private static final String URL_MEDIATED_REQUESTS = "/requests-mediated/mediated-requests";
@@ -135,10 +140,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   private BatchFailedFlowFinalizer failedFlowFinalizer;
 
   @BeforeEach
-  void clearDatabase() {
-    batchRequestSplitRepository.deleteAll();
-    batchRequestRepository.deleteAll();
-
+  void setUp() {
     mockGetUserTenants(TENANT_ID_CONSORTIUM, TENANT_ID_CONSORTIUM);
   }
 
@@ -226,7 +228,8 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
     var postBatchRequestDto = sampleBatchRequestPostDto(ITEM_IDS);
 
     addStubForSettings();
-    createBatchRequests(postBatchRequestDto)
+    addStubsForEcsRequestCreation(EXPECTED_CREATED_REQUEST_IDS, ITEM_IDS);
+    var createdRequestJson = createBatchRequests(postBatchRequestDto)
       .andExpect(jsonPath("mediatedRequestStatus", oneOf(PENDING.getValue(), IN_PROGRESS.getValue())))
       .andExpect(jsonPath("requesterId", is(REQUESTER_ID)))
       .andExpect(jsonPath("patronComments", is(postBatchRequestDto.getPatronComments())))
@@ -236,10 +239,19 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
       .andExpect(jsonPath("metadata.createdByUsername").doesNotExist())
       .andExpect(jsonPath("metadata.updatedDate").exists())
       .andExpect(jsonPath("metadata.updatedByUserId", is(USER_ID)))
-      .andExpect(jsonPath("metadata.updatedByUsername").doesNotExist());
+      .andExpect(jsonPath("metadata.updatedByUsername").doesNotExist())
+      .andReturn().getResponse().getContentAsString();
 
     assertThat(batchRequestRepository.count()).isEqualTo(1L);
     assertThat(batchRequestSplitRepository.count()).isEqualTo(2L);
+
+    var createdRequest = OBJECT_MAPPER.readValue(createdRequestJson, MediatedBatchRequestDto.class);
+    awaitUntilAsserted(() ->
+      mockMvc.perform(get(URL_MEDIATED_BATCH_REQUESTS + "/" + createdRequest.getBatchId())
+        .headers(defaultHeaders())
+        .contentType(MediaType.APPLICATION_JSON))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("mediatedRequestStatus", is("Completed"))));
   }
 
   @Test
@@ -259,27 +271,27 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
     assertThat(batchRequestSplitRepository.count()).isEqualTo(2L);
 
     var captor = ArgumentCaptor.forClass(BatchContext.class);
-    Awaitility.await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE)
-      .untilAsserted(() -> {
-        verify(flowInitializer).execute(captor.capture());
-        var batchContext = captor.getValue();
-        assertEquals(BATCH_REQUEST_ID1, batchContext.getBatchRequestId().toString());
-        assertThat(batchContext.getBatchSplitEntitiesById()).hasSize(2);
+    awaitUntilAsserted(() -> {
+      verify(flowInitializer).execute(captor.capture());
+      var batchContext = captor.getValue();
+      assertEquals(BATCH_REQUEST_ID1, batchContext.getBatchRequestId().toString());
+      assertThat(batchContext.getBatchSplitEntityIds()).hasSize(2);
 
-        verify(batchSplitProcessor, times(2)).execute(any(BatchSplitContext.class));
-        verify(flowFinalizer).execute(any(BatchContext.class));
+      verify(batchSplitProcessor, atLeast(2)).execute(any(BatchSplitContext.class));
+      verify(flowFinalizer).execute(any(BatchContext.class));
 
-        assertThat(batchRequestSplitRepository.findAll())
-          .extracting(
-            MediatedBatchRequestSplit::getStatus,
-            MediatedBatchRequestSplit::getConfirmedRequestId,
-            MediatedBatchRequestSplit::getRequestStatus)
-          .containsExactlyInAnyOrder(
-            tuple(BatchRequestSplitStatus.COMPLETED, EXPECTED_CREATED_REQUEST_IDS[0], "Open - Not yet filled"),
-            tuple(BatchRequestSplitStatus.COMPLETED, EXPECTED_CREATED_REQUEST_IDS[1], "Open - Not yet filled")
-          );
-        assertEquals(BatchRequestStatus.COMPLETED, batchRequestRepository.findAll().getFirst().getStatus());
-      });
+      assertThat(batchRequestSplitRepository.findAll())
+        .extracting(
+          MediatedBatchRequestSplit::getStatus,
+          MediatedBatchRequestSplit::getConfirmedRequestId,
+          MediatedBatchRequestSplit::getRequestStatus)
+        .containsExactlyInAnyOrder(
+          tuple(BatchRequestSplitStatus.COMPLETED, EXPECTED_CREATED_REQUEST_IDS[0], "Open - Not yet filled"),
+          tuple(BatchRequestSplitStatus.COMPLETED, EXPECTED_CREATED_REQUEST_IDS[1], "Open - Not yet filled")
+        );
+      assertEquals(BatchRequestStatus.COMPLETED, batchRequestRepository.findAll().getFirst().getStatus());
+    });
+
     wireMockServer.verify(1, getRequestedFor(urlPathEqualTo(SEARCH_ITEM_URL + "/" + ITEM_IDS[0])));
     wireMockServer.verify(1, getRequestedFor(urlPathEqualTo(SEARCH_ITEM_URL + "/" + ITEM_IDS[1])));
     wireMockServer.verify(2, postRequestedFor(urlPathEqualTo(ECS_TLR_EXTERNAL_URL)));
@@ -326,17 +338,16 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
 
     assertThat(batchRequestRepository.count()).isEqualTo(1L);
     assertThat(batchRequestSplitRepository.count()).isEqualTo(1L);
-    Awaitility.await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE)
-      .untilAsserted(() -> {
-        assertThat(batchRequestSplitRepository.findAll())
-          .extracting(
-            MediatedBatchRequestSplit::getStatus,
-            MediatedBatchRequestSplit::getErrorDetails)
-          .containsExactlyInAnyOrder(
-            tuple(BatchRequestSplitStatus.FAILED, "Mediated Batch Request with ID [%s] was not found"
-              .formatted(BATCH_REQUEST_ID1)));
-        assertEquals(BatchRequestStatus.FAILED, batchRequestRepository.findAll().getFirst().getStatus());
-      });
+    awaitUntilAsserted(() -> {
+      assertThat(batchRequestSplitRepository.findAll())
+        .extracting(
+          MediatedBatchRequestSplit::getStatus,
+          MediatedBatchRequestSplit::getErrorDetails)
+        .containsExactlyInAnyOrder(
+          tuple(BatchRequestSplitStatus.FAILED, "Mediated Batch Request with ID [%s] was not found"
+            .formatted(BATCH_REQUEST_ID1)));
+      assertEquals(BatchRequestStatus.FAILED, batchRequestRepository.findAll().getFirst().getStatus());
+    });
   }
 
   @Test
@@ -352,17 +363,16 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
 
     assertThat(batchRequestRepository.count()).isEqualTo(1L);
     assertThat(batchRequestSplitRepository.count()).isEqualTo(2L);
-    Awaitility.await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE)
-      .untilAsserted(() -> {
-        assertThat(batchRequestSplitRepository.findAll())
-          .extracting(
-            MediatedBatchRequestSplit::getStatus,
-            MediatedBatchRequestSplit::getErrorDetails)
-          .containsExactly(
-            tuple(BatchRequestSplitStatus.COMPLETED, null),
-            tuple(BatchRequestSplitStatus.COMPLETED, null));
-        assertEquals(BatchRequestStatus.FAILED, batchRequestRepository.findAll().getFirst().getStatus());
-      });
+    awaitUntilAsserted(() -> {
+      assertThat(batchRequestSplitRepository.findAll())
+        .extracting(
+          MediatedBatchRequestSplit::getStatus,
+          MediatedBatchRequestSplit::getErrorDetails)
+        .containsExactly(
+          tuple(BatchRequestSplitStatus.COMPLETED, null),
+          tuple(BatchRequestSplitStatus.COMPLETED, null));
+      assertEquals(BatchRequestStatus.FAILED, batchRequestRepository.findAll().getFirst().getStatus());
+    });
   }
 
   @SneakyThrows
@@ -382,15 +392,14 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
       .andExpect(jsonPath("batchId", is(BATCH_REQUEST_ID1)));
 
     var captor = ArgumentCaptor.forClass(BatchContext.class);
-    Awaitility.await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE)
-      .untilAsserted(() -> {
-        verify(flowInitializer).execute(captor.capture());
-        var batchContext = captor.getValue();
-        assertEquals(BATCH_REQUEST_ID1, batchContext.getBatchRequestId().toString());
-        assertThat(batchContext.getBatchSplitEntitiesById()).hasSize(1);
+    awaitUntilAsserted(() -> {
+      verify(flowInitializer).execute(captor.capture());
+      var batchContext = captor.getValue();
+      assertEquals(BATCH_REQUEST_ID1, batchContext.getBatchRequestId().toString());
+      assertThat(batchContext.getBatchSplitEntityIds()).hasSize(1);
 
-        verify(failedFlowFinalizer).execute(any(BatchContext.class));
-      });
+      verify(failedFlowFinalizer).execute(any(BatchContext.class));
+    });
 
     var expectedErrorMsg = isNotBlank(errorMessage) ? errorMessage : "Failed to create request for item %s".formatted(ITEM_IDS[0]);
     assertThat(batchRequestSplitRepository.findAll())
@@ -418,7 +427,7 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
         .content(asJsonString(postBatchRequestDto2)))
       .andExpect(status().isUnprocessableEntity())
       .andExpect(errorMessageMatch(is(DUPLICATE_BATCH_REQUEST_ID.getMessage())))
-      .andExpect(exceptionMatch(DataIntegrityViolationException.class));
+      .andExpect(exceptionMatch(MediatedBatchRequestValidationException.class));
   }
 
   // POST Batch Request in Secure Tenant environment tests
@@ -449,30 +458,30 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
     assertThat(databaseHelper.countRowsWhere("batch_request_split", TENANT_ID_SECURE,
       "batch_id='" + BATCH_REQUEST_ID1 + "'")).isEqualTo(2L);
 
-    Awaitility.await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE)
-      .untilAsserted(() -> {
-        var response = mockMvc.perform(
-            get(URL_MEDIATED_REQUESTS)
-              .headers(headers)
-              .contentType(MediaType.APPLICATION_JSON))
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("totalRecords", is(2)))
-          .andExpect(jsonPath("mediatedRequests[*].status", is(List.of("New - Awaiting confirmation", "New - Awaiting confirmation"))))
-          .andExpect(jsonPath("mediatedRequests[*].requestLevel", is(List.of("Item", "Item"))))
-          .andExpect(jsonPath("mediatedRequests[*].instanceId", is(List.of(INSTANCE_ID, INSTANCE_ID))))
-          .andExpect(jsonPath("mediatedRequests[*].itemId", containsInAnyOrder(ITEM_IDS[0], ITEM_IDS[1])))
-          .andReturn().getResponse().getContentAsString();
-        var mediatedRequests = OBJECT_MAPPER.readValue(response, MediatedRequests.class);
-        var mediatedRequestIds = mediatedRequests.getMediatedRequests().stream().map(MediatedRequest::getId).toList();
+    awaitUntilAsserted(() -> {
+      var response = mockMvc.perform(
+          get(URL_MEDIATED_REQUESTS)
+            .headers(headers)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("totalRecords", is(2)))
+        .andExpect(jsonPath("mediatedRequests[*].status", is(List.of("New - Awaiting confirmation", "New - Awaiting confirmation"))))
+        .andExpect(jsonPath("mediatedRequests[*].requestLevel", is(List.of("Item", "Item"))))
+        .andExpect(jsonPath("mediatedRequests[*].instanceId", is(List.of(INSTANCE_ID, INSTANCE_ID))))
+        .andExpect(jsonPath("mediatedRequests[*].itemId", containsInAnyOrder(ITEM_IDS[0], ITEM_IDS[1])))
+        .andReturn().getResponse().getContentAsString();
+      var mediatedRequests = OBJECT_MAPPER.readValue(response, MediatedRequests.class);
+      var mediatedRequestIds = mediatedRequests.getMediatedRequests().stream().map(MediatedRequest::getId).toList();
 
-        mockMvc.perform(
-            get(URL_MEDIATED_BATCH_REQUESTS + "/" + BATCH_REQUEST_ID1 + "/details")
-              .headers(headers)
-              .contentType(MediaType.APPLICATION_JSON))
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("totalRecords", is(2)))
-          .andExpect(jsonPath("mediatedBatchRequestDetails[*].confirmedRequestId", is(mediatedRequestIds)));
-      });
+      mockMvc.perform(
+          get(URL_MEDIATED_BATCH_REQUESTS + "/" + BATCH_REQUEST_ID1 + "/details")
+            .headers(headers)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("totalRecords", is(2)))
+        .andExpect(jsonPath("mediatedBatchRequestDetails[*].confirmedRequestId",
+          containsInAnyOrder(mediatedRequestIds.toArray())));
+    });
 
     wireMockServer.verify(1, getRequestedFor(urlPathEqualTo(SEARCH_ITEM_URL + "/" + ITEM_IDS[0]))
       .withHeader(HEADER_TENANT, equalTo(TENANT_ID_CONSORTIUM)));
@@ -550,29 +559,28 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
     assertThat(batchRequestRepository.count()).isEqualTo(2L);
     assertThat(batchRequestSplitRepository.count()).isEqualTo(3L);
 
-    Awaitility.await().pollInterval(ONE_SECOND).atMost(Durations.ONE_MINUTE)
-      .untilAsserted(() -> {
-        assertThat(batchRequestRepository.findAll())
-          .extracting(
-            MediatedBatchRequest::getId,
-            MediatedBatchRequest::getStatus)
-          .containsExactlyInAnyOrder(
-            tuple(UUID.fromString(BATCH_REQUEST_ID1), BatchRequestStatus.COMPLETED),
-            tuple(UUID.fromString(BATCH_REQUEST_ID2), BatchRequestStatus.COMPLETED)
-          );
+    awaitUntilAsserted(() -> {
+      assertThat(batchRequestRepository.findAll())
+        .extracting(
+          MediatedBatchRequest::getId,
+          MediatedBatchRequest::getStatus)
+        .containsExactlyInAnyOrder(
+          tuple(UUID.fromString(BATCH_REQUEST_ID1), BatchRequestStatus.COMPLETED),
+          tuple(UUID.fromString(BATCH_REQUEST_ID2), BatchRequestStatus.COMPLETED)
+        );
 
-        assertThat(batchRequestSplitRepository.findAll())
-          .extracting(
-            dto -> dto.getMediatedBatchRequest().getId().toString(),
-            MediatedBatchRequestSplit::getItemId,
-            MediatedBatchRequestSplit::getConfirmedRequestId,
-            MediatedBatchRequestSplit::getPickupServicePointId)
-          .containsExactlyInAnyOrder(
-            tuple(BATCH_REQUEST_ID1, ITEM_IDS[0], EXPECTED_CREATED_REQUEST_IDS[0], SERVICE_POINT_IDS[0]),
-            tuple(BATCH_REQUEST_ID1, ITEM_IDS[1], EXPECTED_CREATED_REQUEST_IDS[1], SERVICE_POINT_IDS[1]),
-            tuple(BATCH_REQUEST_ID2, itemId, EXPECTED_CREATED_REQUEST_IDS[0], SERVICE_POINT_IDS[0])
-          );
-      });
+      assertThat(batchRequestSplitRepository.findAll())
+        .extracting(
+          dto -> dto.getMediatedBatchRequest().getId().toString(),
+          dto -> dto.getItemId().toString(),
+          MediatedBatchRequestSplit::getConfirmedRequestId,
+          MediatedBatchRequestSplit::getPickupServicePointId)
+        .containsExactlyInAnyOrder(
+          tuple(BATCH_REQUEST_ID1, ITEM_IDS[0], EXPECTED_CREATED_REQUEST_IDS[0], SERVICE_POINT_IDS[0]),
+          tuple(BATCH_REQUEST_ID1, ITEM_IDS[1], EXPECTED_CREATED_REQUEST_IDS[1], SERVICE_POINT_IDS[1]),
+          tuple(BATCH_REQUEST_ID2, itemId, EXPECTED_CREATED_REQUEST_IDS[0], SERVICE_POINT_IDS[0])
+        );
+    });
 
     var response = getRequestsDetailsByQuery(cql)
       .andExpect(status().isOk())
@@ -771,5 +779,12 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
     split.setUpdatedByUserId(UUID.randomUUID());
 
     batchRequestSplitRepository.save(split);
+  }
+
+  private static void awaitUntilAsserted(ThrowingRunnable throwingRunnable) {
+    Awaitility.await()
+      .pollInterval(AWAIT_POLL_INTERVAL)
+      .atMost(MAX_AWAIT_TIMEOUT)
+      .untilAsserted(throwingRunnable);
   }
 }

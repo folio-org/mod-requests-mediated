@@ -13,13 +13,13 @@ import org.folio.mr.domain.dto.MediatedBatchRequestDetailsDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestDtoItemRequestsStats;
 import org.folio.mr.domain.dto.MediatedBatchRequestPostDto;
+import org.folio.mr.domain.dto.MediatedBatchRequestPostDtoItemRequestsInner;
 import org.folio.mr.domain.dto.MediatedBatchRequestsDto;
-import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
-import org.folio.mr.domain.mapper.MediatedBatchRequestMapper;
 import org.folio.mr.exception.MediatedBatchRequestValidationException;
 import org.folio.mr.service.MediatedBatchRequestFlowProvider;
 import org.folio.mr.service.MediatedBatchRequestSplitService;
 import org.folio.mr.service.MediatedBatchRequestsService;
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +38,6 @@ public class BatchRequestsServiceDelegate {
 
   private final MediatedBatchRequestsService batchRequestsService;
   private final MediatedBatchRequestSplitService requestSplitService;
-  private final MediatedBatchRequestMapper mapper;
   private final FlowEngine flowEngine;
   private final MediatedBatchRequestFlowProvider flowProvider;
   private final SettingsClient settingsClient;
@@ -46,33 +45,27 @@ public class BatchRequestsServiceDelegate {
   public MediatedBatchRequestsDto retrieveBatchRequestsCollection(String query, Integer offset, Integer limit) {
     log.debug("retrieveBatchRequestsCollection:: parameters query: {}, offset: {}, limit: {}", query, offset, limit);
 
-    var entitiesPage = batchRequestsService.getAll(query, offset, limit);
-    return mapper.toMediatedBatchRequestsCollection(entitiesPage);
+    var resultPage = batchRequestsService.getAll(query, offset, limit);
+    return new MediatedBatchRequestsDto(resultPage.getContent(), (int) resultPage.getTotalElements());
   }
 
   public MediatedBatchRequestDto createBatchRequest(MediatedBatchRequestPostDto batchRequestDto) {
     log.debug("createBatchRequest:: parameters batchRequestDto: {}", batchRequestDto);
 
-    var batchEntity = mapper.mapPostDtoToEntity(batchRequestDto);
-    var batchSplits = mapper.mapPostDtoToSplitEntities(batchRequestDto);
-
-    validateRequestItems(batchSplits);
-
-    var createdEntity = batchRequestsService.create(batchEntity, batchSplits);
-
-    var flow = flowProvider.createFlow(createdEntity.getId());
+    validateRequestItems(batchRequestDto.getItemRequests());
+    var createdRequest = batchRequestsService.create(batchRequestDto);
+    var flow = flowProvider.createFlow(UUID.fromString(createdRequest.getBatchId()));
     flowEngine.executeAsync(flow);
 
-    return mapper.toDto(createdEntity);
+    return createdRequest;
   }
 
   public MediatedBatchRequestDto getBatchRequestById(UUID id) {
     log.debug("getBatchRequestById:: parameters id: {}", id);
 
-    var entity = batchRequestsService.getById(id);
+    var dto = batchRequestsService.getById(id);
     var stats = requestSplitService.getBatchRequestStats(id);
 
-    var dto = mapper.toDto(entity);
     dto.setItemRequestsStats(new MediatedBatchRequestDtoItemRequestsStats()
       .total(stats.getTotal())
       .pending(stats.getPending())
@@ -86,23 +79,27 @@ public class BatchRequestsServiceDelegate {
   public MediatedBatchRequestDetailsDto getBatchRequestDetailsByBatchId(UUID batchId, Integer offset, Integer limit) {
     log.debug("getBatchRequestDetailsByBatchId:: parameters batchId: {}, offset: {}, limit: {}", batchId, offset, limit);
 
-    var batchSplitEntities = requestSplitService.getAllByBatchId(batchId, offset, limit);
-    return mapper.toMediatedBatchRequestDetailsCollection(batchSplitEntities);
+    var splitRequestsPage = requestSplitService.getPageByBatchId(batchId, offset, limit);
+    return new MediatedBatchRequestDetailsDto()
+      .mediatedBatchRequestDetails(splitRequestsPage.getContent())
+      .totalRecords((int) splitRequestsPage.getTotalElements());
   }
 
   public MediatedBatchRequestDetailsDto retrieveBatchRequestDetailsCollection(String query, Integer offset, Integer limit) {
     log.debug("retrieveBatchRequestDetailsCollection:: parameters query: {}, offset: {}, limit: {}", query, offset, limit);
 
-    var entitiesPage = requestSplitService.getAll(query, offset, limit);
-    return mapper.toMediatedBatchRequestDetailsCollection(entitiesPage);
+    var splitRequestsPage = requestSplitService.getAll(query, offset, limit);
+    return new MediatedBatchRequestDetailsDto()
+      .mediatedBatchRequestDetails(splitRequestsPage.getContent())
+      .totalRecords((int) splitRequestsPage.getTotalElements());
   }
 
-  private void validateRequestItems(List<MediatedBatchRequestSplit> batchSplits) {
-    var uniquesItemIds = batchSplits.stream()
-      .map(MediatedBatchRequestSplit::getItemId)
+  private void validateRequestItems(List<MediatedBatchRequestPostDtoItemRequestsInner> itemRequests) {
+    var uniquesItemIds = ListUtils.emptyIfNull(itemRequests).stream()
+      .map(MediatedBatchRequestPostDtoItemRequestsInner::getItemId)
       .collect(Collectors.toSet());
 
-    if (uniquesItemIds.size() < batchSplits.size()) {
+    if (uniquesItemIds.size() < itemRequests.size()) {
       throw MediatedBatchRequestValidationException.duplicateBatchRequestItems();
     }
 

@@ -13,6 +13,7 @@ import org.folio.mr.service.MediatedRequestsService;
 import org.folio.mr.service.ValidatorService;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -68,6 +69,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   }
 
   @Override
+  @Transactional
   public MediatedRequest post(MediatedRequest mediatedRequest) {
     validatorService.validateRequesterForSave(mediatedRequest);
 
