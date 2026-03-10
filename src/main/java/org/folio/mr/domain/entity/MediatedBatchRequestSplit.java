@@ -84,4 +84,14 @@ public class MediatedBatchRequestSplit extends MetadataEntity implements Persist
   void markNotNew() {
     this.isNew = false;
   }
+
+  @Override
+  public boolean isNew() {
+    return isNew;
+  }
+
+  @Override
+  public UUID getId() {
+    return id;
+  }
 }

@@ -20,7 +20,8 @@ folio:
     print-result: ${BATCH_REQUEST_PRINT_RESULTS:true}
 management:
   endpoints:
-    enabled-by-default: false
+    access:
+      default: none
 logging:
   level:
     org.springframework.web: debug

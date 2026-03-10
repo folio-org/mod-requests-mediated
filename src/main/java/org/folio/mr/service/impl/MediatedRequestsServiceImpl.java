@@ -46,7 +46,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
       .map(MediatedRequestsServiceImpl::removeSearchIndex)
       .toList();
 
-    var totalRecords = mediatedRequestsRepository.count(query);
+    var totalRecords = mediatedRequestsRepository.countByCql(query);
 
     return new MediatedRequests().mediatedRequests(mediatedRequests).totalRecords(totalRecords);
   }

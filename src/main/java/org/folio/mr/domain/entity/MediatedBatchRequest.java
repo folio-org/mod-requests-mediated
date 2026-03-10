@@ -66,6 +66,16 @@ public class MediatedBatchRequest extends MetadataEntity implements Persistable<
     this.isNew = false;
   }
 
+  @Override
+  public boolean isNew() {
+    return isNew;
+  }
+
+  @Override
+  public UUID getId() {
+    return id;
+  }
+
   public static BatchRequestBuilder builder() {
     return new BatchRequestBuilder();
   }
