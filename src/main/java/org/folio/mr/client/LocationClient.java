@@ -4,15 +4,13 @@ import java.util.Optional;
 
 import org.folio.mr.domain.dto.Location;
 import org.folio.mr.domain.dto.Locations;
-import org.folio.spring.config.FeignClientConfiguration;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient(name = "locations", url = "locations",
-  configuration = FeignClientConfiguration.class, dismiss404 = true)
+@HttpExchange(url = "locations")
 public interface LocationClient extends GetByQueryParamsClient<Locations> {
 
-  @GetMapping("/{id}")
+  @GetExchange("/{id}")
   Optional<Location> get(@PathVariable String id);
 }

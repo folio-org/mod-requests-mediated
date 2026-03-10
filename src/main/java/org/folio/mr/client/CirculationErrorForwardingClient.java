@@ -1,30 +1,25 @@
 package org.folio.mr.client;
 
-import org.folio.mr.config.ErrorForwardingFeignClientConfiguration;
 import org.folio.mr.domain.dto.ClaimItemReturnedCirculationRequest;
 import org.folio.mr.domain.dto.DeclareClaimedReturnedItemAsMissingCirculationRequest;
 import org.folio.mr.domain.dto.DeclareLostCirculationRequest;
-import org.folio.spring.config.FeignClientConfiguration;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
 
-@FeignClient(name = "circulation-error-forwarding", url = "circulation",
-  configuration = { FeignClientConfiguration.class, ErrorForwardingFeignClientConfiguration.class })
+@HttpExchange(url = "circulation")
 public interface CirculationErrorForwardingClient {
 
-  @PostMapping("/loans/{id}/declare-item-lost")
+  @PostExchange("/loans/{id}/declare-item-lost")
   void declareItemLost(@PathVariable("id") String loanId,
     @RequestBody DeclareLostCirculationRequest declareLostRequest);
 
-  @PostMapping("/loans/{id}/claim-item-returned")
+  @PostExchange("/loans/{id}/claim-item-returned")
   void claimItemReturned(@PathVariable("id") String loanId,
     @RequestBody ClaimItemReturnedCirculationRequest request);
 
-  @PostMapping("/loans/{id}/declare-claimed-returned-item-as-missing")
+  @PostExchange("/loans/{id}/declare-claimed-returned-item-as-missing")
   void declareClaimedReturnedItemAsMissing(@PathVariable("id") String loanId,
     @RequestBody DeclareClaimedReturnedItemAsMissingCirculationRequest request);
-
 }
-

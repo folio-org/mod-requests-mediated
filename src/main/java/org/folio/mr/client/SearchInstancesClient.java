@@ -1,9 +1,8 @@
 package org.folio.mr.client;
 
 import org.folio.mr.domain.dto.SearchInstancesResponse;
-import org.folio.spring.config.FeignClientConfiguration;
-import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient(name = "searchInstances", url = "search/instances", configuration = FeignClientConfiguration.class)
+@HttpExchange(url = "search/instances")
 public interface SearchInstancesClient extends GetByQueryParamsClient<SearchInstancesResponse> {
 }

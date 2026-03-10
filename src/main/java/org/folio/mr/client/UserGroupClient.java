@@ -4,16 +4,13 @@ import java.util.Optional;
 
 import org.folio.mr.domain.dto.UserGroup;
 import org.folio.mr.domain.dto.UserGroups;
-import org.folio.spring.config.FeignClientConfiguration;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient(name = "groups", url = "groups", configuration = FeignClientConfiguration.class,
-  dismiss404 = true)
+@HttpExchange(url = "groups")
 public interface UserGroupClient extends GetByQueryParamsClient<UserGroups> {
 
-  @GetMapping("/{id}")
+  @GetExchange("/{id}")
   Optional<UserGroup> get(@PathVariable String id);
-
 }

@@ -3,20 +3,18 @@ package org.folio.mr.client;
 import java.util.Optional;
 
 import org.folio.mr.domain.dto.LoanPolicy;
-import org.folio.spring.config.FeignClientConfiguration;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
 
-@FeignClient(name = "loan-policies", url = "loan-policy-storage/loan-policies",
-  configuration = FeignClientConfiguration.class, dismiss404 = true)
+@HttpExchange(url = "loan-policy-storage/loan-policies")
 public interface LoanPolicyClient {
 
-  @GetMapping("/{id}")
+  @GetExchange("/{id}")
   Optional<LoanPolicy> get(@PathVariable String id);
 
-  @PostMapping
+  @PostExchange
   LoanPolicy post(@RequestBody LoanPolicy loanPolicy);
 }

@@ -5,19 +5,17 @@ import java.util.Optional;
 import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.Items;
 import org.folio.mr.support.CqlQuery;
-import org.folio.spring.config.FeignClientConfiguration;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient(name = "items", url = "item-storage/items",
-  configuration = FeignClientConfiguration.class, dismiss404 = true)
+@HttpExchange(url = "item-storage/items")
 public interface ItemClient extends GetByQueryParamsClient<Items> {
 
-  @GetMapping("/{id}")
+  @GetExchange("/{id}")
   Optional<Item> get(@PathVariable String id);
 
-  @GetMapping
+  @GetExchange
   Items get(@RequestParam("query") CqlQuery cqlQuery);
 }

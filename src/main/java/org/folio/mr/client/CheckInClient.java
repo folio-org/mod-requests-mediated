@@ -1,17 +1,14 @@
 package org.folio.mr.client;
 
-import org.folio.mr.config.ErrorForwardingFeignClientConfiguration;
 import org.folio.mr.domain.dto.CheckInRequest;
 import org.folio.mr.domain.dto.CheckInResponse;
-import org.folio.spring.config.FeignClientConfiguration;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
 
-@FeignClient(name = "check-in", url = "circulation",
-  configuration = { FeignClientConfiguration.class, ErrorForwardingFeignClientConfiguration.class })
+@HttpExchange(url = "circulation")
 public interface CheckInClient {
 
-  @PostMapping("/check-in-by-barcode")
+  @PostExchange("/check-in-by-barcode")
   CheckInResponse checkIn(@RequestBody CheckInRequest request);
 }

@@ -1,10 +1,8 @@
 package org.folio.mr.client;
 
 import org.folio.mr.domain.dto.Libraries;
-import org.folio.spring.config.FeignClientConfiguration;
-import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient(name = "libraries", url = "location-units/libraries",
-  configuration = FeignClientConfiguration.class, dismiss404 = true)
+@HttpExchange(url = "location-units/libraries")
 public interface LibraryClient extends GetByQueryParamsClient<Libraries> {
 }
