@@ -27,6 +27,7 @@ import org.folio.mr.util.TestUtils;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.scope.FolioExecutionContextSetter;
+import org.folio.spring.scope.filter.FolioExecutionScopeFilter;
 import org.folio.spring.testing.extension.impl.OkapiConfiguration;
 import org.folio.spring.testing.extension.impl.OkapiExtension;
 import org.folio.tenant.domain.dto.TenantAttributes;
@@ -74,7 +75,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import lombok.SneakyThrows;
 
 @EnablePostgres
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "it"})
 @ContextConfiguration(initializers = {DbInitializer.class})
 @EnableAutoConfiguration(excludeName = {"org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration"})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -325,8 +326,9 @@ public class BaseIT {
     }
 
     @Bean
-    public MockMvc mockMvc(WebApplicationContext context) {
+    public MockMvc mockMvc(WebApplicationContext context, FolioModuleMetadata folioModuleMetadata) {
       return MockMvcBuilders.webAppContextSetup(context)
+        .addFilters(new FolioExecutionScopeFilter(folioModuleMetadata))
         .build();
     }
   }
