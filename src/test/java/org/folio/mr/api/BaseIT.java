@@ -42,7 +42,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
@@ -110,13 +109,12 @@ public class BaseIT {
   protected static DatabaseHelper databaseHelper;
 
   protected FolioExecutionContextSetter contextSetter;
+
+  @Autowired
   protected MockMvc mockMvc;
 
   @RegisterExtension
   static OkapiExtension okapiExtension = new OkapiExtension();
-
-  @Autowired
-  private WebApplicationContext webApplicationContext;
 
   @Autowired
   private FolioModuleMetadata moduleMetadata;
@@ -175,7 +173,6 @@ public class BaseIT {
 
   @BeforeEach
   void beforeEachTest() {
-    mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
     contextSetter = initFolioContext();
     wireMockServer.resetAll();
   }
@@ -325,6 +322,12 @@ public class BaseIT {
     @Bean
     public DatabaseHelper databaseHelper(JdbcTemplate jdbcTemplate, FolioModuleMetadata moduleMetadata) {
       return new DatabaseHelper(moduleMetadata, jdbcTemplate);
+    }
+
+    @Bean
+    public MockMvc mockMvc(WebApplicationContext context) {
+      return MockMvcBuilders.webAppContextSetup(context)
+        .build();
     }
   }
 }

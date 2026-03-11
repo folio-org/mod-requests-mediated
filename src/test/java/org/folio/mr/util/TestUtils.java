@@ -81,7 +81,7 @@ public class TestUtils {
 
   public static String dateToString(Date date) {
     return ZonedDateTime.ofInstant(date.toInstant(), ZoneId.of("UTC"))
-      .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx"));
+      .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));
   }
 
   public static String randomId() {
