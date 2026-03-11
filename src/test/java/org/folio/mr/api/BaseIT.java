@@ -39,13 +39,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -59,6 +57,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -95,30 +95,30 @@ public class BaseIT {
   protected static final String REQUEST_KAFKA_TOPIC_NAME = buildTopicName("circulation", "request");
   protected static final String ITEM_KAFKA_TOPIC_NAME = buildTopicName("inventory", "item");
   private static final String[] KAFKA_TOPICS = {REQUEST_KAFKA_TOPIC_NAME, ITEM_KAFKA_TOPIC_NAME};
-  protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
+  protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
     .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
   protected static WebTestClient webClient;
-
   protected static OkapiConfiguration okapi;
-
   protected static AdminClient kafkaAdminClient;
-
   protected static WireMockServer wireMockServer;
-
   protected static MockHelper mockHelper;
-
   protected static DatabaseHelper databaseHelper;
 
   protected FolioExecutionContextSetter contextSetter;
+  protected MockMvc mockMvc;
+
+  @LocalServerPort
+  private int serverPort;
 
   @RegisterExtension
   static OkapiExtension okapiExtension = new OkapiExtension();
 
   @Autowired
-  protected MockMvc mockMvc;
+  private WebApplicationContext webApplicationContext;
 
   @Autowired
   private FolioModuleMetadata moduleMetadata;
@@ -157,21 +157,8 @@ public class BaseIT {
     doPostWithTenant("/_/tenant", tenantAttributes, tenantId, httpHeaders);
   }
 
-  @BeforeEach
-  void beforeEachTest() {
-    contextSetter = initFolioContext();
-    wireMockServer.resetAll();
-  }
-
-  @AfterEach
-  void afterEachTest() {
-    contextSetter.close();
-  }
-
   @BeforeAll
-  static void setUp(@Autowired WebTestClient webClient, @Autowired DatabaseHelper databaseHelper) {
-    BaseIT.webClient = webClient;
-
+  static void setUp(@Autowired DatabaseHelper databaseHelper) {
     wireMockServer = okapi.wireMockServer();
     mockHelper = new MockHelper(wireMockServer);
     BaseIT.databaseHelper = databaseHelper;
@@ -181,6 +168,23 @@ public class BaseIT {
     createKafkaTopics(KAFKA_TOPICS);
 
     setUpTenant();
+  }
+
+  @BeforeEach
+  void beforeEachTest() {
+    if (webClient == null) {
+      webClient = WebTestClient.bindToServer()
+        .baseUrl("http://localhost:" + serverPort)
+        .build();
+    }
+    mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+    contextSetter = initFolioContext();
+    wireMockServer.resetAll();
+  }
+
+  @AfterEach
+  void afterEachTest() {
+    contextSetter.close();
   }
 
   @AfterAll
@@ -249,11 +253,13 @@ public class BaseIT {
     return doPostWithToken(url, payload, TestUtils.buildToken(tenantId), defaultHeaders());
   }
 
-  protected static WebTestClient.ResponseSpec doPostWithTenant(String url, Object payload, String tenantId, HttpHeaders headers) {
+  protected static WebTestClient.ResponseSpec doPostWithTenant(String url, Object payload, String tenantId,
+    HttpHeaders headers) {
     return doPostWithToken(url, payload, TestUtils.buildToken(tenantId), headers);
   }
 
-  protected static WebTestClient.ResponseSpec doPostWithToken(String url, Object payload, String token, HttpHeaders headers) {
+  protected static WebTestClient.ResponseSpec doPostWithToken(String url, Object payload, String token,
+    HttpHeaders headers) {
     return buildRequest(HttpMethod.POST, url, headers)
       .cookie("folioAccessToken", token)
       .body(BodyInserters.fromValue(payload))
@@ -321,20 +327,6 @@ public class BaseIT {
     @Bean
     public DatabaseHelper databaseHelper(JdbcTemplate jdbcTemplate, FolioModuleMetadata moduleMetadata) {
       return new DatabaseHelper(moduleMetadata, jdbcTemplate);
-    }
-
-    @Bean
-    public WebTestClient webTestClient(@Value("${local.server.port}") int port) {
-      return WebTestClient.bindToServer()
-        .baseUrl("http://localhost:" + port)
-        .build();
-    }
-
-    @Bean
-    public MockMvc mockMvc(WebApplicationContext context) {
-      return MockMvcBuilders
-        .webAppContextSetup(context)
-        .build();
     }
   }
 }
