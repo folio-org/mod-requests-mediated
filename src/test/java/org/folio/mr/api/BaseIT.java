@@ -45,6 +45,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -111,9 +112,6 @@ public class BaseIT {
   protected FolioExecutionContextSetter contextSetter;
   protected MockMvc mockMvc;
 
-  @LocalServerPort
-  private int serverPort;
-
   @RegisterExtension
   static OkapiExtension okapiExtension = new OkapiExtension();
 
@@ -158,10 +156,15 @@ public class BaseIT {
   }
 
   @BeforeAll
-  static void setUp(@Autowired DatabaseHelper databaseHelper) {
+  static void setUp(@Autowired DatabaseHelper databaseHelper, @Autowired Environment environment) {
     wireMockServer = okapi.wireMockServer();
     mockHelper = new MockHelper(wireMockServer);
     BaseIT.databaseHelper = databaseHelper;
+
+    int port = Integer.parseInt(environment.getProperty("local.server.port"));
+    webClient = WebTestClient.bindToServer()
+      .baseUrl("http://localhost:" + port)
+      .build();
 
     kafkaAdminClient = KafkaAdminClient.create(Map.of(
       ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers()));
@@ -172,11 +175,6 @@ public class BaseIT {
 
   @BeforeEach
   void beforeEachTest() {
-    if (webClient == null) {
-      webClient = WebTestClient.bindToServer()
-        .baseUrl("http://localhost:" + serverPort)
-        .build();
-    }
     mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
     contextSetter = initFolioContext();
     wireMockServer.resetAll();
