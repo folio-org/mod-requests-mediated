@@ -39,10 +39,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -318,6 +321,20 @@ public class BaseIT {
     @Bean
     public DatabaseHelper databaseHelper(JdbcTemplate jdbcTemplate, FolioModuleMetadata moduleMetadata) {
       return new DatabaseHelper(moduleMetadata, jdbcTemplate);
+    }
+
+    @Bean
+    public WebTestClient webTestClient(@Value("${local.server.port}") int port) {
+      return WebTestClient.bindToServer()
+        .baseUrl("http://localhost:" + port)
+        .build();
+    }
+
+    @Bean
+    public MockMvc mockMvc(WebApplicationContext context) {
+      return MockMvcBuilders
+        .webAppContextSetup(context)
+        .build();
     }
   }
 }
