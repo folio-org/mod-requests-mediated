@@ -40,9 +40,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -76,13 +73,11 @@ import lombok.SneakyThrows;
 @EnablePostgres
 @ActiveProfiles("test")
 @ContextConfiguration(initializers = {DbInitializer.class})
-@EnableAutoConfiguration(exclude = {FlywayAutoConfiguration.class})
+@EnableAutoConfiguration(excludeName = {"org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration"})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @TestPropertySource(properties = {
   "spring.kafka.consumer.auto-offset-reset=earliest"
 })
-@AutoConfigureMockMvc
 @Testcontainers
 @Import(BaseIT.DbHelperTestConfiguration.class)
 public class BaseIT {
@@ -209,9 +204,8 @@ public class BaseIT {
   protected FolioExecutionContextSetter initFolioContext(String tenantId) {
     var headers = defaultHeaders();
     headers.set(XOkapiHeaders.TENANT, tenantId);
-    HashMap<String, Collection<String>> headersMap = new HashMap<>(headers.entrySet()
-      .stream()
-      .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
+    HashMap<String, Collection<String>> headersMap = new HashMap<>();
+    headers.forEach((key, values) -> headersMap.put(key, values));
 
     return new FolioExecutionContextSetter(moduleMetadata, headersMap);
   }

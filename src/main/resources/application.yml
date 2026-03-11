@@ -12,7 +12,7 @@ spring:
       # to boot up application despite of any DB connection issues
       continue-on-error: true
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
