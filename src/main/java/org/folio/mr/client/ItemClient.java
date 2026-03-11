@@ -1,5 +1,6 @@
 package org.folio.mr.client;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.folio.mr.domain.dto.Item;
@@ -12,6 +13,14 @@ import org.springframework.web.service.annotation.HttpExchange;
 
 @HttpExchange(url = "item-storage/items")
 public interface ItemClient extends GetByQueryParamsClient<Items> {
+
+  @Override
+  @GetExchange
+  Items getByQuery(@RequestParam CqlQuery query, @RequestParam int limit);
+
+  @Override
+  @GetExchange
+  Items getByQueryParams(@RequestParam Map<String, String> queryParams);
 
   @GetExchange("/{id}")
   Optional<Item> get(@PathVariable String id);

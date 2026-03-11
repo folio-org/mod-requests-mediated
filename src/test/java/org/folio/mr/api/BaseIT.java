@@ -27,7 +27,6 @@ import org.folio.mr.util.TestUtils;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.scope.FolioExecutionContextSetter;
-import org.folio.spring.scope.filter.FolioExecutionScopeFilter;
 import org.folio.spring.testing.extension.impl.OkapiConfiguration;
 import org.folio.spring.testing.extension.impl.OkapiExtension;
 import org.folio.tenant.domain.dto.TenantAttributes;
@@ -185,8 +184,12 @@ public class BaseIT {
 
   @AfterAll
   static void tearDown() {
-    kafkaAdminClient.close();
-    wireMockServer.stop();
+    if (kafkaAdminClient != null) {
+      kafkaAdminClient.close();
+    }
+    if (wireMockServer != null) {
+      wireMockServer.stop();
+    }
   }
 
   @SneakyThrows
@@ -218,7 +221,7 @@ public class BaseIT {
 
     httpHeaders.setContentType(APPLICATION_JSON);
     httpHeaders.add(XOkapiHeaders.TENANT, TENANT_ID_CONSORTIUM);
-    httpHeaders.add(XOkapiHeaders.URL, (wireMockServer.baseUrl()));
+    httpHeaders.add(XOkapiHeaders.URL, wireMockServer.baseUrl());
     httpHeaders.add(XOkapiHeaders.TOKEN, TOKEN);
     httpHeaders.add(XOkapiHeaders.USER_ID, USER_ID);
 
@@ -326,10 +329,8 @@ public class BaseIT {
     }
 
     @Bean
-    public MockMvc mockMvc(WebApplicationContext context, FolioModuleMetadata folioModuleMetadata) {
-      return MockMvcBuilders.webAppContextSetup(context)
-        .addFilters(new FolioExecutionScopeFilter(folioModuleMetadata))
-        .build();
+    public MockMvc mockMvc(WebApplicationContext context) {
+      return MockMvcBuilders.webAppContextSetup(context).build();
     }
   }
 }
