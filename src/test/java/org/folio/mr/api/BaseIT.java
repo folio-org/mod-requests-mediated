@@ -66,9 +66,8 @@ import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 
 import lombok.SneakyThrows;
@@ -95,12 +94,11 @@ public class BaseIT {
   protected static final String REQUEST_KAFKA_TOPIC_NAME = buildTopicName("circulation", "request");
   protected static final String ITEM_KAFKA_TOPIC_NAME = buildTopicName("inventory", "item");
   private static final String[] KAFKA_TOPICS = {REQUEST_KAFKA_TOPIC_NAME, ITEM_KAFKA_TOPIC_NAME};
-  protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+  protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().rebuild()
+    .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
-    .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-
+    .build();
   protected static WebTestClient webClient;
   protected static OkapiConfiguration okapi;
   protected static AdminClient kafkaAdminClient;
