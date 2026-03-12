@@ -24,10 +24,10 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -36,8 +36,9 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @RequiredArgsConstructor
 public class KafkaEventListener {
-  private static final ObjectMapper objectMapper = new ObjectMapper()
-    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  private static final ObjectMapper objectMapper = new ObjectMapper().rebuild()
+    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    .build();
   private final RequestEventHandler requestEventHandler;
   private final ItemEventHandler itemEventHandler;
   private final SystemUserScopedExecutionService systemUserScopedExecutionService;
@@ -89,7 +90,7 @@ public class KafkaEventListener {
       return objectMapper.<KafkaEvent<T>>readValue(eventString, eventType)
         .withTenantIdHeaderValue(getHeaderValue(messageHeaders, XOkapiHeaders.TENANT, true))
         .withUserIdHeaderValue(getHeaderValue(messageHeaders, XOkapiHeaders.USER_ID, false));
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       log.error("deserialize:: failed to deserialize event", e);
       throw new KafkaEventDeserializationException(e);
     }
@@ -106,7 +107,12 @@ public class KafkaEventListener {
       log.warn("getHeaderValue:: {} header is missing", headerName);
       return null;
     }
-    var value = new String((byte[]) headerValue, StandardCharsets.UTF_8);
+    if (headerValue instanceof byte[] headerBytes) {
+      var value = new String(headerBytes, StandardCharsets.UTF_8);
+      log.info("getHeaderValue:: header {} value is {}", headerName, value);
+      return value;
+    }
+    var value = String.valueOf(headerValue);
     log.info("getHeaderValue:: header {} value is {}", headerName, value);
     return value;
   }
