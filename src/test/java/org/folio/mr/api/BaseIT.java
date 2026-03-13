@@ -76,7 +76,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import lombok.SneakyThrows;
 
 @EnablePostgres
-@ActiveProfiles({"test", "it"})
+@ActiveProfiles("test")
 @ContextConfiguration(initializers = {DbInitializer.class})
 @EnableAutoConfiguration(excludeName = {"org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration"})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
