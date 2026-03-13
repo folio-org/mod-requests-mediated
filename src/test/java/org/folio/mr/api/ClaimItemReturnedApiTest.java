@@ -46,14 +46,14 @@ class ClaimItemReturnedApiTest extends BaseIT {
 
     wireMockServer.stubFor(WireMock.post(urlPathEqualTo("/circulation/loans/" + loanId +
       "/claim-item-returned"))
-      .withHeader(TENANT, equalTo(TENANT_ID_SECURE))
+      .withHeader(TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(noContent()));
 
     mockHelper.mockGetLoan(new Loan()
       .id(loanId)
       .userId(userId.toString())
       .itemId(itemId),
-      TENANT_ID_SECURE);
+      TENANT_ID_CONSORTIUM);
 
     mediatedRequestsRepository.save(
       buildMediatedRequestEntity(CLOSED_FILLED)
@@ -102,11 +102,8 @@ class ClaimItemReturnedApiTest extends BaseIT {
   private ResultActions performClaimItemReturnedRequest(UUID loanId,
     ClaimItemReturnedCirculationRequest request) {
 
-    final HttpHeaders httpHeaders = defaultHeaders();
-    httpHeaders.add(TENANT, TENANT_ID_SECURE);
-
     return mockMvc.perform(post("/requests-mediated/loans/{loanId}/claim-item-returned", loanId)
-      .headers(httpHeaders)
+      .headers(defaultHeaders())
       .contentType(MediaType.APPLICATION_JSON)
       .content(asJsonString(request)));
   }

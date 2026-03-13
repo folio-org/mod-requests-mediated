@@ -6,6 +6,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -47,6 +48,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.RequestEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
@@ -58,6 +60,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.testcontainers.junit.jupiter.Container;
@@ -105,6 +108,7 @@ public class BaseIT {
   protected static WireMockServer wireMockServer;
   protected static MockHelper mockHelper;
   protected static DatabaseHelper databaseHelper;
+  private static int serverPort;
 
   protected FolioExecutionContextSetter contextSetter;
 
@@ -157,9 +161,9 @@ public class BaseIT {
     mockHelper = new MockHelper(wireMockServer);
     BaseIT.databaseHelper = databaseHelper;
 
-    int port = Integer.parseInt(environment.getProperty("local.server.port"));
+    serverPort = Integer.parseInt(environment.getProperty("local.server.port"));
     webClient = WebTestClient.bindToServer()
-      .baseUrl("http://localhost:" + port)
+      .baseUrl("http://localhost:" + serverPort)
       .build();
 
     kafkaAdminClient = KafkaAdminClient.create(Map.of(
@@ -250,9 +254,16 @@ public class BaseIT {
     return doPostWithToken(url, payload, TestUtils.buildToken(tenantId), defaultHeaders());
   }
 
-  protected static WebTestClient.ResponseSpec doPostWithTenant(String url, Object payload, String tenantId,
+  protected static void doPostWithTenant(String url, Object payload, String tenantId,
     HttpHeaders headers) {
-    return doPostWithToken(url, payload, TestUtils.buildToken(tenantId), headers);
+    var restTemplate = new RestTemplate();
+    String body = asJsonString(payload);
+    var requestEntity = new RequestEntity<>(
+      body,
+      headers,
+      HttpMethod.POST,
+      URI.create("http://localhost:" + serverPort + url));
+    restTemplate.exchange(requestEntity, String.class);
   }
 
   protected static WebTestClient.ResponseSpec doPostWithToken(String url, Object payload, String token,
