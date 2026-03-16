@@ -5,11 +5,13 @@ import java.util.Optional;
 import org.folio.mr.domain.dto.Campus;
 import org.folio.mr.domain.dto.Institution;
 import org.folio.mr.domain.dto.Library;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 
-@HttpExchange(url = "location-units")
+@HttpExchange(url = "location-units", contentType = MediaType.APPLICATION_JSON_VALUE,
+  accept = MediaType.APPLICATION_JSON_VALUE)
 public interface LocationUnitClient {
 
   @GetExchange("/libraries/{id}")
