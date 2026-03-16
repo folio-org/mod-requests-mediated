@@ -7,7 +7,6 @@ import static org.folio.mr.domain.type.ErrorType.VALIDATION_ERROR;
 import static org.folio.mr.support.DatabaseConstraintTranslator.translate;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
 import java.util.List;
 import org.folio.mr.domain.dto.Error;
@@ -68,7 +67,7 @@ public class ApiExceptionHandler {
     var error = new Error(e.getErrorCode().getMessage())
       .code(e.getErrorCode().getCode())
       .parameters(e.getParameters());
-    return buildSingleErrorResponseEntity(HttpStatus.UNPROCESSABLE_ENTITY, error);
+    return buildSingleErrorResponseEntity(HttpStatusCode.valueOf(422), error);
   }
 
   @ExceptionHandler({
@@ -79,7 +78,7 @@ public class ApiExceptionHandler {
     var cause = e.getCause();
     if (cause instanceof ConstraintViolationException cve) {
       var errorCode = translate(cve);
-      return buildResponseEntity(errorCode, VALIDATION_ERROR, UNPROCESSABLE_ENTITY);
+      return buildResponseEntity(errorCode, VALIDATION_ERROR, HttpStatusCode.valueOf(422));
     }
     return buildResponseEntity(BAD_REQUEST, VALIDATION_ERROR, e);
   }
