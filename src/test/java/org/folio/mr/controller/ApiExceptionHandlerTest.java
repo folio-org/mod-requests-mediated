@@ -57,7 +57,7 @@ class ApiExceptionHandlerTest {
 
     var response = handler.handleValidationExceptions(ex);
 
-    assertEquals(HttpStatus.valueOf(422), response.getStatusCode());
+    assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
     var error = response.getBody().getErrors().getFirst();
     assertEquals(errorCode.getMessage(), error.getMessage());
     assertEquals(errorCode.getCode(), error.getCode());
@@ -73,7 +73,7 @@ class ApiExceptionHandlerTest {
     // Simulate DatabaseConstraintTranslator.translate returning ErrorCode.VALIDATION_ERROR
     var response = handler.conflict(ex);
 
-    assertEquals(HttpStatus.valueOf(422), response.getStatusCode());
+    assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
     var error = response.getBody().getErrors().getFirst();
     assertEquals(ErrorType.VALIDATION_ERROR.getValue(), error.getType());
   }
