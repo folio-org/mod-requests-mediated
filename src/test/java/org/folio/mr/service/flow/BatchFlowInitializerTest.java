@@ -32,4 +32,17 @@ class BatchFlowInitializerTest {
     initializer.execute(context);
     verify(batchFlowHelper).prepareForFlowExecution(context);
   }
+
+  @Test
+  void onError_positive_exceptionWithoutCause() {
+    initializer.onError(context, new RuntimeException("Error"));
+    verify(context).setBatchRequestFailedMessage("Error");
+  }
+
+  @Test
+  void onError_positive_exceptionWithCause() {
+    var cause = new RuntimeException("Execution error");
+    initializer.onError(context, new RuntimeException("Error", cause));
+    verify(context).setBatchRequestFailedMessage("Error, cause: Execution error");
+  }
 }

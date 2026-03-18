@@ -36,12 +36,6 @@ public class MediatedBatchRequestSplitServiceImpl implements MediatedBatchReques
 
   @Override
   @Transactional
-  public void create(List<MediatedBatchRequestSplit> requestSplits) {
-    repository.saveAll(requestSplits);
-  }
-
-  @Override
-  @Transactional
   public void updateStatusById(UUID id, BatchRequestSplitStatus status) {
     var entityById = getEntityById(id);
     entityById.setStatus(status);

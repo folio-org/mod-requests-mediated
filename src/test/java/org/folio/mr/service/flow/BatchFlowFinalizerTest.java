@@ -32,4 +32,17 @@ class BatchFlowFinalizerTest {
     finalizer.execute(context);
     verify(batchFlowHelper).finalizeFlowExecution(context);
   }
+
+  @Test
+  void onError_positive_exceptionWithoutCause() {
+    finalizer.onError(context, new RuntimeException("Error"));
+    verify(context).setBatchRequestFailedMessage("Error");
+  }
+
+  @Test
+  void onError_positive_exceptionWithCause() {
+    var cause = new RuntimeException("Execution error");
+    finalizer.onError(context, new RuntimeException("Error", cause));
+    verify(context).setBatchRequestFailedMessage("Error, cause: Execution error");
+  }
 }

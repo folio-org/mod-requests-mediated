@@ -9,7 +9,6 @@ import org.folio.flow.api.AbstractStageContextWrapper;
 import org.folio.flow.api.StageContext;
 import org.folio.mr.service.flow.EnvironmentType;
 
-
 public class BatchContext extends AbstractStageContextWrapper {
   public static final String PARAM_BATCH_ID = "mediatedBatchRequestId";
   public static final String PARAM_OKAPI_HEADERS = "okapiHeaders";

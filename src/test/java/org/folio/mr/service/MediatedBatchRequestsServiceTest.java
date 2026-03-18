@@ -6,19 +6,25 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.folio.mr.config.BatchRequestExecutionProperties;
+
+import org.folio.mr.domain.BatchRequestStatus;
 import org.folio.mr.domain.dto.MediatedBatchRequestDto;
+import org.folio.mr.domain.dto.MediatedBatchRequestDto.MediatedRequestStatusEnum;
 import org.folio.mr.domain.dto.MediatedBatchRequestPostDto;
+import org.folio.mr.domain.dto.Parameter;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.folio.mr.domain.mapper.MediatedBatchRequestMapper;
 import org.folio.mr.exception.MediatedBatchRequestNotFoundException;
+import org.folio.mr.exception.MediatedBatchRequestValidationException;
 import org.folio.mr.repository.MediatedBatchRequestRepository;
 import org.folio.mr.repository.MediatedBatchRequestSplitRepository;
 import org.folio.mr.service.impl.MediatedBatchRequestsServiceImpl;
@@ -38,7 +44,6 @@ class MediatedBatchRequestsServiceTest {
   @Mock private MediatedBatchRequestMapper mapper;
   @Mock private MediatedBatchRequestRepository repository;
   @Mock private MediatedBatchRequestSplitRepository batchRequestSplitRepository;
-  @Mock private BatchRequestExecutionProperties executionProperties;
 
   @Test
   void shouldCreateBatchRequest() {
@@ -58,7 +63,7 @@ class MediatedBatchRequestsServiceTest {
     when(repository.save(any(MediatedBatchRequest.class))).thenReturn(savedEntity);
     when(mapper.toDto(savedEntity)).thenReturn(createdDto);
     var entityCaptor = ArgumentCaptor.forClass(MediatedBatchRequest.class);
-    var splitsCaptor = ArgumentCaptor.forClass(List.class);
+    var splitsCaptor = ArgumentCaptor.<List<MediatedBatchRequestSplit>>captor();
 
     var result = service.create(postDto);
 
@@ -69,10 +74,59 @@ class MediatedBatchRequestsServiceTest {
     verify(batchRequestSplitRepository).saveAll(splitsCaptor.capture());
     var splitsPassed = splitsCaptor.getValue();
     assertEquals(splitsPassed.size(), batchSplits.size());
-    var split = (MediatedBatchRequestSplit) splitsPassed.get(0);
+    var split = splitsPassed.getFirst();
     assertEquals("comment\n\n\nBatch request ID: " + savedEntity.getId(), split.getPatronComments());
     assertEquals(batchEntity.getRequesterId(), split.getRequesterId());
     assertEquals(savedEntity, split.getMediatedBatchRequest());
+  }
+
+  @Test
+  void shouldCreateBatchRequestWithPredefinedId() {
+    var batchId = UUID.randomUUID();
+    var postDto = new MediatedBatchRequestPostDto().batchId(batchId.toString());
+    var batchEntity = new MediatedBatchRequest();
+    batchEntity.setPatronComments("comment");
+    batchEntity.setRequesterId(batchId);
+    var savedEntity = new MediatedBatchRequest();
+    savedEntity.setId(batchId);
+    savedEntity.setPatronComments(batchEntity.getPatronComments());
+    savedEntity.setRequesterId(batchEntity.getRequesterId());
+    var createdDto = new MediatedBatchRequestDto().batchId(savedEntity.getId().toString());
+    var batchSplits = List.of(MediatedBatchRequestSplit.builder().build());
+
+    when(mapper.mapPostDtoToEntity(postDto)).thenReturn(batchEntity);
+    when(mapper.mapPostDtoToSplitEntities(postDto)).thenReturn(batchSplits);
+    when(repository.existsById(batchId)).thenReturn(false);
+    when(repository.save(any(MediatedBatchRequest.class))).thenReturn(savedEntity);
+    when(mapper.toDto(savedEntity)).thenReturn(createdDto);
+    var entityCaptor = ArgumentCaptor.forClass(MediatedBatchRequest.class);
+    var splitsCaptor = ArgumentCaptor.<List<MediatedBatchRequestSplit>>captor();
+
+    var result = service.create(postDto);
+
+    assertEquals(createdDto, result);
+    verify(repository).save(entityCaptor.capture());
+    assertNotNull(entityCaptor.getValue().getId());
+
+    verify(batchRequestSplitRepository).saveAll(splitsCaptor.capture());
+    var splitsPassed = splitsCaptor.getValue();
+    assertEquals(splitsPassed.size(), batchSplits.size());
+    var split = splitsPassed.getFirst();
+    assertEquals("comment\n\n\nBatch request ID: " + savedEntity.getId(), split.getPatronComments());
+    assertEquals(batchEntity.getRequesterId(), split.getRequesterId());
+    assertEquals(savedEntity, split.getMediatedBatchRequest());
+  }
+
+  @Test
+  void shouldNotCreateBatchRequestWithExistingId() {
+    var batchId = UUID.randomUUID();
+    var request = new MediatedBatchRequestPostDto().batchId(batchId.toString());
+
+    when(repository.existsById(batchId)).thenReturn(true);
+
+    var err = assertThrows(MediatedBatchRequestValidationException.class, () -> service.create(request));
+    var expectedParameter = new Parameter().key("batchId").value(batchId.toString());
+    assertEquals(List.of(expectedParameter), err.getParameters());
   }
 
   @Test
@@ -89,7 +143,7 @@ class MediatedBatchRequestsServiceTest {
     var result = service.getAll("", offset, limit);
 
     assertEquals(1, result.getTotalElements());
-    assertEquals(dto, result.getContent().get(0));
+    assertEquals(dto, result.getContent().getFirst());
     verify(repository).findAll(any(OffsetRequest.class));
   }
 
@@ -108,7 +162,7 @@ class MediatedBatchRequestsServiceTest {
     var result = service.getAll(query, offset, limit);
 
     assertEquals(1, result.getTotalElements());
-    assertEquals(dto, result.getContent().get(0));
+    assertEquals(dto, result.getContent().getFirst());
     verify(repository).findByCql(eq(query), any(OffsetRequest.class));
   }
 
@@ -134,5 +188,29 @@ class MediatedBatchRequestsServiceTest {
 
     var ex = assertThrows(MediatedBatchRequestNotFoundException.class, () -> service.getById(id));
     assertTrue(ex.getMessage().contains("Mediated Batch Request with ID [%s] was not found".formatted(id)));
+  }
+
+  @Test
+  void shouldUpdateStatusById() {
+    var batchId = UUID.randomUUID();
+    var entity = mock(MediatedBatchRequest.class);
+    when(repository.findById(batchId)).thenReturn(Optional.of(entity));
+
+    service.updateStatusById(batchId, MediatedRequestStatusEnum.IN_PROGRESS);
+
+    verify(entity).setStatus(BatchRequestStatus.IN_PROGRESS);
+    verify(repository).save(entity);
+  }
+
+  @Test
+  void shouldNotUpdateStatusByIdForNotFoundEntity() {
+    var batchId = UUID.randomUUID();
+    when(repository.findById(batchId)).thenReturn(Optional.empty());
+
+    assertThrows(MediatedBatchRequestNotFoundException.class,
+      () -> service.updateStatusById(batchId, MediatedRequestStatusEnum.IN_PROGRESS));
+
+
+    verify(repository, never()).save(any());
   }
 }

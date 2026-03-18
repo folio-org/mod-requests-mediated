@@ -3,7 +3,6 @@ package org.folio.mr.service.impl;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.mr.support.ServiceUtils.initId;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,7 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.folio.mr.config.BatchRequestExecutionProperties;
 import org.folio.mr.domain.BatchRequestStatus;
 import org.folio.mr.domain.dto.MediatedBatchRequestDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestDto.MediatedRequestStatusEnum;
@@ -36,19 +34,18 @@ public class MediatedBatchRequestsServiceImpl implements MediatedBatchRequestsSe
   private final MediatedBatchRequestMapper mapper;
   private final MediatedBatchRequestRepository repository;
   private final MediatedBatchRequestSplitRepository batchRequestSplitRepository;
-  private final BatchRequestExecutionProperties executionProperties;
 
   @Override
   @Transactional
   public MediatedBatchRequestDto create(MediatedBatchRequestPostDto batchRequestDto) {
+    var entityId = batchRequestDto.getBatchId();
+    if (entityId != null && repository.existsById(UUID.fromString(entityId))) {
+      throw MediatedBatchRequestValidationException.requestExistsException(UUID.fromString(entityId));
+    }
+
     var batchRequestEntity = mapper.mapPostDtoToEntity(batchRequestDto);
     var batchSplits = mapper.mapPostDtoToSplitEntities(batchRequestDto);
     log.debug("create:: Attempting to create Mediated Batch Request: {}", batchRequestEntity);
-
-    var entityId = batchRequestEntity.getId();
-    if (entityId != null && repository.existsById(entityId)) {
-      throw MediatedBatchRequestValidationException.requestExistsException(entityId);
-    }
 
     initId(batchRequestEntity);
 

@@ -69,7 +69,6 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   }
 
   @Override
-  @Transactional
   public MediatedRequest post(MediatedRequest mediatedRequest) {
     validatorService.validateRequesterForSave(mediatedRequest);
 

@@ -1,27 +1,11 @@
 package org.folio.mr.service.flow.splits;
 
-import static org.folio.mr.domain.RequestLevel.ITEM;
-
-import java.util.UUID;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 
-import org.folio.mr.client.EcsExternalTlrClient;
 import org.folio.mr.domain.BatchSplitContext;
-import org.folio.mr.domain.FulfillmentPreference;
-import org.folio.mr.domain.dto.EcsRequestExternal;
-import org.folio.mr.domain.dto.MediatedBatchRequestDetailDto;
-import org.folio.mr.domain.dto.MediatedBatchRequestDto;
-import org.folio.mr.exception.ItemNotFoundException;
-import org.folio.mr.service.CirculationRequestService;
-import org.folio.mr.service.MediatedBatchRequestsService;
-import org.folio.mr.service.SearchService;
-import org.folio.mr.service.flow.EnvironmentType;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.scope.FolioExecutionContextSetter;
-import org.folio.spring.service.SystemUserScopedExecutionService;
 
 @Log4j2
 @Component

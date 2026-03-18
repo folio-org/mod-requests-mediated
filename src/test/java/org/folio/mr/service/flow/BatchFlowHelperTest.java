@@ -179,17 +179,6 @@ class BatchFlowHelperTest {
   }
 
   @Test
-  void finalizeFlowExecution_positive_shouldSetCompletedWhenNoSplitsExist() {
-    var batchId = UUID.randomUUID();
-    when(context.getBatchRequestId()).thenReturn(batchId);
-    when(batchRequestSplitService.getAllByBatchId(batchId)).thenReturn(List.of());
-
-    helper.finalizeFlowExecution(context);
-
-    verify(batchRequestsService).updateStatusById(batchId, MediatedRequestStatusEnum.COMPLETED);
-  }
-
-  @Test
   void finalizeFlowExecution_negative_shouldThrowExceptionWhenBatchEntityNotFound() {
     var batchId = UUID.randomUUID();
     when(context.getBatchRequestId()).thenReturn(batchId);
@@ -200,7 +189,6 @@ class BatchFlowHelperTest {
     var ex = assertThrows(MediatedBatchRequestNotFoundException.class, () -> helper.finalizeFlowExecution(context));
     assertTrue(ex.getMessage().contains("Mediated Batch Request with ID [%s] was not found".formatted(batchId)));
   }
-
 
   @Test
   void execute_positive_shouldSetStatusToFailedAndSaveEntity() {

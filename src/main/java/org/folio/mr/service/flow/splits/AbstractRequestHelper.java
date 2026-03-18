@@ -57,8 +57,6 @@ public abstract class AbstractRequestHelper {
     split.setConfirmedRequestId(request.getId());
     if (request.getStatus() != null) {
       split.setRequestStatus(request.getStatus().getValue());
-    } else {
-      log.warn("updateBatchRequestSplit:: Request status is null for created request with id: {}", request.getId());
     }
     split.setMediatedRequestStatus(MediatedBatchRequestDetailDto.MediatedRequestStatusEnum.COMPLETED);
     batchRequestSplitService.update(splitRequestId, split);

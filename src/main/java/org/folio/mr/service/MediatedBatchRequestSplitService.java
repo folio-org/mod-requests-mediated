@@ -6,13 +6,10 @@ import java.util.UUID;
 import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.dto.IdentifiableMediatedBatchSplit;
 import org.folio.mr.domain.dto.MediatedBatchRequestDetailDto;
-import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.folio.mr.domain.entity.projection.BatchRequestStats;
 import org.springframework.data.domain.Page;
 
 public interface MediatedBatchRequestSplitService {
-
-  void create(List<MediatedBatchRequestSplit> requestSplits);
 
   void updateStatusById(UUID id, BatchRequestSplitStatus status);
 
