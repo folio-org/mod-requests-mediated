@@ -214,7 +214,7 @@ class MediatedBatchRequestSplitServiceTest {
     service.markNotCompletedRequestsAsFailed(batchId, errorDetails);
 
     var savedSplitRequests = captor.getValue();
-    assertEquals(savedSplitRequests.size(), 4);
+    assertEquals(4, savedSplitRequests.size());
     assertEquals(BatchRequestSplitStatus.FAILED, savedSplitRequests.getFirst().getStatus());
     assertEquals(errorDetails, savedSplitRequests.getFirst().getErrorDetails());
 
