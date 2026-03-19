@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
@@ -80,6 +81,7 @@ import lombok.SneakyThrows;
 @ContextConfiguration(initializers = {DbInitializer.class})
 @EnableAutoConfiguration(excludeName = {"org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration"})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureWebTestClient
 @TestPropertySource(properties = {
   "spring.kafka.consumer.auto-offset-reset=earliest"
 })
@@ -156,15 +158,15 @@ public class BaseIT {
   }
 
   @BeforeAll
-  static void setUp(@Autowired DatabaseHelper databaseHelper, @Autowired Environment environment) {
+  static void setUp(@Autowired DatabaseHelper databaseHelper, @Autowired Environment environment,
+    @Autowired WebTestClient webTestClient) {
+
     wireMockServer = okapi.wireMockServer();
     mockHelper = new MockHelper(wireMockServer);
     BaseIT.databaseHelper = databaseHelper;
+    webClient = webTestClient;
 
     serverPort = Integer.parseInt(environment.getProperty("local.server.port"));
-    webClient = WebTestClient.bindToServer()
-      .baseUrl("http://localhost:" + serverPort)
-      .build();
 
     kafkaAdminClient = KafkaAdminClient.create(Map.of(
       ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers()));

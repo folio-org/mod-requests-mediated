@@ -113,6 +113,11 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-webflux</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-webtestclient</artifactId>
+      <scope>compile</scope>
+    </dependency>
 
     <!-- Test dependencies -->
     <dependency>
@@ -327,7 +332,8 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.4</version>
         <configuration>
-          <argLine>${argLine} -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+          <useSystemClassLoader>false</useSystemClassLoader>
+          <argLine>@{argLine} -Dfile.encoding=UTF-8</argLine>
         </configuration>
       </plugin>
 
