@@ -154,7 +154,7 @@ public class BaseIT {
     httpHeaders.add(XOkapiHeaders.URL, okapi.getOkapiUrl());
 
     var tenantAttributes = new TenantAttributes().moduleTo("mod-requests-mediated");
-    doPostWithTenant("/_/tenant", tenantAttributes, tenantId, httpHeaders);
+    doPostWithTenant("/_/tenant", tenantAttributes, httpHeaders);
   }
 
   @BeforeAll
@@ -215,7 +215,7 @@ public class BaseIT {
     var headers = defaultHeaders();
     headers.set(XOkapiHeaders.TENANT, tenantId);
     HashMap<String, Collection<String>> headersMap = new HashMap<>();
-    headers.forEach((key, values) -> headersMap.put(key, values));
+    headers.forEach(headersMap::put);
 
     return new FolioExecutionContextSetter(moduleMetadata, headersMap);
   }
@@ -256,8 +256,7 @@ public class BaseIT {
     return doPostWithToken(url, payload, TestUtils.buildToken(tenantId), defaultHeaders());
   }
 
-  protected static void doPostWithTenant(String url, Object payload, String tenantId,
-    HttpHeaders headers) {
+  protected static void doPostWithTenant(String url, Object payload, HttpHeaders headers) {
     var restTemplate = new RestTemplate();
     String body = asJsonString(payload);
     var requestEntity = new RequestEntity<>(

@@ -13,7 +13,6 @@ import static org.folio.mr.domain.dto.MediatedRequest.RequestTypeEnum.PAGE;
 import static org.folio.mr.domain.type.ErrorCode.MEDIATED_REQUEST_SAVE_NOT_ALLOWED_FOR_INACTIVE_PATRON;
 import static org.folio.mr.util.TestUtils.dateToString;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyIterable;
 import static org.hamcrest.Matchers.greaterThan;
