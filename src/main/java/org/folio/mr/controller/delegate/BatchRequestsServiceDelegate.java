@@ -28,7 +28,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class BatchRequestsServiceDelegate {
 
-  public static final String SETTING_SCOPE = "mod-requests-mediated";
+  public static final String SETTING_SCOPE = "mod-requests-mediated.manage";
   public static final String SETTING_KEY = "multiItemBatchRequestItemsValidation";
   public static final String BATCH_REQUEST_ITEMS_VALIDATION_SETTING_FETCH_QUERY =
     "(scope=%s AND key=%s)".formatted(SETTING_SCOPE, SETTING_KEY);
