@@ -1,6 +1,5 @@
 package org.folio.mr.service.impl;
 
-import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.mr.support.ServiceUtils.mapItems;
 
@@ -77,6 +76,7 @@ public class MediatedBatchRequestSplitServiceImpl implements MediatedBatchReques
   }
 
   @Override
+  @Transactional
   public void markNotCompletedRequestsAsFailed(UUID batchId, String errorMessage) {
     var splitEntities = repository.findAllByBatchId(batchId);
     splitEntities.stream()
