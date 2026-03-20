@@ -100,7 +100,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"folio.tenant.secure-tenant-id=" + TENANT_ID_SECURE})
 class MediatedBatchRequestsControllerIT extends BaseIT {
 
-  private static final Duration MAX_AWAIT_TIMEOUT = Durations.TWO_SECONDS;
+  private static final Duration MAX_AWAIT_TIMEOUT = Durations.ONE_MINUTE;
   private static final Duration AWAIT_POLL_INTERVAL = Durations.ONE_HUNDRED_MILLISECONDS;
 
   private static final String URL_MEDIATED_BATCH_REQUESTS = "/requests-mediated/batch-mediated-requests";

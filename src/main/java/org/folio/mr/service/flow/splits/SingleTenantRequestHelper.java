@@ -63,9 +63,9 @@ public class SingleTenantRequestHelper extends AbstractRequestHelper {
   }
 
   Optional<Request.RequestTypeEnum> findMatchingRequestType(MediatedBatchRequestDetailDto splitRequest) {
-    var requesterUUid = UUID.fromString(splitRequest.getRequesterId());
+    var requesterUuid = UUID.fromString(splitRequest.getRequesterId());
     var itemUuid = UUID.fromString(requireNonNull(splitRequest.getItemId()));
-    var allowedServicePoints = circulationRequestService.getItemRequestAllowedServicePoints(requesterUUid, itemUuid);
+    var allowedServicePoints = circulationRequestService.getItemRequestAllowedServicePoints(requesterUuid, itemUuid);
 
     var pickupServicePointId = UUID.fromString(requireNonNull(splitRequest.getPickupServicePointId()));
     if (containsServicePoint(allowedServicePoints.page(), pickupServicePointId)) {
@@ -81,7 +81,7 @@ public class SingleTenantRequestHelper extends AbstractRequestHelper {
     }
 
     log.warn("findMatchingRequestType:: Pickup Service point id [{}] is not allowed for item id: [{}] and " +
-      "requester id: [{}]", pickupServicePointId, itemUuid, requesterUUid);
+      "requester id: [{}]", pickupServicePointId, itemUuid, requesterUuid);
     return Optional.empty();
   }
 

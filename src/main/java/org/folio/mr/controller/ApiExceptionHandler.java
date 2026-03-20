@@ -3,9 +3,11 @@ package org.folio.mr.controller;
 import static org.folio.mr.domain.type.ErrorType.INTEGRATION_ERROR;
 import static org.folio.mr.domain.type.ErrorType.NOT_FOUND_ERROR;
 import static org.folio.mr.domain.type.ErrorType.SERVICE_ERROR;
+import static org.folio.mr.domain.type.ErrorType.UNKNOWN_ERROR;
 import static org.folio.mr.domain.type.ErrorType.VALIDATION_ERROR;
 import static org.folio.mr.support.DatabaseConstraintTranslator.translate;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
@@ -82,6 +84,12 @@ public class ApiExceptionHandler {
       return buildResponseEntity(errorCode, VALIDATION_ERROR, UNPROCESSABLE_ENTITY);
     }
     return buildResponseEntity(BAD_REQUEST, VALIDATION_ERROR, e);
+  }
+
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<ErrorResponse> handleOtherExceptions(Exception e) {
+    log.warn("anyExceptionHandler:: handling unexpected exception", e);
+    return buildResponseEntity(INTERNAL_SERVER_ERROR, UNKNOWN_ERROR, e);
   }
 
   private static ResponseEntity<ErrorResponse> buildResponseEntity(HttpStatusCode httpStatusCode, ErrorType type,
