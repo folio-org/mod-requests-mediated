@@ -8,37 +8,35 @@ import static org.mockito.Mockito.when;
 import java.util.UUID;
 import org.folio.mr.domain.BatchContext;
 import org.folio.mr.service.TenantSupportService;
+import org.folio.mr.service.flow.splits.BatchSplitFlowErrorHandler;
+import org.folio.mr.service.flow.splits.BatchSplitFlowInitializer;
+import org.folio.mr.service.flow.splits.BatchSplitProcessor;
 import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 
 @ExtendWith(MockitoExtension.class)
 class MediatedBatchRequestFlowProviderTest {
 
-  @Mock
-  private BatchFlowInitializer batchFlowInitializer;
-  @Mock
-  private BatchSplitProcessor batchSplitProcessor;
-  @Mock
-  private BatchFailedFlowFinalizer failedFlowFinalizer;
-  @Mock
-  private BatchFlowFinalizer flowFinalizer;
-  @Mock
-  private MediatedBatchRequestFlowProviderImpl provider;
-  @Mock
-  private TenantSupportService tenantSupportService;
-  @Mock
-  private FolioExecutionContext executionContext;
+  @InjectMocks private MediatedBatchRequestFlowProviderImpl provider;
+  @Mock private BatchFlowInitializer batchFlowInitializer;
+  @Mock private BatchFailedFlowFinalizer failedFlowFinalizer;
+  @Mock private BatchFlowFinalizer flowFinalizer;
+  @Mock private TenantSupportService tenantSupportService;
+  @Mock private FolioExecutionContext executionContext;
+  @Mock private BatchSplitProcessor batchSplitProcessor;
+  @Mock private BatchSplitFlowInitializer batchSplitFlowInitializer;
+  @Mock private BatchSplitFlowErrorHandler batchSplitFlowErrorHandler;
 
   @BeforeEach
   void setUp() {
     provider = new MediatedBatchRequestFlowProviderImpl(
-      batchFlowInitializer, batchSplitProcessor, failedFlowFinalizer, flowFinalizer, tenantSupportService, executionContext
-    );
+      batchFlowInitializer,failedFlowFinalizer,flowFinalizer, tenantSupportService,executionContext,
+      batchSplitProcessor, batchSplitFlowInitializer, batchSplitFlowErrorHandler);
   }
 
   @Test

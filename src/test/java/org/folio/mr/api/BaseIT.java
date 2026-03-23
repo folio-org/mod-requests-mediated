@@ -159,6 +159,20 @@ public class BaseIT {
     doPostWithTenant("/_/tenant", tenantAttributes, tenantId, httpHeaders);
   }
 
+  @SneakyThrows
+  protected static void tearDownTenant(String tenantId) {
+    var httpHeaders = new HttpHeaders();
+    httpHeaders.setContentType(APPLICATION_JSON);
+    httpHeaders.add(XOkapiHeaders.TENANT, tenantId);
+    httpHeaders.add(XOkapiHeaders.USER_ID, USER_ID);
+    httpHeaders.add(XOkapiHeaders.URL, okapi.getOkapiUrl());
+
+    var tenantAttributes = new TenantAttributes()
+      .moduleFrom("mod-requests-mediated")
+      .purge(true);
+    doPostWithTenant("/_/tenant", tenantAttributes, tenantId, httpHeaders);
+  }
+
   @BeforeEach
   void beforeEachTest() {
     contextSetter = initFolioContext();
@@ -217,10 +231,14 @@ public class BaseIT {
   }
 
   public static HttpHeaders defaultHeaders() {
+    return defaultHeaders(TENANT_ID_CONSORTIUM);
+  }
+
+  public static HttpHeaders defaultHeaders(String tenant) {
     final HttpHeaders httpHeaders = new HttpHeaders();
 
     httpHeaders.setContentType(APPLICATION_JSON);
-    httpHeaders.add(XOkapiHeaders.TENANT, TENANT_ID_CONSORTIUM);
+    httpHeaders.add(XOkapiHeaders.TENANT, tenant);
     httpHeaders.add(XOkapiHeaders.URL, (wireMockServer.baseUrl()));
     httpHeaders.add(XOkapiHeaders.TOKEN, TOKEN);
     httpHeaders.add(XOkapiHeaders.USER_ID, USER_ID);
