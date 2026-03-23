@@ -86,12 +86,6 @@ public class ApiExceptionHandler {
     return buildResponseEntity(BAD_REQUEST, VALIDATION_ERROR, e);
   }
 
-  @ExceptionHandler(Exception.class)
-  public ResponseEntity<ErrorResponse> handleOtherExceptions(Exception e) {
-    log.warn("anyExceptionHandler:: handling unexpected exception", e);
-    return buildResponseEntity(INTERNAL_SERVER_ERROR, UNKNOWN_ERROR, e);
-  }
-
   private static ResponseEntity<ErrorResponse> buildResponseEntity(HttpStatusCode httpStatusCode, ErrorType type,
     Exception e) {
 

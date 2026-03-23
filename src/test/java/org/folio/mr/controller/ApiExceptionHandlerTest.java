@@ -114,14 +114,4 @@ class ApiExceptionHandlerTest {
     assertEquals("Mediated Batch Request with ID [%s] was not found".formatted(id.toString()), error.getMessage());
     assertEquals(ErrorType.NOT_FOUND_ERROR.getValue(), error.getType());
   }
-
-  @Test
-  void handleAnyException_returnsInternalServerError() {
-    var ex = new RuntimeException("Error");
-    var response = handler.handleOtherExceptions(ex);
-
-    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-    assertEquals("Error", response.getBody().getErrors().getFirst().getMessage());
-    assertEquals(ErrorType.UNKNOWN_ERROR.getValue(), response.getBody().getErrors().getFirst().getType());
-  }
 }

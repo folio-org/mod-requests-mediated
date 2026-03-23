@@ -21,7 +21,6 @@ import static org.folio.test.TestUtils.asJsonString;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.http.HttpStatus;
 
