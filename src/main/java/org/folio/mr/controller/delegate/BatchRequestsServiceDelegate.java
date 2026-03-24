@@ -76,6 +76,18 @@ public class BatchRequestsServiceDelegate {
     return dto;
   }
 
+  public void recoverStaleBatchRequests() {
+    log.debug("recoverBatchRequests:: Starting recovery of stuck batch requests");
+    var pendingRequests = batchRequestsService.getStaleBatchRequests();
+    log.debug("recoverBatchRequests:: Found stale requests: {}", pendingRequests.size());
+    for (var request : pendingRequests) {
+      var batchRequestId = UUID.fromString(request.getBatchId());
+      log.info("recoverBatchRequests:: Recovering batch request: {}", batchRequestId);
+      var previuoslyStuckFlow = flowProvider.createFlow(batchRequestId);
+      flowEngine.executeAsync(previuoslyStuckFlow);
+    }
+  }
+
   public MediatedBatchRequestDetailsDto getBatchRequestDetailsByBatchId(UUID batchId, Integer offset, Integer limit) {
     log.debug("getBatchRequestDetailsByBatchId:: parameters batchId: {}, offset: {}, limit: {}", batchId, offset, limit);
 

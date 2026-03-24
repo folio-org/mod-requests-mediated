@@ -52,6 +52,9 @@ public class MediatedBatchRequest extends MetadataEntity implements Identifiable
   @Column(name = "mediated_workflow", length = 255)
   private String mediatedWorkflow;
 
+  @Column(name = "last_processed_date", nullable = false)
+  private Timestamp lastProcessedDate;
+
   // copy column of status for easier querying
   private String mediatedRequestStatus;
 }

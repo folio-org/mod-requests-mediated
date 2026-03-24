@@ -559,7 +559,9 @@
       { "name": "BATCH_REQUEST_THREADS_NUM", "value": "4" },
       { "name": "BATCH_REQUEST_EXECUTION_TIMEOUT", "value": "10" },
       { "name": "BATCH_REQUEST_LAST_EXECUTIONS_CACHE_SIZE", "value": "25" },
-      { "name": "BATCH_REQUEST_PRINT_RESULTS", "value": "false" }
+      { "name": "BATCH_REQUEST_PRINT_RESULTS", "value": "false" },
+      { "name": "BATCH_REQUEST_STALE_THRESHOLD", "value": "1h" },
+      { "name": "BATCH_REQUEST_STALE_QUERY_LIMIT", "value": "10" }
     ]
   }
 }

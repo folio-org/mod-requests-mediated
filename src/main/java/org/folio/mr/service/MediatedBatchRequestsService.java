@@ -1,5 +1,6 @@
 package org.folio.mr.service;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -18,6 +19,13 @@ public interface MediatedBatchRequestsService {
   MediatedBatchRequestDto getById(UUID id);
 
   /**
+   * Retrieves stale batch requests.
+   *
+   * @return - {@link List} with stale {@link MediatedBatchRequestDto}
+   */
+  List<MediatedBatchRequestDto> getStaleBatchRequests();
+
+  /**
    * Updates status for entity using id.
    *
    * @param id     - entity identifier
@@ -25,4 +33,12 @@ public interface MediatedBatchRequestsService {
    * @throws MediatedBatchRequestNotFoundException if entity is not found by id
    */
   void updateStatusById(UUID id, MediatedRequestStatusEnum status);
+
+  /**
+   * Updates last_processed_at field in the database to mark entity as in progress,
+   * so it won't be considered as stale.
+   *
+   * @param batchId - entity identifier
+   */
+  void updateLastProcessedDateById(UUID batchId);
 }

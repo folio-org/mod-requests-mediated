@@ -1,5 +1,7 @@
 package org.folio.mr.service.flow.splits;
 
+import static org.folio.mr.domain.BatchRequestSplitStatus.IN_PROGRESS;
+
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.folio.mr.domain.BatchSplitContext;
 import org.folio.mr.domain.dto.MediatedBatchRequestDetailDto.MediatedRequestStatusEnum;
 import org.folio.mr.service.MediatedBatchRequestSplitService;
+import org.folio.mr.service.MediatedBatchRequestsService;
 
 /**
  * Helper class for executing transactional flow control methods within
@@ -27,7 +30,15 @@ import org.folio.mr.service.MediatedBatchRequestSplitService;
 @RequiredArgsConstructor
 public class BatchSplitFlowHelper {
 
+  private final MediatedBatchRequestsService batchRequestsService;
   private final MediatedBatchRequestSplitService batchRequestSplitService;
+
+  @Transactional
+  public void initializeFlowExecution(BatchSplitContext context) {
+    var splitRequestId = context.getBatchSplitRequestId();
+    batchRequestSplitService.updateStatusById(splitRequestId, IN_PROGRESS);
+    batchRequestsService.updateLastProcessedDateById(context.getBatchRequestId());
+  }
 
   @Transactional
   public void handleExecutionError(BatchSplitContext context) {
@@ -48,5 +59,6 @@ public class BatchSplitFlowHelper {
     splitRequest.setErrorDetails(errorMessage);
     splitRequest.setMediatedRequestStatus(MediatedRequestStatusEnum.FAILED);
     batchRequestSplitService.update(splitRequestId, splitRequest);
+    batchRequestsService.updateLastProcessedDateById(context.getBatchRequestId());
   }
 }

@@ -64,6 +64,8 @@ folio:
     execution-timeout: ${BATCH_REQUEST_EXECUTION_TIMEOUT:10m}
     last-executions-status-cache-size: ${BATCH_REQUEST_LAST_EXECUTIONS_CACHE_SIZE:25}
     print-result: ${BATCH_REQUEST_PRINT_RESULTS:false}
+    stale-request-threshold: ${BATCH_REQUEST_STALE_THRESHOLD:1h}
+    stale-requests-query-limit: ${BATCH_REQUEST_STALE_QUERY_LIMIT:10}
 management:
   endpoints:
     web:

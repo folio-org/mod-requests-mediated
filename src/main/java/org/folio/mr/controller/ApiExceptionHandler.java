@@ -3,11 +3,9 @@ package org.folio.mr.controller;
 import static org.folio.mr.domain.type.ErrorType.INTEGRATION_ERROR;
 import static org.folio.mr.domain.type.ErrorType.NOT_FOUND_ERROR;
 import static org.folio.mr.domain.type.ErrorType.SERVICE_ERROR;
-import static org.folio.mr.domain.type.ErrorType.UNKNOWN_ERROR;
 import static org.folio.mr.domain.type.ErrorType.VALIDATION_ERROR;
 import static org.folio.mr.support.DatabaseConstraintTranslator.translate;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 

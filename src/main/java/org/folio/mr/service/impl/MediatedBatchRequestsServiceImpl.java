@@ -3,6 +3,8 @@ package org.folio.mr.service.impl;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.mr.support.ServiceUtils.initId;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.folio.mr.config.BatchRequestExecutionProperties;
 import org.folio.mr.domain.BatchRequestStatus;
 import org.folio.mr.domain.dto.MediatedBatchRequestDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestDto.MediatedRequestStatusEnum;
@@ -33,6 +36,7 @@ public class MediatedBatchRequestsServiceImpl implements MediatedBatchRequestsSe
 
   private final MediatedBatchRequestMapper mapper;
   private final MediatedBatchRequestRepository repository;
+  private final BatchRequestExecutionProperties batchRequestExecutionProperties;
   private final MediatedBatchRequestSplitRepository batchRequestSplitRepository;
 
   @Override
@@ -58,6 +62,7 @@ public class MediatedBatchRequestsServiceImpl implements MediatedBatchRequestsSe
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Page<MediatedBatchRequestDto> getAll(String query, Integer offset, Integer limit) {
     log.debug("getAll:: Attempts to find all Mediated Batch Requests by [offset: {}, limit: {}, query: {}]",
       offset, limit, query);
@@ -66,6 +71,7 @@ public class MediatedBatchRequestsServiceImpl implements MediatedBatchRequestsSe
   }
 
   @Override
+  @Transactional(readOnly = true)
   public MediatedBatchRequestDto getById(UUID id) {
     log.debug("getById:: Loading Mediated Batch Request by ID [id: {}]", id);
     return mapper.toDto(getEntityById(id));
@@ -77,7 +83,27 @@ public class MediatedBatchRequestsServiceImpl implements MediatedBatchRequestsSe
     log.debug("updateStatusById:: Updating status for entity: {}", id);
     var entity = getEntityById(id);
     entity.setStatus(BatchRequestStatus.fromValue(status.getValue()));
+    entity.setLastProcessedDate(Timestamp.from(Instant.now()));
     repository.save(entity);
+  }
+
+  @Override
+  @Transactional
+  public void updateLastProcessedDateById(UUID batchId) {
+    var entityById = getEntityById(batchId);
+    entityById.setLastProcessedDate(Timestamp.from(Instant.now()));
+    repository.save(entityById);
+  }
+
+  @Override
+  @Transactional
+  public List<MediatedBatchRequestDto> getStaleBatchRequests() {
+    var limit = batchRequestExecutionProperties.getStaleRequestsQueryLimit();
+    var staleRequestThreshold = batchRequestExecutionProperties.getStaleRequestThreshold();
+    var threshold = Timestamp.from(Instant.now().minus(staleRequestThreshold));
+    log.debug("getStaleBatchRequests:: Searching for stuck batch requests older than {}", threshold);
+
+    return repository.getStaleRequests(threshold, limit).stream().map(mapper::toDto).toList();
   }
 
   private MediatedBatchRequest getEntityById(UUID id) {
