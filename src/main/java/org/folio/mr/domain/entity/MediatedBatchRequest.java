@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.sql.Timestamp;
 import java.util.UUID;
@@ -54,17 +56,6 @@ public class MediatedBatchRequest extends MetadataEntity implements Identifiable
 
   // copy column of status for easier querying
   private String mediatedRequestStatus;
-
-  @PostLoad
-  @PrePersist
-  void markNotNew() {
-    this.isNew = false;
-  }
-
-  @Override
-  public boolean isNew() {
-    return isNew;
-  }
 
   @Override
   public UUID getId() {
