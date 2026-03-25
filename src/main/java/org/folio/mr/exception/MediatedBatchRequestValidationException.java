@@ -15,17 +15,16 @@ public class MediatedBatchRequestValidationException extends ValidationException
     super(code, parameters);
   }
 
-  public static MediatedBatchRequestValidationException invalidInitialStatus(String status, UUID batchId) {
-    return new MediatedBatchRequestValidationException(ErrorCode.INVALID_BATCH_REQUEST_INITIAL_STATUS,
-      new Parameter().key("status").value(status),
+  public static MediatedBatchRequestValidationException requestExistsException(UUID batchId) {
+    return new MediatedBatchRequestValidationException(ErrorCode.DUPLICATE_BATCH_REQUEST_ID,
       new Parameter().key("batchId").value(batchId.toString()));
   }
 
-  public static MediatedBatchRequestValidationException invalidPickupServicePoint(UUID batchId, UUID servicePointId, UUID itemId) {
+  public static MediatedBatchRequestValidationException invalidPickupServicePoint(String batchId, String servicePointId, String itemId) {
     return new MediatedBatchRequestValidationException(ErrorCode.INVALID_SERVICE_POINT_FOR_BATCH_REQUEST_ENTITY,
-      new Parameter().key("servicePointId").value(servicePointId.toString()),
-      new Parameter().key("batchId").value(batchId.toString()),
-      new Parameter().key("itemId").value(itemId.toString()));
+      new Parameter().key("servicePointId").value(servicePointId),
+      new Parameter().key("batchId").value(batchId),
+      new Parameter().key("itemId").value(itemId));
   }
 
   public static MediatedBatchRequestValidationException duplicateBatchRequestItems() {

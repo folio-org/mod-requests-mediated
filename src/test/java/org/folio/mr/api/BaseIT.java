@@ -157,6 +157,31 @@ public class BaseIT {
     doPostWithTenant("/_/tenant", tenantAttributes, httpHeaders);
   }
 
+  @SneakyThrows
+  protected static void tearDownTenant(String tenantId) {
+    var httpHeaders = new HttpHeaders();
+    httpHeaders.setContentType(APPLICATION_JSON);
+    httpHeaders.add(XOkapiHeaders.TENANT, tenantId);
+    httpHeaders.add(XOkapiHeaders.USER_ID, USER_ID);
+    httpHeaders.add(XOkapiHeaders.URL, okapi.getOkapiUrl());
+
+    var tenantAttributes = new TenantAttributes()
+      .moduleFrom("mod-requests-mediated")
+      .purge(true);
+    doPostWithTenant("/_/tenant", tenantAttributes, httpHeaders);
+  }
+
+  @BeforeEach
+  void beforeEachTest() {
+    contextSetter = initFolioContext();
+    wireMockServer.resetAll();
+  }
+
+  @AfterEach
+  void afterEachTest() {
+    contextSetter.close();
+  }
+
   @BeforeAll
   static void setUp(@Autowired DatabaseHelper databaseHelper, @Autowired Environment environment,
     @Autowired WebTestClient webTestClient) {
@@ -173,17 +198,6 @@ public class BaseIT {
     createKafkaTopics(KAFKA_TOPICS);
 
     setUpTenant();
-  }
-
-  @BeforeEach
-  void beforeEachTest() {
-    contextSetter = initFolioContext();
-    wireMockServer.resetAll();
-  }
-
-  @AfterEach
-  void afterEachTest() {
-    contextSetter.close();
   }
 
   @AfterAll
@@ -221,10 +235,14 @@ public class BaseIT {
   }
 
   public static HttpHeaders defaultHeaders() {
+    return defaultHeaders(TENANT_ID_CONSORTIUM);
+  }
+
+  public static HttpHeaders defaultHeaders(String tenant) {
     final HttpHeaders httpHeaders = new HttpHeaders();
 
     httpHeaders.setContentType(APPLICATION_JSON);
-    httpHeaders.add(XOkapiHeaders.TENANT, TENANT_ID_CONSORTIUM);
+    httpHeaders.add(XOkapiHeaders.TENANT, tenant);
     httpHeaders.add(XOkapiHeaders.URL, wireMockServer.baseUrl());
     httpHeaders.add(XOkapiHeaders.TOKEN, TOKEN);
     httpHeaders.add(XOkapiHeaders.USER_ID, USER_ID);

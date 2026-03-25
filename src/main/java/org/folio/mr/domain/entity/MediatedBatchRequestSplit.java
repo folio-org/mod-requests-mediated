@@ -8,10 +8,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PostLoad;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,8 +20,6 @@ import lombok.ToString;
 import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.converter.BatchRequestSplitStatusJdbcType;
 import org.hibernate.annotations.JdbcType;
-import org.springframework.data.domain.Persistable;
-
 
 @Getter
 @Setter
@@ -35,10 +30,7 @@ import org.springframework.data.domain.Persistable;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Entity
 @Table(name = "batch_request_split")
-public class MediatedBatchRequestSplit extends MetadataEntity implements Persistable<UUID>, Identifiable<UUID> {
-
-  @Transient
-  private boolean isNew = true;
+public class MediatedBatchRequestSplit extends MetadataEntity implements Identifiable<UUID> {
 
   @EqualsAndHashCode.Include
   @Id
@@ -78,20 +70,4 @@ public class MediatedBatchRequestSplit extends MetadataEntity implements Persist
 
   // copy column of status for easier querying
   private String mediatedRequestStatus;
-
-  @PostLoad
-  @PrePersist
-  void markNotNew() {
-    this.isNew = false;
-  }
-
-  @Override
-  public boolean isNew() {
-    return isNew;
-  }
-
-  @Override
-  public UUID getId() {
-    return id;
-  }
 }

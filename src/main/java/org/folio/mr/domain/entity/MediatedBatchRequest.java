@@ -5,13 +5,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.PostLoad;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import java.sql.Timestamp;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,20 +18,17 @@ import lombok.ToString;
 import org.folio.mr.domain.BatchRequestStatus;
 import org.folio.mr.domain.converter.BatchRequestStatusJdbcType;
 import org.hibernate.annotations.JdbcType;
-import org.springframework.data.domain.Persistable;
 
 @Getter
 @Setter
+@Entity
+@Builder
 @ToString(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
-@Entity
 @Table(name = "batch_request")
-public class MediatedBatchRequest extends MetadataEntity implements Persistable<UUID>, Identifiable<UUID> {
-
-  @Transient
-  private boolean isNew = true;
+public class MediatedBatchRequest extends MetadataEntity implements Identifiable<UUID> {
 
   @EqualsAndHashCode.Include
   @Id
