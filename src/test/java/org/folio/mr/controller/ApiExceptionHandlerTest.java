@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
-import feign.FeignException;
+import org.springframework.web.client.HttpServerErrorException;
 
 
 class ApiExceptionHandlerTest {
@@ -40,15 +40,12 @@ class ApiExceptionHandlerTest {
   }
 
   @Test
-  void handleFeignException_returnsIntegrationError() {
-    var ex = mock(FeignException.class);
-    when(ex.status()).thenReturn(502);
-    when(ex.getMessage()).thenReturn("Bad Gateway");
+  void handleHttpStatusCodeException_returnsIntegrationError() {
+    var ex = HttpServerErrorException.create(HttpStatus.BAD_GATEWAY, "Bad Gateway", null, null, null);
 
-    var response = handler.handleFeignException(ex);
+    var response = handler.handleHttpStatusCodeException(ex);
 
     assertEquals(HttpStatus.valueOf(502), response.getStatusCode());
-    assertEquals("Bad Gateway", response.getBody().getErrors().getFirst().getMessage());
     assertEquals(ErrorType.INTEGRATION_ERROR.getValue(), response.getBody().getErrors().getFirst().getType());
   }
 

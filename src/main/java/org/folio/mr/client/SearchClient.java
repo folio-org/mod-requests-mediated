@@ -4,27 +4,27 @@ import org.folio.mr.domain.dto.BatchIds;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.ConsortiumItems;
 import org.folio.mr.domain.dto.SearchInstancesResponse;
-import org.folio.spring.config.FeignClientConfiguration;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
 
-@FeignClient(name = "search", url = "search", configuration = FeignClientConfiguration.class)
+@HttpExchange(url = "search", contentType = MediaType.APPLICATION_JSON_VALUE,
+  accept = MediaType.APPLICATION_JSON_VALUE)
 public interface SearchClient {
 
-  @GetMapping("/consortium/items")
+  @GetExchange("/consortium/items")
   ConsortiumItems searchItems(@RequestParam String instanceId, @RequestParam String tenantId);
 
-  @GetMapping("/consortium/item/{itemId}")
+  @GetExchange("/consortium/item/{itemId}")
   ConsortiumItem searchItem(@PathVariable("itemId") String itemId);
 
-  // this search can be performed in central tenant only!
-  @PostMapping("/consortium/batch/items")
+  @PostExchange("/consortium/batch/items")
   ConsortiumItems searchItems(@RequestBody BatchIds batchIds);
 
-  @GetMapping("/instances?query=id=={instanceId}&expandAll=true")
+  @GetExchange("/instances?query=id=={instanceId}&expandAll=true")
   SearchInstancesResponse searchInstance(@PathVariable("instanceId") String instanceId);
 }

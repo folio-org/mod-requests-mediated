@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import org.folio.mr.client.SearchClient;
 import org.folio.mr.domain.MediatedRequestContext;
@@ -31,6 +32,7 @@ import org.folio.mr.domain.MediatedRequestStatus;
 import org.folio.mr.domain.dto.ConsortiumItem;
 import org.folio.mr.domain.dto.EcsTlr;
 import org.folio.mr.domain.dto.Instance;
+import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.MediatedRequest;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
@@ -102,6 +104,7 @@ class MediatedRequestActionsServiceTest {
       .withId(mediatedRequestId);
     MediatedRequest mappedRequest = buildMediatedRequest(OPEN_ITEM_ARRIVED);
     String itemBarcode = initialRequest.getItemBarcode();
+    String itemId = initialRequest.getItemId().toString();
 
     when(mediatedRequestsRepository.findRequestForItemArrivalConfirmation(itemBarcode))
       .thenReturn(Optional.of(initialRequest));
@@ -109,6 +112,12 @@ class MediatedRequestActionsServiceTest {
       .thenReturn(updatedRequest);
     when(mediatedRequestMapper.mapEntityToDto(any(MediatedRequestEntity.class)))
       .thenReturn(mappedRequest);
+    when(searchService.searchItem(itemId))
+      .thenReturn(Optional.of(new ConsortiumItem().id(itemId).tenantId("consortium")));
+    when(executionService.executeSystemUserScoped(anyString(), any()))
+      .thenAnswer(inv -> ((Callable<?>) inv.getArgument(1)).call());
+    when(inventoryService.fetchItem(itemId))
+      .thenReturn(new Item().id(itemId));
     when(circulationRequestService.get(anyString())).thenReturn(new Request());
     when(circulationRequestService.update(any(Request.class))).thenReturn(new Request());
     when(userService.fetchUser(anyString())).thenReturn(
@@ -145,6 +154,7 @@ class MediatedRequestActionsServiceTest {
       .withId(mediatedRequestId);
     MediatedRequest mappedRequest = buildMediatedRequest(OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
     String itemBarcode = initialRequest.getItemBarcode();
+    String itemId = initialRequest.getItemId().toString();
 
     when(mediatedRequestsRepository.findRequestForSendingInTransit(itemBarcode))
       .thenReturn(Optional.of(initialRequest));
@@ -152,6 +162,12 @@ class MediatedRequestActionsServiceTest {
       .thenReturn(updatedRequest);
     when(mediatedRequestMapper.mapEntityToDto(any(MediatedRequestEntity.class)))
       .thenReturn(mappedRequest);
+    when(searchService.searchItem(itemId))
+      .thenReturn(Optional.of(new ConsortiumItem().id(itemId).tenantId("consortium")));
+    when(executionService.executeSystemUserScoped(anyString(), any()))
+      .thenAnswer(inv -> ((Callable<?>) inv.getArgument(1)).call());
+    when(inventoryService.fetchItem(itemId))
+      .thenReturn(new Item().id(itemId));
 
     MediatedRequestContext result = mediatedRequestActionsService.sendItemInTransit(itemBarcode);
 

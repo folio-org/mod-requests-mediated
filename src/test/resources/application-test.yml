@@ -21,7 +21,8 @@ folio:
     thread-pool-size: 1
 management:
   endpoints:
-    enabled-by-default: false
+    access:
+      default: none
 logging:
   level:
     org.springframework.web: debug

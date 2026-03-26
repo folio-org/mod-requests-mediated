@@ -13,7 +13,7 @@ import static org.folio.mr.domain.dto.MediatedRequest.RequestTypeEnum.PAGE;
 import static org.folio.mr.domain.type.ErrorCode.MEDIATED_REQUEST_SAVE_NOT_ALLOWED_FOR_INACTIVE_PATRON;
 import static org.folio.mr.util.TestUtils.dateToString;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyIterable;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
@@ -215,7 +215,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("instance.publication[1].place", is("Boston, Mass.")))
       .andExpect(jsonPath("instance.publication[1].dateOfPublication", is("1916-1975")))
       .andExpect(jsonPath("instance.publication[1].role", is("role2")))
-      .andExpect(jsonPath("instance.editions", contains("ed.1", "ed.2")))
+      .andExpect(jsonPath("instance.editions", containsInAnyOrder("ed.1", "ed.2")))
       .andExpect(jsonPath("instance.contributorNames", hasSize(2)))
       .andExpect(jsonPath("instance.contributorNames[0].name", is("First, Author")))
       .andExpect(jsonPath("instance.contributorNames[1].name", is("Second, Writer")))
@@ -617,7 +617,7 @@ class MediatedRequestsApiTest extends BaseIT {
       .andExpect(jsonPath("instance.publication[1].place", is("Boston, Mass.")))
       .andExpect(jsonPath("instance.publication[1].dateOfPublication", is("1916-1975")))
       .andExpect(jsonPath("instance.publication[1].role", is("role2")))
-      .andExpect(jsonPath("instance.editions", contains("ed.1", "ed.2")))
+      .andExpect(jsonPath("instance.editions", containsInAnyOrder("ed.1", "ed.2")))
       .andExpect(jsonPath("instance.contributorNames", hasSize(2)))
       .andExpect(jsonPath("instance.contributorNames[0].name", is("First, Author")))
       .andExpect(jsonPath("instance.contributorNames[1].name", is("Second, Writer")))

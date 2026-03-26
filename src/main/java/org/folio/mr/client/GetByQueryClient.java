@@ -1,21 +1,19 @@
 package org.folio.mr.client;
 
 import org.folio.mr.support.CqlQuery;
-import org.folio.spring.config.FeignClientConfiguration;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient(name="get-by-query", configuration = FeignClientConfiguration.class)
+@HttpExchange
 public interface GetByQueryClient<T> {
 
   int DEFAULT_LIMIT = 1000;
 
-  @GetMapping
+  @GetExchange
   T getByQuery(@RequestParam CqlQuery query, @RequestParam(defaultValue = "1000") int limit);
 
   default T getByQuery(CqlQuery query) {
     return getByQuery(query, DEFAULT_LIMIT);
   }
-
 }

@@ -12,7 +12,7 @@ spring:
       # to boot up application despite of any DB connection issues
       continue-on-error: true
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -28,10 +28,6 @@ spring:
       accept-single-value-as-array: true
   mustache:
     check-template-location: false
-  cloud:
-    openfeign:
-      okhttp:
-        enabled: true
   kafka:
     bootstrap-servers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:9092}
     security:
@@ -45,6 +41,15 @@ spring:
       auto-offset-reset: latest
       group-id: ${ENV:folio}-mod-requests-mediated-group
 folio:
+  exchange:
+    enabled: true
+  logging: # https://github.com/folio-org/folio-spring-support/blob/master/doc/REQUEST_LOGGING.md
+    request:
+      enabled: false       # Logs incoming HTTP requests
+      level: BASIC
+    exchange:
+      enabled: false       # Logs outgoing HTTP client requests
+      level: BASIC
   tenant:
     secure-tenant-id: ${SECURE_TENANT_ID}
     validation:
@@ -85,3 +90,7 @@ management:
     readinessstate:
       enabled: true
 debug: false
+logging:
+  level:
+    org.folio.spring.filter.LoggingRequestFilter: DEBUG
+    org.folio.spring.client.ExchangeLoggingInterceptor: DEBUG

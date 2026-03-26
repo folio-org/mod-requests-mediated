@@ -1,18 +1,29 @@
 package org.folio.mr.client;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.folio.mr.domain.dto.Location;
 import org.folio.mr.domain.dto.Locations;
-import org.folio.spring.config.FeignClientConfiguration;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.folio.mr.support.CqlQuery;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient(name = "locations", url = "locations",
-  configuration = FeignClientConfiguration.class, dismiss404 = true)
+@HttpExchange(url = "locations", contentType = MediaType.APPLICATION_JSON_VALUE,
+  accept = MediaType.APPLICATION_JSON_VALUE)
 public interface LocationClient extends GetByQueryParamsClient<Locations> {
 
-  @GetMapping("/{id}")
+  @GetExchange("/{id}")
   Optional<Location> get(@PathVariable String id);
+
+  @Override
+  @GetExchange
+  Locations getByQuery(@RequestParam CqlQuery query, @RequestParam int limit);
+
+  @Override
+  @GetExchange
+  Locations getByQueryParams(@RequestParam Map<String, String> queryParams);
 }

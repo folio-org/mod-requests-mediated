@@ -301,10 +301,12 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private void findItem(MediatedRequestContext context) {
-    searchService.searchItem(context.getRequest().getItemId())
-      .map(ConsortiumItem::getTenantId)
-      .map(context::setLendingTenantId)
-      .ifPresent(this::fetchItem);
+    String itemId = context.getRequest().getItemId();
+    var searchItem = searchService.searchItem(itemId)
+      .orElseThrow(() -> ExceptionFactory.notFound(format("Item %s not found", itemId)));
+
+    context.setLendingTenantId(searchItem.getTenantId());
+    fetchItem(context);
   }
 
   private void findRequester(MediatedRequestContext context) {
