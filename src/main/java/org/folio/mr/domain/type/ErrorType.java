@@ -1,10 +1,8 @@
 package org.folio.mr.domain.type;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
 public enum ErrorType {
 
   VALIDATION_ERROR("validation"),
@@ -14,4 +12,8 @@ public enum ErrorType {
   UNKNOWN_ERROR("unknown");
 
   private final String value;
+
+  ErrorType(String value) {
+    this.value = value;
+  }
 }

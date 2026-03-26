@@ -5,22 +5,21 @@ import java.util.Optional;
 import org.folio.mr.domain.dto.Campus;
 import org.folio.mr.domain.dto.Institution;
 import org.folio.mr.domain.dto.Library;
-import org.folio.spring.config.FeignClientConfiguration;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient(name = "location-units", url = "location-units",
-  configuration = FeignClientConfiguration.class, dismiss404 = true)
+@HttpExchange(url = "location-units", contentType = MediaType.APPLICATION_JSON_VALUE,
+  accept = MediaType.APPLICATION_JSON_VALUE)
 public interface LocationUnitClient {
 
-  @GetMapping("/libraries/{id}")
+  @GetExchange("/libraries/{id}")
   Optional<Library> getLibrary(@PathVariable String id);
 
-  @GetMapping("/campuses/{id}")
+  @GetExchange("/campuses/{id}")
   Optional<Campus> getCampus(@PathVariable String id);
 
-  @GetMapping("/institutions/{id}")
+  @GetExchange("/institutions/{id}")
   Optional<Institution> getInstitution(@PathVariable String id);
-
 }

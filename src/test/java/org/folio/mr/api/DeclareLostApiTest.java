@@ -20,9 +20,7 @@ import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.test.types.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -32,8 +30,6 @@ import lombok.SneakyThrows;
 @IntegrationTest
 class DeclareLostApiTest extends BaseIT {
 
-  @Autowired
-  private MockMvc mockMvc;
 
   @Autowired
   private MediatedRequestsRepository mediatedRequestsRepository;
@@ -49,14 +45,14 @@ class DeclareLostApiTest extends BaseIT {
 
     wireMockServer.stubFor(WireMock.post(urlPathEqualTo("/circulation/loans/" + loanId +
       "/declare-item-lost"))
-      .withHeader(TENANT, equalTo(TENANT_ID_SECURE))
+      .withHeader(TENANT, equalTo(TENANT_ID_CONSORTIUM))
       .willReturn(noContent()));
 
     mockHelper.mockGetLoan(new Loan()
       .id(loanId)
       .userId(userId.toString())
       .itemId(itemId),
-      TENANT_ID_SECURE);
+      TENANT_ID_CONSORTIUM);
 
     mediatedRequestsRepository.save(
       buildMediatedRequestEntity(CLOSED_FILLED)
@@ -105,11 +101,8 @@ class DeclareLostApiTest extends BaseIT {
   private ResultActions performDeclareLostRequest(UUID loanId,
     DeclareLostCirculationRequest request) {
 
-    final HttpHeaders httpHeaders = defaultHeaders();
-    httpHeaders.add(TENANT, TENANT_ID_SECURE);
-
     return mockMvc.perform(post("/requests-mediated/loans/{loanId}/declare-item-lost", loanId)
-      .headers(httpHeaders)
+      .headers(defaultHeaders())
       .contentType(MediaType.APPLICATION_JSON)
       .content(asJsonString(request)));
   }

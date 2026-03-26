@@ -1,10 +1,8 @@
 package org.folio.mr.domain.type;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
 public enum ErrorCode {
   UNKNOWN_CONSTRAINT("-1", "Unknown constraint."),
   MEDIATED_REQUEST_SAVE_NOT_ALLOWED_FOR_INACTIVE_PATRON("100",
@@ -19,4 +17,9 @@ public enum ErrorCode {
 
   private final String code;
   private final String message;
+
+  ErrorCode(String code, String message) {
+    this.code = code;
+    this.message = message;
+  }
 }

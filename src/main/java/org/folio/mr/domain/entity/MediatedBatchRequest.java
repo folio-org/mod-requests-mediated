@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.sql.Timestamp;
 import java.util.UUID;
@@ -54,4 +56,107 @@ public class MediatedBatchRequest extends MetadataEntity implements Identifiable
 
   // copy column of status for easier querying
   private String mediatedRequestStatus;
+
+  @Override
+  public UUID getId() {
+    return id;
+  }
+
+  public static BatchRequestBuilder builder() {
+    return new BatchRequestBuilder();
+  }
+
+  public static class BatchRequestBuilder {
+    private UUID id;
+    private UUID requesterId;
+    private BatchRequestStatus status;
+    private Timestamp requestDate;
+    private String patronComments;
+    private String mediatedWorkflow;
+
+    // MetadataEntity fields
+    private Timestamp createdDate;
+    private UUID createdByUserId;
+    private String createdByUsername;
+    private Timestamp updatedDate;
+    private UUID updatedByUserId;
+    private String updatedByUsername;
+
+    public BatchRequestBuilder id(UUID id) {
+      this.id = id;
+      return this;
+    }
+
+    public BatchRequestBuilder requesterId(UUID requesterId) {
+      this.requesterId = requesterId;
+      return this;
+    }
+
+    public BatchRequestBuilder status(BatchRequestStatus status) {
+      this.status = status;
+      return this;
+    }
+
+    public BatchRequestBuilder requestDate(Timestamp requestDate) {
+      this.requestDate = requestDate;
+      return this;
+    }
+
+    public BatchRequestBuilder patronComments(String patronComments) {
+      this.patronComments = patronComments;
+      return this;
+    }
+
+    public BatchRequestBuilder mediatedWorkflow(String mediatedWorkflow) {
+      this.mediatedWorkflow = mediatedWorkflow;
+      return this;
+    }
+
+    public BatchRequestBuilder createdDate(Timestamp createdDate) {
+      this.createdDate = createdDate;
+      return this;
+    }
+
+    public BatchRequestBuilder createdByUserId(UUID createdByUserId) {
+      this.createdByUserId = createdByUserId;
+      return this;
+    }
+
+    public BatchRequestBuilder createdByUsername(String createdByUsername) {
+      this.createdByUsername = createdByUsername;
+      return this;
+    }
+
+    public BatchRequestBuilder updatedDate(Timestamp updatedDate) {
+      this.updatedDate = updatedDate;
+      return this;
+    }
+
+    public BatchRequestBuilder updatedByUserId(UUID updatedByUserId) {
+      this.updatedByUserId = updatedByUserId;
+      return this;
+    }
+
+    public BatchRequestBuilder updatedByUsername(String updatedByUsername) {
+      this.updatedByUsername = updatedByUsername;
+      return this;
+    }
+
+    public MediatedBatchRequest build() {
+      var entity = new MediatedBatchRequest();
+      entity.setId(id);
+      entity.setRequesterId(requesterId);
+      entity.setStatus(status);
+      entity.setRequestDate(requestDate);
+      entity.setPatronComments(patronComments);
+      entity.setMediatedWorkflow(mediatedWorkflow);
+      entity.setCreatedDate(createdDate);
+      entity.setCreatedByUserId(createdByUserId);
+      entity.setCreatedByUsername(createdByUsername);
+      entity.setUpdatedDate(updatedDate);
+      entity.setUpdatedByUserId(updatedByUserId);
+      entity.setUpdatedByUsername(updatedByUsername);
+      return entity;
+    }
+  }
 }

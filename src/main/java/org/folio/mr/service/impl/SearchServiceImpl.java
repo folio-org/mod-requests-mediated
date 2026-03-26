@@ -74,8 +74,13 @@ public class SearchServiceImpl implements SearchService {
   public Optional<ConsortiumItem> searchItemByBarcode(String itemBarcode) {
     log.info("searchItem:: searching item by barcode: {}", itemBarcode);
 
-    Optional<ConsortiumItem> consortiumItem = searchItems(new BatchIds(BARCODE, List.of(itemBarcode)))
-      .getItems()
+    ConsortiumItems result = searchItems(new BatchIds(BARCODE, List.of(itemBarcode)));
+    if (result == null || result.getItems() == null) {
+      log.warn("searchItem:: item with barcode {} was not found", itemBarcode);
+      return Optional.empty();
+    }
+
+    Optional<ConsortiumItem> consortiumItem = result.getItems()
       .stream()
       .findFirst();
 

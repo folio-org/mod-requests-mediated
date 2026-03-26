@@ -12,7 +12,6 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
 import java.util.List;
-import feign.FeignException;
 import org.folio.mr.domain.dto.Error;
 import org.folio.mr.domain.dto.ErrorResponse;
 import org.folio.mr.domain.dto.Errors;
@@ -27,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import lombok.extern.log4j.Log4j2;
 
@@ -47,9 +47,9 @@ public class ApiExceptionHandler {
   }
 
   @ExceptionHandler
-  public ResponseEntity<ErrorResponse> handleFeignException(FeignException e) {
+  public ResponseEntity<ErrorResponse> handleHttpStatusCodeException(HttpStatusCodeException e) {
     logException(e);
-    return buildResponseEntity(HttpStatus.valueOf(e.status()), INTEGRATION_ERROR, e);
+    return buildResponseEntity(HttpStatus.valueOf(e.getStatusCode().value()), INTEGRATION_ERROR, e);
   }
 
   /**
