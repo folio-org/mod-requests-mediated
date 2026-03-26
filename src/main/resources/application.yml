@@ -42,13 +42,14 @@ spring:
       group-id: ${ENV:folio}-mod-requests-mediated-group
 folio:
   exchange:
-    enabled: true  # REQUIRED for HTTP service clients
-  logging:
+    enabled: true
+  logging: # https://github.com/folio-org/folio-spring-support/blob/master/doc/REQUEST_LOGGING.md
     request:
-      enabled: false       # Optional: logs incoming HTTP requests
+      enabled: false       # Logs incoming HTTP requests
+      level: BASIC
     exchange:
-      enabled: true        # Optional: logs outgoing HTTP client requests
-      level: BASIC         # Optional: NONE, BASIC, HEADERS, FULL (default: BASIC)
+      enabled: false       # Logs outgoing HTTP client requests
+      level: BASIC
   tenant:
     secure-tenant-id: ${SECURE_TENANT_ID}
     validation:
