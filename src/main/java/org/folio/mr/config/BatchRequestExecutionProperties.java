@@ -46,6 +46,8 @@ public class BatchRequestExecutionProperties {
   /**
    * Defines the threshold for selecting stale requests for recovery. Requests with the last
    * update time before the threshold will be considered stale and selected for recovery.
+   *
+   * <p>Default: 1 hour</p>
    */
-  private Duration staleRequestThreshold = Duration.ofMinutes(15);
+  private Duration staleRequestThreshold = Duration.ofHours(1);
 }
