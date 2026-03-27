@@ -8,6 +8,8 @@
 * Add validation for max number of items in Mediated Batch Request creation ([MODREQMED-161](https://folio-org.atlassian.net/browse/MODREQMED-161))
 * Extend Get Mediated Batch Request by id endpoint with items requests stats info ([MODREQMED-164](https://folio-org.atlassian.net/browse/MODREQMED-164))
 * Add support for creating Mediated Batch Requests with Secure Tenant  ([MODREQMED-179](https://folio-org.atlassian.net/browse/MODREQMED-179))
+* Fix an issue when multi-tenancy ([MODREQMED-211](https://folio-org.atlassian.net/browse/MODREQMED-211))
+* Add batch request recovery ([MODREQMED-163](https://folio-org.atlassian.net/browse/MODREQMED-163))
 
 ## 1.2.0 2025-03-13
 * Upgrade to Java 21, folio-spring-support 9.0.0 (MODREQMED-97)
