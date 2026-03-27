@@ -12,6 +12,8 @@ spring:
   jpa:
     show-sql: false
 folio:
+  system-user:
+    enabled: false
   tenant:
     secure-tenant-id: consortium
     validation:
