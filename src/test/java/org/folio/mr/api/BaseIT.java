@@ -205,9 +205,6 @@ public class BaseIT {
     if (kafkaAdminClient != null) {
       kafkaAdminClient.close();
     }
-    if (wireMockServer != null) {
-      wireMockServer.stop();
-    }
   }
 
   @SneakyThrows
