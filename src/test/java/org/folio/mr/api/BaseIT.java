@@ -368,8 +368,8 @@ public class BaseIT {
     /**
      * Override the RestClient.Builder to use SimpleClientHttpRequestFactory (HTTP/1.1 only).
      * Spring Boot 4.0 defaults to JdkClientHttpRequestFactory which supports HTTP/2,
-     * but WireMock (used as mock Okapi in tests) only supports HTTP/1.1. Using HTTP/2
-     * causes intermittent EOFException when the JDK HttpClient attempts to reuse connections.
+     * but WireMock only supports HTTP/1.1. Using HTTP/2 causes intermittent EOFException
+     * when the JDK HttpClient attempts to reuse connections.
      */
     @Bean("http1RestClientBuilder")
     @Primary
