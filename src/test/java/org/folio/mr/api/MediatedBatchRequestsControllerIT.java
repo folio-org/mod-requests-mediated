@@ -80,6 +80,8 @@ import org.folio.spring.testing.extension.DatabaseCleanup;
 import org.folio.test.types.IntegrationTest;
 
 import org.awaitility.core.ThrowingRunnable;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -97,7 +99,8 @@ import org.springframework.test.web.servlet.ResultActions;
 
 @IntegrationTest
 @DatabaseCleanup(tables = {"batch_request_split", "batch_request", "mediated_request"})
-@SpringBootTest(properties = {"folio.tenant.secure-tenant-id=" + TENANT_ID_SECURE})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+  properties = {"folio.tenant.secure-tenant-id=" + TENANT_ID_SECURE})
 class MediatedBatchRequestsControllerIT extends BaseIT {
 
   private static final Duration MAX_AWAIT_TIMEOUT = Durations.ONE_MINUTE;
@@ -138,6 +141,16 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
 
   @MockitoSpyBean
   private BatchFailedFlowFinalizer failedFlowFinalizer;
+
+  @BeforeAll
+  static void setUpSecureTenant() {
+    setUpTenant(TENANT_ID_SECURE);
+  }
+
+  @AfterAll
+  static void tearDownSecureTenant() {
+    tearDownTenant(TENANT_ID_SECURE);
+  }
 
   @BeforeEach
   void setUp() {
@@ -435,8 +448,6 @@ class MediatedBatchRequestsControllerIT extends BaseIT {
   @Test
   @SneakyThrows
   void shouldCreateMediatedBatchRequestWithProvidedIdInSecureTenantEnv() {
-    setUpTenant(TENANT_ID_SECURE);
-
     var postBatchRequestDto = sampleBatchRequestPostDto(ITEM_IDS)
       .batchId(BATCH_REQUEST_ID1);
 

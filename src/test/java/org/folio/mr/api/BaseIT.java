@@ -40,16 +40,19 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.RequestEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
@@ -61,6 +64,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -359,6 +363,19 @@ public class BaseIT {
     @Bean
     public MockMvc mockMvc(WebApplicationContext context) {
       return MockMvcBuilders.webAppContextSetup(context).build();
+    }
+
+    /**
+     * Override the RestClient.Builder to use SimpleClientHttpRequestFactory (HTTP/1.1 only).
+     * Spring Boot 4.0 defaults to JdkClientHttpRequestFactory which supports HTTP/2,
+     * but WireMock (used as mock Okapi in tests) only supports HTTP/1.1. Using HTTP/2
+     * causes intermittent EOFException when the JDK HttpClient attempts to reuse connections.
+     */
+    @Bean("http1RestClientBuilder")
+    @Primary
+    public RestClient.Builder restClientBuilder(
+      @Qualifier("restClientBuilder") RestClient.Builder folioRestClientBuilder) {
+      return folioRestClientBuilder.requestFactory(new SimpleClientHttpRequestFactory());
     }
   }
 }
