@@ -3,10 +3,11 @@ package org.folio.mr.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.mr.domain.BatchRequestSplitStatus.COMPLETED;
 import static org.folio.mr.domain.BatchRequestStatus.IN_PROGRESS;
-import static org.mockito.Mockito.when;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import org.folio.mr.api.BaseIT;
@@ -15,17 +16,18 @@ import org.folio.mr.domain.BatchRequestStatus;
 import org.folio.mr.domain.entity.MediatedBatchRequest;
 import org.folio.mr.domain.entity.MediatedBatchRequestSplit;
 import org.folio.mr.domain.entity.MetadataEntity;
-import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.integration.XOkapiHeaders;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.folio.test.types.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 @IntegrationTest
 class MediatedBatchRequestSplitRepositoryIT extends BaseIT {
 
-  @MockitoSpyBean
-  private FolioExecutionContext context;
+  @Autowired
+  private FolioModuleMetadata folioModuleMetadata;
 
   @Autowired
   private MediatedBatchRequestRepository batchRequestRepository;
@@ -54,10 +56,19 @@ class MediatedBatchRequestSplitRepositoryIT extends BaseIT {
       .requesterId(randomUUID)
       .status(BatchRequestSplitStatus.fromValue("Completed"))
       .build();
-    when(context.getUserId()).thenReturn(userId);
 
-    var savedBatch = batchRequestRepository.save(batch);
-    var savedSplit = batchRequestSplitRepository.save(requestSplit);
+    // Set a specific userId in the execution context for JPA auditing
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of(TENANT_ID_CONSORTIUM));
+    headers.put(XOkapiHeaders.USER_ID, List.of(userId.toString()));
+    headers.put(XOkapiHeaders.URL, List.of(wireMockServer.baseUrl()));
+
+    MediatedBatchRequest savedBatch;
+    MediatedBatchRequestSplit savedSplit;
+    try (var ignored = new FolioExecutionContextSetter(folioModuleMetadata, headers)) {
+      savedBatch = batchRequestRepository.save(batch);
+      savedSplit = batchRequestSplitRepository.save(requestSplit);
+    }
 
     assertThat(List.of(savedBatch, savedSplit))
       .extracting(MetadataEntity::getCreatedByUserId, MetadataEntity::getCreatedDate,

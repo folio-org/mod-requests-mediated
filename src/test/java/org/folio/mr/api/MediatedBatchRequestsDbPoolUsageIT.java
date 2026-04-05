@@ -50,7 +50,7 @@ import org.folio.test.types.IntegrationTest;
 
 @IntegrationTest
 @DatabaseCleanup(tables = { "batch_request_split", "batch_request", "mediated_request" })
-@SpringBootTest(properties = {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
   "folio.tenant.secure-tenant-id=secure",
   "folio.batch-requests.thread-pool-size=4",
   "spring.datasource.hikari.maximum-pool-size=2",
