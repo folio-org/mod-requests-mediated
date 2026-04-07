@@ -36,4 +36,18 @@ public class BatchRequestExecutionProperties {
    */
   @Positive
   private int lastExecutionsStatusCacheSize = 25;
+
+  /**
+   * Provides a maximum amount of stale requests to be selected for recovery.
+   */
+  @Positive
+  private int staleRequestsQueryLimit = 10;
+
+  /**
+   * Defines the threshold for selecting stale requests for recovery. Requests with the last
+   * update time before the threshold will be considered stale and selected for recovery.
+   *
+   * <p>Default: 1 hour</p>
+   */
+  private Duration staleRequestThreshold = Duration.ofHours(1);
 }

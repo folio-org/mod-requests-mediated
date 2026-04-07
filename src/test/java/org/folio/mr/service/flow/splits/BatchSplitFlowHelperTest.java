@@ -11,10 +11,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.folio.mr.domain.BatchRequestSplitStatus;
 import org.folio.mr.domain.BatchSplitContext;
 import org.folio.mr.domain.dto.MediatedBatchRequestDetailDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestDetailDto.MediatedRequestStatusEnum;
 import org.folio.mr.service.MediatedBatchRequestSplitService;
+import org.folio.mr.service.MediatedBatchRequestsService;
 
 @ExtendWith(MockitoExtension.class)
 class BatchSplitFlowHelperTest {
@@ -22,6 +24,7 @@ class BatchSplitFlowHelperTest {
   @InjectMocks private BatchSplitFlowHelper helper;
   @Mock private BatchSplitContext context;
   @Mock private MediatedBatchRequestDetailDto splitRecord;
+  @Mock private MediatedBatchRequestsService batchRequestsService;
   @Mock private MediatedBatchRequestSplitService batchRequestSplitService;
 
   @Test
@@ -67,5 +70,18 @@ class BatchSplitFlowHelperTest {
     verify(splitRecord).setErrorDetails("Failed to create request for item %s".formatted(itemId));
     verify(splitRecord).setMediatedRequestStatus(MediatedRequestStatusEnum.FAILED);
     verify(batchRequestSplitService).update(splitRequestId, splitRecord);
+  }
+
+  @Test
+  void initializeFlowExecution_positive() {
+    var batchId = UUID.randomUUID();
+    var batchSplitId = UUID.randomUUID();
+    when(context.getBatchRequestId()).thenReturn(batchId);
+    when(context.getBatchSplitRequestId()).thenReturn(batchSplitId);
+
+    helper.initializeFlowExecution(context);
+
+    verify(batchRequestSplitService).updateStatusById(batchSplitId, BatchRequestSplitStatus.IN_PROGRESS);
+    verify(batchRequestsService).updateLastProcessedDateById(batchId);
   }
 }
