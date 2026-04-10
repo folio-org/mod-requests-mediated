@@ -62,7 +62,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
   public ResponseEntity<ConfirmItemArrivalResponse> confirmItemArrival(
     ConfirmItemArrivalRequest request) {
 
-    log.info("confirmItemArrival:: request={}", request);
+    log.info("confirmItemArrival:: processing request");
     MediatedRequest mediatedRequest = actionsService.confirmItemArrival(request.getItemBarcode());
 
     return ResponseEntity.ok(
@@ -113,7 +113,7 @@ public class MediatedRequestActionsController implements MediatedRequestsActions
   public ResponseEntity<SendItemInTransitResponse> sendItemInTransit(
     SendItemInTransitRequest request) {
 
-    log.info("sendItemInTransit:: request={}", request);
+    log.info("sendItemInTransit:: processing request");
     MediatedRequestContext context = actionsService.sendItemInTransit(request.getItemBarcode());
 
     return ResponseEntity.ok(buildSendItemInTransitResponse(context));

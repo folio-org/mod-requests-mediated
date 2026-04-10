@@ -95,7 +95,7 @@ public class MediatedRequestsServiceImpl implements MediatedRequestsService {
   public Optional<MediatedRequest> delete(UUID requestId) {
     return mediatedRequestsRepository.findById(requestId)
       .map(mediatedRequestEntity -> {
-        log.info("delete:: found mediatedRequestEntity: {}", () -> mediatedRequestEntity);
+        log.info("delete:: found mediatedRequestEntity: {}", mediatedRequestEntity::getId);
         mediatedRequestsRepository.delete(mediatedRequestEntity);
         return requestsMapper.mapEntityToDto(mediatedRequestEntity);
       });

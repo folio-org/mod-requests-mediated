@@ -249,7 +249,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       UserGroup proxyGroup = userService.fetchUserGroup(proxy.getPatronGroup());
       ctxBuilder.proxy(proxy).proxyGroup(proxyGroup);
     } else {
-      log.info("fetchProxyUser:: proxy user {} not found", request.getProxyUserId());
+      log.info("fetchProxyUser:: proxy user not found");
       MediatedRequestProxy medReqProxy = request.getProxy();
       ctxBuilder.proxy(new User().barcode(medReqProxy.getBarcode())
         .personal(new UserPersonal()
@@ -449,7 +449,7 @@ public class MediatedRequestDetailsServiceImpl implements MediatedRequestDetails
       return new Item();
     }
 
-    log.debug("createFallbackItem:: item barcode: {}", item::getBarcode);
+    log.debug("createFallbackItem:: creating fallback item");
     return new Item().barcode(item.getBarcode());
   }
 
