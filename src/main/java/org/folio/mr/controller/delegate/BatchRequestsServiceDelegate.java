@@ -50,7 +50,7 @@ public class BatchRequestsServiceDelegate {
   }
 
   public MediatedBatchRequestDto createBatchRequest(MediatedBatchRequestPostDto batchRequestDto) {
-    log.debug("createBatchRequest:: parameters batchRequestDto: {}", batchRequestDto);
+    log.debug("createBatchRequest:: creating batch request");
 
     validateRequestItems(batchRequestDto.getItemRequests());
     var createdRequest = batchRequestsService.create(batchRequestDto);

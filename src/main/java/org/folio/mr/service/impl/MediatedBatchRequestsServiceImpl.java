@@ -49,7 +49,7 @@ public class MediatedBatchRequestsServiceImpl implements MediatedBatchRequestsSe
 
     var batchRequestEntity = mapper.mapPostDtoToEntity(batchRequestDto);
     var batchSplits = mapper.mapPostDtoToSplitEntities(batchRequestDto);
-    log.debug("create:: Attempting to create Mediated Batch Request: {}", batchRequestEntity);
+    log.debug("create:: Attempting to create Mediated Batch Request");
 
     initId(batchRequestEntity);
 

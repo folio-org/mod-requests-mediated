@@ -80,8 +80,8 @@ public class SingleTenantRequestHelper extends AbstractRequestHelper {
       return Optional.of(Request.RequestTypeEnum.RECALL);
     }
 
-    log.warn("findMatchingRequestType:: Pickup Service point id [{}] is not allowed for item id: [{}] and " +
-      "requester id: [{}]", pickupServicePointId, itemUuid, requesterUuid);
+    log.warn("findMatchingRequestType:: Pickup Service point id [{}] is not allowed for item id: [{}]",
+      pickupServicePointId, itemUuid);
     return Optional.empty();
   }
 

@@ -61,7 +61,7 @@ public class KafkaEventListener {
   private <E, T> void handleEvent(String eventString, KafkaEventHandler<T> handler,
     Map<String, Object> messageHeaders, Class<E> kafkaEventClass, Class<T> payloadType) {
 
-    log.debug("handleEvent:: event: {}", () -> eventString);
+    log.debug("handleEvent:: event received");
     KafkaEvent<T> event = deserialize(eventString, messageHeaders, kafkaEventClass, payloadType);
     log.info("handleEvent:: event received: {}", event::getId);
 
@@ -106,11 +106,11 @@ public class KafkaEventListener {
     }
     if (headerValue instanceof byte[] headerBytes) {
       var value = new String(headerBytes, StandardCharsets.UTF_8);
-      log.info("getHeaderValue:: header {} value is {}", headerName, value);
+      log.debug("getHeaderValue:: header {} is present", headerName);
       return value;
     }
     var value = String.valueOf(headerValue);
-    log.info("getHeaderValue:: header {} value is {}", headerName, value);
+    log.debug("getHeaderValue:: header {} is present", headerName);
     return value;
   }
 }

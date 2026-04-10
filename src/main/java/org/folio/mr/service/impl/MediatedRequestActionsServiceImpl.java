@@ -132,8 +132,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
     var requestItem = request.getItem();
     if (requestItem != null) {
-      log.info("updateMediatedRequestItem:: requestItem is present, set barcode: {}",
-        requestItem.getBarcode());
+      log.info("updateMediatedRequestItem:: requestItem is present, updating barcode");
       mediatedRequest.setItemBarcode(requestItem.getBarcode());
       extendMediatedRequestWithInventoryItemDetails(mediatedRequest);
     }
@@ -182,7 +181,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
   @Override
   public MediatedRequest confirmItemArrival(String itemBarcode) {
-    log.info("confirmItemArrival:: item barcode: {}", itemBarcode);
+    log.info("confirmItemArrival:: processing item arrival confirmation");
     MediatedRequestEntity mediatedRequestEntity = findMediatedRequestForItemArrival(itemBarcode);
     changeMediatedRequestStatus(mediatedRequestEntity, OPEN_ITEM_ARRIVED);
     mediatedRequestsRepository.save(mediatedRequestEntity);
@@ -193,7 +192,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     extendMediatedRequest(context);
     revertConfirmedRequestDeliveryInfo(context);
 
-    log.debug("confirmItemArrival:: result: {}", mediatedRequestDto);
+    log.debug("confirmItemArrival:: result processed");
     return mediatedRequestDto;
   }
 
@@ -259,8 +258,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   }
 
   private MediatedRequestEntity findMediatedRequestForItemArrival(String itemBarcode) {
-    log.info("findMediatedRequestForItemArrival:: looking for mediated request with item barcode '{}'",
-      itemBarcode);
+    log.info("findMediatedRequestForItemArrival:: looking for mediated request for item arrival confirmation");
 
     var entity = mediatedRequestsRepository.findRequestForItemArrivalConfirmation(itemBarcode)
       .orElseThrow(() -> ExceptionFactory.notFound(format(
@@ -272,7 +270,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
 
   @Override
   public MediatedRequestContext sendItemInTransit(String itemBarcode) {
-    log.info("sendItemInTransit:: item barcode: {}", itemBarcode);
+    log.info("sendItemInTransit:: processing send item in transit");
     var entity = findMediatedRequestForSendingInTransit(itemBarcode);
     changeMediatedRequestStatus(entity, OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT);
     mediatedRequestsRepository.save(entity);
@@ -282,14 +280,13 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
     findRequester(context);
     extendMediatedRequest(context);
 
-    log.debug("sendItemInTransit:: result: {}", dto);
+    log.debug("sendItemInTransit:: result processed");
 
     return context;
   }
 
   private MediatedRequestEntity findMediatedRequestForSendingInTransit(String itemBarcode) {
-    log.info("findMediatedRequestForSendingInTransit:: looking for mediated " +
-        "request with item barcode '{}'", itemBarcode);
+    log.info("findMediatedRequestForSendingInTransit:: looking for mediated request for send in transit");
     var entity = mediatedRequestsRepository.findRequestForSendingInTransit(itemBarcode)
       .orElseThrow(() -> ExceptionFactory.notFound(format(
         "Send item in transit: mediated request for item '%s' was not found",
@@ -390,7 +387,7 @@ public class MediatedRequestActionsServiceImpl implements MediatedRequestActions
   public void decline(UUID id) {
     log.info("decline:: looking for mediated request: {}", id);
     MediatedRequestEntity mediatedRequest = findMediatedRequest(id);
-    log.debug("decline:: mediatedRequest: {}", mediatedRequest);
+    log.debug("decline:: processing mediated request");
 
     declineRequest(mediatedRequest);
     log.info("decline:: mediated request {} was successfully declined", id);
