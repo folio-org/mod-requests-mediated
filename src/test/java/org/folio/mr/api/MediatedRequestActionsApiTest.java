@@ -80,7 +80,6 @@ class MediatedRequestActionsApiTest extends BaseIT {
   private static final String ECS_TLR_URL = "/tlr/ecs-tlr";
   private static final String SEARCH_ITEMS_URL = "/search/consortium/items";
   private static final String NOT_FOUND_ITEM_UUID = "f13ef24f-d0fe-4aa8-901a-bfad3f0e6cae";
-  private static final String SEARCH_INSTANCES_URL = "/search/instances";
   private static final String SEARCH_ITEM_URL = "/search/consortium/item";
   private static final String HOLDINGS_URL = "/holdings-storage/holdings";
   private static final String MATERIAL_TYPES_URL = "/material-types";
@@ -384,7 +383,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
         .withRequesterId(UUID.fromString(requesterId)));
 
     confirmMediatedRequest(initialRequest.getId())
-      .andExpect(status().isUnprocessableEntity())
+      .andExpect(status().isUnprocessableContent())
       .andExpect(jsonPath("errors").value(iterableWithSize(1)))
       .andExpect(errorCodeMatch(is(MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON.getCode())))
       .andExpect(errorMessageMatch(is(MEDIATED_REQUEST_CONFIRM_NOT_ALLOWED_FOR_INACTIVE_PATRON.getMessage())))
@@ -511,8 +510,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @Test
   @SneakyThrows
   void itemArrivalConfirmationFailsWhenMediatedRequestIsNotFoundByStatus() {
-    MediatedRequestEntity mediatedRequest = mediatedRequestsRepository.save(
-      buildMediatedRequestEntity(OPEN_ITEM_ARRIVED));// wrong status
+    mediatedRequestsRepository.save(buildMediatedRequestEntity(OPEN_ITEM_ARRIVED));// wrong status
 
     confirmItemArrival("A14837334314")
       .andExpect(status().isNotFound())
@@ -661,7 +659,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @SneakyThrows
   @Test
   void sendItemInTransitDoesNotFailWhenItemIsNotFound() {
-    var request = mediatedRequestsRepository.save(buildMediatedRequestEntity(OPEN_ITEM_ARRIVED)
+    mediatedRequestsRepository.save(buildMediatedRequestEntity(OPEN_ITEM_ARRIVED)
       .withItemId(UUID.fromString(NOT_FOUND_ITEM_UUID)));
     mockHelper.mockItemSearchNotFound(TENANT_ID_CONSORTIUM, NOT_FOUND_ITEM_UUID);
     sendItemInTransit("A14837334314").andExpect(status().isOk());
@@ -680,7 +678,7 @@ class MediatedRequestActionsApiTest extends BaseIT {
   @Test
   @SneakyThrows
   void sendItemInTransitFailsWhenMediatedRequestIsNotFoundByStatus() {
-    MediatedRequestEntity request = mediatedRequestsRepository.save(
+    mediatedRequestsRepository.save(
       buildMediatedRequestEntity(OPEN_IN_TRANSIT_TO_BE_CHECKED_OUT));// wrong status
 
     sendItemInTransit("A14837334314")
