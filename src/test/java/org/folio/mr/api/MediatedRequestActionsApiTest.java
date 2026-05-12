@@ -525,12 +525,10 @@ class MediatedRequestActionsApiTest extends BaseIT {
   void itemArrivalConfirmationDoesNotFailWhenItemIsNotFound() {
     var request = mediatedRequestsRepository.save(buildMediatedRequestEntity(OPEN_IN_TRANSIT_FOR_APPROVAL)
       .withItemId(UUID.fromString(NOT_FOUND_ITEM_UUID)));
-    mockHelper.mockItemSearchNotFound(TENANT_ID_CONSORTIUM, NOT_FOUND_ITEM_UUID);
-
     Request mockConfirmedRequest = new Request().id(request.getConfirmedRequestId().toString());
     mockHelper.mockGetRequest(mockConfirmedRequest, TENANT_ID_CONSORTIUM);
     mockHelper.mockPutRequest(mockConfirmedRequest, TENANT_ID_CONSORTIUM);
-
+    mockHelper.mockItemSearchNotFound(TENANT_ID_CONSORTIUM, NOT_FOUND_ITEM_UUID);
     confirmItemArrival("A14837334314").andExpect(status().isOk());
   }
 
