@@ -90,7 +90,7 @@ class CheckOutApiTest extends BaseIT {
       buildItemBatchSearchResponse(ITEM_BARCODE, TENANT_ID_COLLEGE));
 
     // mock secondary request
-    mockHelper.mockGetRequest(buildRequest(mediatedRequest, FAKE_USER_BARCODE), TENANT_ID_COLLEGE);
+    mockHelper.mockGetRequestFromStorage(buildRequest(mediatedRequest, FAKE_USER_BARCODE), TENANT_ID_COLLEGE);
 
     // mock check-out dry run
     mockHelper.mockCirculationCheckOutDryRun(
@@ -157,7 +157,7 @@ class CheckOutApiTest extends BaseIT {
       buildItemBatchSearchResponse(ITEM_BARCODE, TENANT_ID_COLLEGE));
 
     // mock secondary request
-    mockHelper.mockGetRequest(buildRequest(mediatedRequest, FAKE_USER_BARCODE), TENANT_ID_COLLEGE);
+    mockHelper.mockGetRequestFromStorage(buildRequest(mediatedRequest, FAKE_USER_BARCODE), TENANT_ID_COLLEGE);
 
     // mock check-out dry run
     mockHelper.mockCirculationCheckOutDryRun(
@@ -327,7 +327,7 @@ class CheckOutApiTest extends BaseIT {
     mockHelper.mockItemBatchSearch(TENANT_ID_CENTRAL, buildBatchIds(),
       buildItemBatchSearchResponse(ITEM_BARCODE, TENANT_ID_COLLEGE));
 
-    mockHelper.mockGetRequest(buildRequest(mediatedRequest, FAKE_USER_BARCODE), TENANT_ID_COLLEGE);
+    mockHelper.mockGetRequestFromStorage(buildRequest(mediatedRequest, FAKE_USER_BARCODE), TENANT_ID_COLLEGE);
 
     wireMockServer.stubFor(post(urlEqualTo(CIRCULATION_CHECK_OUT_DRY_RUN_URL))
       .withRequestBody(equalToJson(asJsonString(buildCheckOutDryRunRequest(FAKE_USER_BARCODE, ITEM_BARCODE))))
@@ -363,7 +363,7 @@ class CheckOutApiTest extends BaseIT {
     mockHelper.mockItemBatchSearch(TENANT_ID_CENTRAL, buildBatchIds(),
       buildItemBatchSearchResponse(ITEM_BARCODE, TENANT_ID_COLLEGE));
 
-    mockHelper.mockGetRequest(buildRequest(mediatedRequest, FAKE_USER_BARCODE), TENANT_ID_COLLEGE);
+    mockHelper.mockGetRequestFromStorage(buildRequest(mediatedRequest, FAKE_USER_BARCODE), TENANT_ID_COLLEGE);
 
     mockHelper.mockCirculationCheckOutDryRun(
       buildCheckOutDryRunRequest(FAKE_USER_BARCODE, ITEM_BARCODE),
