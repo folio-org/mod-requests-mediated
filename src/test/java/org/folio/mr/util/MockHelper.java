@@ -114,10 +114,9 @@ public class MockHelper {
       .willReturn(okJson(asJsonString(request))));
   }
 
-  public void mockPutRequest(Request request, String tenantId) {
-    wireMockServer.stubFor(put(urlPathEqualTo(CIRCULATION_REQUESTS_URL + "/" + request.getId()))
+  public void mockPutRequest(String requestId, String tenantId) {
+    wireMockServer.stubFor(put(urlPathEqualTo(CIRCULATION_REQUESTS_URL + "/" + requestId))
       .withHeader(TENANT, equalTo(tenantId))
-      .withRequestBody(equalToJson(asJsonString(request)))
       .willReturn(noContent()));
   }
 

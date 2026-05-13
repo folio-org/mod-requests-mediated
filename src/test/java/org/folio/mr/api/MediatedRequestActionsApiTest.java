@@ -449,9 +449,10 @@ class MediatedRequestActionsApiTest extends BaseIT {
     MediatedRequestEntity request = createMediatedRequestEntity();
     String itemId = request.getItemId().toString();
 
-    Request mockConfirmedRequest = new Request().id(request.getConfirmedRequestId().toString());
-    mockHelper.mockGetRequest(mockConfirmedRequest, TENANT_ID_CONSORTIUM);
-    mockHelper.mockPutRequest(mockConfirmedRequest, TENANT_ID_CONSORTIUM);
+    String confirmedRequestId = request.getConfirmedRequestId().toString();
+    Request confirmedRequest = new Request().id(confirmedRequestId);
+    mockHelper.mockGetRequest(confirmedRequest, TENANT_ID_CONSORTIUM);
+    mockHelper.mockPutRequest(confirmedRequestId, TENANT_ID_CONSORTIUM);
 
     ConsortiumItem mockConsortiumItem = new ConsortiumItem()
       .id(itemId)
@@ -525,9 +526,10 @@ class MediatedRequestActionsApiTest extends BaseIT {
   void itemArrivalConfirmationDoesNotFailWhenItemIsNotFound() {
     var request = mediatedRequestsRepository.save(buildMediatedRequestEntity(OPEN_IN_TRANSIT_FOR_APPROVAL)
       .withItemId(UUID.fromString(NOT_FOUND_ITEM_UUID)));
-    Request mockConfirmedRequest = new Request().id(request.getConfirmedRequestId().toString());
+    String confirmedRequestId = request.getConfirmedRequestId().toString();
+    Request mockConfirmedRequest = new Request().id(confirmedRequestId);
     mockHelper.mockGetRequest(mockConfirmedRequest, TENANT_ID_CONSORTIUM);
-    mockHelper.mockPutRequest(mockConfirmedRequest, TENANT_ID_CONSORTIUM);
+    mockHelper.mockPutRequest(confirmedRequestId, TENANT_ID_CONSORTIUM);
     mockHelper.mockItemSearchNotFound(TENANT_ID_CONSORTIUM, NOT_FOUND_ITEM_UUID);
     confirmItemArrival("A14837334314").andExpect(status().isOk());
   }
