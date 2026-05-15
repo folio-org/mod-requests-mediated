@@ -12,6 +12,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathTemplate;
@@ -80,9 +81,18 @@ public class MockHelper {
   }
 
   public void mockItemSearch(String tenantId, String itemId, ConsortiumItem mockItem) {
+    mockItemSearch(tenantId, itemId, asJsonString(mockItem));
+  }
+
+  public void mockItemSearchNotFound(String tenantId, String itemId) {
+    // when item is not found, Item Search API returns 200 with empty JSON body
+    mockItemSearch(tenantId, itemId, "{}");
+  }
+
+  private void mockItemSearch(String tenantId, String itemId, String responseBody) {
     wireMockServer.stubFor(get(urlPathEqualTo(ITEM_SEARCH_URL + "/" + itemId))
       .withHeader(TENANT, equalTo(tenantId))
-      .willReturn(okJson(asJsonString(mockItem))));
+      .willReturn(okJson(responseBody)));
   }
 
   public void mockItemBatchSearch(String tenantId, BatchIds batchIds, ConsortiumItems consortiumItems) {
@@ -92,10 +102,22 @@ public class MockHelper {
       .willReturn(okJson(asJsonString(consortiumItems))));
   }
 
-  public void mockGetRequest(Request request, String tenantId) {
+  public void mockGetRequestFromStorage(Request request, String tenantId) {
     wireMockServer.stubFor(get(urlPathEqualTo(CIRCULATION_STORAGE_REQUESTS_URL + "/" + request.getId()))
       .withHeader(TENANT, equalTo(tenantId))
       .willReturn(okJson(asJsonString(request))));
+  }
+
+  public void mockGetRequest(Request request, String tenantId) {
+    wireMockServer.stubFor(get(urlPathEqualTo(CIRCULATION_REQUESTS_URL + "/" + request.getId()))
+      .withHeader(TENANT, equalTo(tenantId))
+      .willReturn(okJson(asJsonString(request))));
+  }
+
+  public void mockPutRequest(String requestId, String tenantId) {
+    wireMockServer.stubFor(put(urlPathEqualTo(CIRCULATION_REQUESTS_URL + "/" + requestId))
+      .withHeader(TENANT, equalTo(tenantId))
+      .willReturn(noContent()));
   }
 
   public void mockGetLoan(Loan loan, String tenantId) {
