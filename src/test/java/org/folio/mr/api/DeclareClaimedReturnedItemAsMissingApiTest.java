@@ -44,7 +44,7 @@ class DeclareClaimedReturnedItemAsMissingApiTest extends BaseIT {
     mockHelper.mockPostNoContentResponse(CIRCULATION_DECLARE_MISSING_URL, TENANT_ID_CONSORTIUM);
     mockHelper.mockGetLoan(buildLoan(), TENANT_ID_CONSORTIUM);
     mediatedRequestsRepository.save(buildMediatedRequest());
-    mockHelper.mockGetRequest(buildCentalTenantRequest(), TENANT_ID_CENTRAL);
+    mockHelper.mockGetRequestFromStorage(buildCentalTenantRequest(), TENANT_ID_CENTRAL);
     mockHelper.mockPostNoContentResponse(TLR_DECLARE_MISSING_URL, TENANT_ID_CENTRAL);
 
     declareItemMissing()
