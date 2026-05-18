@@ -161,7 +161,8 @@
             "circulation-storage.loans.collection.get",
             "circulation-storage.requests.item.get",
             "circulation-storage.requests.collection.get",
-            "tlr.loans.declare-item-lost.execute"
+            "tlr.loans.declare-item-lost.execute",
+            "inventory-storage.items.item.get"
           ]
         },
         {
@@ -176,7 +177,8 @@
             "circulation-storage.loans.collection.get",
             "circulation-storage.requests.item.get",
             "circulation-storage.requests.collection.get",
-            "tlr.loans.claim-item-returned.execute"
+            "tlr.loans.claim-item-returned.execute",
+            "inventory-storage.items.item.get"
           ]
         },
         {
@@ -190,7 +192,8 @@
             "circulation-storage.loans.collection.get",
             "circulation-storage.loans.item.get",
             "circulation-storage.requests.item.get",
-            "circulation-storage.requests.collection.get"
+            "circulation-storage.requests.collection.get",
+            "inventory-storage.items.item.get"
           ]
         }
       ]

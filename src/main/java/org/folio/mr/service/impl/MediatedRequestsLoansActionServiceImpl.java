@@ -2,6 +2,7 @@ package org.folio.mr.service.impl;
 
 import static java.util.Optional.ofNullable;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -19,6 +20,7 @@ import org.folio.mr.domain.entity.MediatedRequestEntity;
 import org.folio.mr.repository.MediatedRequestsRepository;
 import org.folio.mr.service.CirculationStorageService;
 import org.folio.mr.service.ConsortiumService;
+import org.folio.mr.service.InventoryService;
 import org.folio.mr.service.MediatedRequestsLoansActionService;
 import org.folio.spring.exception.NotFoundException;
 import org.folio.spring.service.SystemUserScopedExecutionService;
@@ -40,6 +42,7 @@ public class MediatedRequestsLoansActionServiceImpl implements MediatedRequestsL
   private final SystemUserScopedExecutionService systemUserService;
   private final ConsortiumService consortiumService;
   private final CirculationStorageService circulationStorageService;
+  private final InventoryService inventoryService;
 
   @Override
   public void declareLost(UUID loanId, DeclareLostCirculationRequest declareLostRequest) {
@@ -91,12 +94,24 @@ public class MediatedRequestsLoansActionServiceImpl implements MediatedRequestsL
   }
 
   private void executeInCentralTenant(MediatedRequestEntity mediatedRequest, Consumer<String> action) {
+    if (localItemExists(mediatedRequest)) {
+      log.info("executeInCentralTenant:: item found in local inventory, doing nothing");
+      return;
+    }
+
     systemUserService.executeAsyncSystemUserScoped(consortiumService.getCentralTenantId(),
       () -> ofNullable(mediatedRequest.getConfirmedRequestId())
         .map(UUID::toString)
         .map(this::fetchRequestLocally)
         .map(Request::getRequesterId)
         .ifPresent(action));
+  }
+
+  private boolean localItemExists(MediatedRequestEntity mediatedRequest) {
+    return Optional.ofNullable(mediatedRequest.getItemId())
+      .map(UUID::toString)
+      .map(inventoryService::fetchItem)
+      .isPresent();
   }
 
   private void claimItemReturnedInTlr(UUID itemId, String fakeRequesterId,
