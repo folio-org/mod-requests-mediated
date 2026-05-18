@@ -95,7 +95,7 @@ public class MediatedRequestsLoansActionServiceImpl implements MediatedRequestsL
 
   private void executeInCentralTenant(MediatedRequestEntity mediatedRequest, Consumer<String> action) {
     if (localItemExists(mediatedRequest)) {
-      log.info("executeInCentralTenant:: item found in local inventory, doing nothing");
+      log.info("executeInCentralTenant:: item found in local inventory, skipping action in central tenant");
       return;
     }
 
