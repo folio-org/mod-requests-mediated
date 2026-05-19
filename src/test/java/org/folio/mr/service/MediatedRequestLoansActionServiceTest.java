@@ -163,9 +163,8 @@ class MediatedRequestLoansActionServiceTest {
 
   @Test
   void declareLocalItemMissingShouldNotForwardToTlr() {
-    DeclareClaimedReturnedItemAsMissingCirculationRequest request =
-      new DeclareClaimedReturnedItemAsMissingCirculationRequest()
-        .comment(COMMENT);
+    var request = new DeclareClaimedReturnedItemAsMissingCirculationRequest()
+      .comment(COMMENT);
 
     initMocksForLocalRequest();
     service.declareItemMissing(LOAN_ID, request);
