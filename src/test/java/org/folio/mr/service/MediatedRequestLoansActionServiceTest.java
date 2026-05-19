@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 
 import org.folio.mr.client.CirculationErrorForwardingClient;
 import org.folio.mr.client.LoanClient;
@@ -145,9 +146,7 @@ class MediatedRequestLoansActionServiceTest {
       .servicePointId(SERVICE_POINT_ID)
       .comment(COMMENT);
 
-    initMocksForLocalRequest();
-    service.declareLost(LOAN_ID, request);
-    verifyNoInteractions(systemUserService, tlrClient, circulationStorageService);
+    actionShouldNotBeForwardedToTlrIfLocalItemExists(request, service::declareLost);
   }
 
   @Test
@@ -156,9 +155,7 @@ class MediatedRequestLoansActionServiceTest {
       .itemClaimedReturnedDateTime(ACTION_DATE)
       .comment(COMMENT);
 
-    initMocksForLocalRequest();
-    service.claimItemReturned(LOAN_ID, request);
-    verifyNoInteractions(systemUserService, tlrClient, circulationStorageService);
+    actionShouldNotBeForwardedToTlrIfLocalItemExists(request, service::claimItemReturned);
   }
 
   @Test
@@ -166,8 +163,14 @@ class MediatedRequestLoansActionServiceTest {
     var request = new DeclareClaimedReturnedItemAsMissingCirculationRequest()
       .comment(COMMENT);
 
+    actionShouldNotBeForwardedToTlrIfLocalItemExists(request, service::declareItemMissing);
+  }
+
+  private <T> void actionShouldNotBeForwardedToTlrIfLocalItemExists(T request,
+    BiConsumer<UUID, T> action) {
+
     initMocksForLocalRequest();
-    service.declareItemMissing(LOAN_ID, request);
+    action.accept(LOAN_ID, request);
     verifyNoInteractions(systemUserService, tlrClient, circulationStorageService);
   }
 
