@@ -6,11 +6,13 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 
 import org.folio.mr.client.CirculationErrorForwardingClient;
 import org.folio.mr.client.LoanClient;
@@ -21,6 +23,7 @@ import org.folio.mr.domain.dto.DeclareClaimedReturnedItemAsMissingCirculationReq
 import org.folio.mr.domain.dto.DeclareClaimedReturnedItemAsMissingTlrRequest;
 import org.folio.mr.domain.dto.DeclareLostCirculationRequest;
 import org.folio.mr.domain.dto.DeclareLostTlrRequest;
+import org.folio.mr.domain.dto.Item;
 import org.folio.mr.domain.dto.Loan;
 import org.folio.mr.domain.dto.Request;
 import org.folio.mr.domain.entity.MediatedRequestEntity;
@@ -63,6 +66,8 @@ class MediatedRequestLoansActionServiceTest {
   private SystemUserScopedExecutionService systemUserService;
   @Mock
   private ConsortiumService consortiumService;
+  @Mock
+  private InventoryService inventoryService;
   @InjectMocks
   private MediatedRequestsLoansActionServiceImpl service;
 
@@ -132,6 +137,41 @@ class MediatedRequestLoansActionServiceTest {
     assertEquals(ITEM_ID, tlrRequest.getItemId());
     assertEquals(FAKE_REQUESTER_ID, tlrRequest.getUserId());
     assertEquals(COMMENT, tlrRequest.getComment());
+  }
+
+  @Test
+  void declareLocalItemLostShouldNotForwardToTlr() {
+    var request = new DeclareLostCirculationRequest()
+      .declaredLostDateTime(ACTION_DATE)
+      .servicePointId(SERVICE_POINT_ID)
+      .comment(COMMENT);
+
+    actionShouldNotBeForwardedToTlrIfLocalItemExists(request, service::declareLost);
+  }
+
+  @Test
+  void claimLocalItemReturnedShouldNotForwardToTlr() {
+    var request = new ClaimItemReturnedCirculationRequest()
+      .itemClaimedReturnedDateTime(ACTION_DATE)
+      .comment(COMMENT);
+
+    actionShouldNotBeForwardedToTlrIfLocalItemExists(request, service::claimItemReturned);
+  }
+
+  @Test
+  void declareLocalItemMissingShouldNotForwardToTlr() {
+    var request = new DeclareClaimedReturnedItemAsMissingCirculationRequest()
+      .comment(COMMENT);
+
+    actionShouldNotBeForwardedToTlrIfLocalItemExists(request, service::declareItemMissing);
+  }
+
+  private <T> void actionShouldNotBeForwardedToTlrIfLocalItemExists(T request,
+    BiConsumer<UUID, T> action) {
+
+    initMocksForLocalRequest();
+    action.accept(LOAN_ID, request);
+    verifyNoInteractions(systemUserService, tlrClient, circulationStorageService);
   }
 
   @Test
@@ -211,5 +251,21 @@ class MediatedRequestLoansActionServiceTest {
       .thenReturn(Optional.of(requestInCentralTenant));
     when(consortiumService.getCentralTenantId())
       .thenReturn("central");
+    when(inventoryService.fetchItem(ITEM_ID.toString()))
+      .thenReturn(null);
+  }
+
+  private void initMocksForLocalRequest() {
+    MediatedRequestEntity mediatedRequest = new MediatedRequestEntity();
+    mediatedRequest.setId(MEDIATED_REQUEST_ID);
+    mediatedRequest.setConfirmedRequestId(CONFIRMED_REQUEST_ID);
+    mediatedRequest.setItemId(ITEM_ID);
+
+    when(mediatedRequestsRepository.findLastClosedFilled(REAL_REQUESTER_ID, ITEM_ID))
+      .thenReturn(Optional.of(mediatedRequest));
+    when(loanClient.getLoanById(LOAN_ID.toString()))
+      .thenReturn(Optional.of(buildLoan()));
+    when(inventoryService.fetchItem(ITEM_ID.toString()))
+      .thenReturn(new Item().id(ITEM_ID.toString()));
   }
 }
