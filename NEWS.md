@@ -1,3 +1,7 @@
+## 1.3.1 2026-05-05
+* Do not forward loan actions to central tenant for local requests (MODREQMED-185)
+* Do not throw an exception when item is not found (MODREQMED-224)
+
 ## 1.3.0 2026-04-15
 * Increase memory allocation to 1gb (MODREQMED-103)
 * Fetch item for in-transit slips from the lending tenant (MODREQMED-105)

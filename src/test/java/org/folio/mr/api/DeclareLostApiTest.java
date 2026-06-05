@@ -60,7 +60,7 @@ class DeclareLostApiTest extends BaseIT {
         .withRequesterId(userId)
         .withConfirmedRequestId(confirmedRequestId));
 
-    mockHelper.mockGetRequest(new Request()
+    mockHelper.mockGetRequestFromStorage(new Request()
       .id(confirmedRequestId.toString())
       .requesterId(fakeRequesterId.toString()), TENANT_ID_CENTRAL);
 
