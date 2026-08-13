@@ -472,8 +472,24 @@
       "version": "10.0 11.0"
     },
     {
+      "id": "holdings-storage",
+      "version": "8.2"
+    },
+    {
       "id": "circulation",
       "version": "14.2"
+    },
+    {
+      "id": "allowed-service-points",
+      "version": "1.2"
+    },
+    {
+      "id": "declare-item-lost",
+      "version": "0.3"
+    },
+    {
+      "id": "claim-item-returned",
+      "version": "0.2"
     },
     {
       "id": "location-units",
@@ -486,6 +502,22 @@
     {
       "id": "service-points",
       "version": "3.4"
+    },
+    {
+      "id": "loan-storage",
+      "version": "7.4"
+    },
+    {
+      "id": "loan-policy-storage",
+      "version": "2.4"
+    },
+    {
+      "id": "loan-types",
+      "version": "2.4"
+    },
+    {
+      "id": "material-types",
+      "version": "2.2"
     },
     {
       "id": "search-inventory",
@@ -511,6 +543,10 @@
   "optional": [
     {
       "id": "ecs-tlr",
+      "version": "1.0"
+    },
+    {
+      "id": "ecs-request-external",
       "version": "1.0"
     },
     {
