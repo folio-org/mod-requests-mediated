@@ -1,3 +1,6 @@
+## 1.3.2 2026-08-20
+* Add missing interface dependencies (MODREQMED-236)
+
 ## 1.3.1 2026-05-05
 * Do not forward loan actions to central tenant for local requests (MODREQMED-185)
 * Do not throw an exception when item is not found (MODREQMED-224)
