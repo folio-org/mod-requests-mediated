@@ -273,7 +273,6 @@
           "methods": [ "POST" ],
           "pathPattern": "/batch-mediated-requests-recovery",
           "modulePermissions": [
-            "pubsub.publish.post",
             "user-tenants.collection.get",
             "consortium-search.items.item.get",
             "tlr.ecs-request-external.post",
