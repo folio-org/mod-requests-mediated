@@ -21,7 +21,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User fetchUser(String id) {
-    log.info("fetchUser:: fetching user {}", id);
+    log.info("fetchUser:: fetching user");
     return userClient.get(id).orElse(null);
   }
 
@@ -33,19 +33,19 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User create(User user) {
-    log.info("create:: creating user {}", user.getId());
+    log.info("create:: creating user");
     return userClient.postUser(user);
   }
 
   @Override
   public boolean isInactive(String userId) {
-    log.info("isInactive:: checking if user {} is inactive", userId);
+    log.info("isInactive:: checking if user is inactive");
 
     return userClient.get(userId)
       .map(User::getActive)
       .map(BooleanUtils::negate)
       .orElseGet(() -> {
-        log.warn("isInactive:: user {} not found", userId);
+        log.warn("isInactive:: user not found");
         return true;
       });
   }

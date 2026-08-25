@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -152,6 +153,20 @@ class BatchRequestsServiceDelegateTest {
 
     assertEquals(1, result.getTotalRecords());
     assertEquals(detailDto, result.getMediatedBatchRequestDetails().get(0));
+  }
+
+  @Test
+  void recoverStaleBatchRequests_positive() {
+    var batchId = UUID.randomUUID();
+    var flow = mock(Flow.class);
+    var staleRequest = Mockito.mock(MediatedBatchRequestDto.class);
+    when(staleRequest.getBatchId()).thenReturn(batchId.toString());
+    when(batchRequestsService.getStaleBatchRequests()).thenReturn(List.of(staleRequest));
+    when(flowProvider.createFlow(batchId)).thenReturn(flow);
+
+    delegate.recoverStaleBatchRequests();
+
+    verify(flowEngine).executeAsync(flow);
   }
 
   private static MediatedBatchRequestPostDtoItemRequestsInner itemRequest(UUID itemId) {

@@ -23,7 +23,7 @@ public class StaffSlipContextService {
   private final InventoryService inventoryService;
 
   public SendItemInTransitResponseStaffSlipContext createStaffSlipContext(MediatedRequestContext context) {
-    log.debug("createStaffSlipContext:: parameters context: {}", context);
+    log.debug("createStaffSlipContext:: creating staff slip context");
 
     var staffSlipContextItem = new SendItemInTransitResponseStaffSlipContextItem();
     Item item = context.getItem();

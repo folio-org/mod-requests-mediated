@@ -37,6 +37,8 @@ FOLIO compatible mediated requests functionality, including secure requests.
 | BATCH_REQUEST_LAST_EXECUTIONS_CACHE_SIZE | 25                        | Max cache size for the latest flow executions of batch requests processing.                                                                                                           |
 | BATCH_REQUEST_PRINT_RESULTS              | false                     | Defines if flow engine should print batch requests execution results in logs or not                                                                                                   |
 | BATCH_REQUEST_MAX_ITEMS                  | 50                        | Defines the maximum number of items allowed in a single multi-item batch request.                                                                                                     |
+| BATCH_REQUEST_STALE_THRESHOLD            | 1h                        | Defines the maximum duration between now and last processed date to identify stale batch requests.                                                                                    |
+| BATCH_REQUEST_STALE_QUERY_LIMIT          | 10                        | Defines the maximum number of stale requests being processed at once using Timer API.                                                                                                 |
 
 
 ## Multi-Item Batch Requests

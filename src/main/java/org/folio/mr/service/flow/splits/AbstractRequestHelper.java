@@ -33,6 +33,7 @@ public abstract class AbstractRequestHelper {
       getRequestName(), splitRequest.getItemId(), splitRequest.getPickupServicePointId());
 
     createRequest(splitRequestId, batchRequest, splitRequest);
+    batchRequestsService.updateLastProcessedDateById(context.getBatchRequestId());
   }
 
   /**

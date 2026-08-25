@@ -37,12 +37,10 @@ public class EcsRequestServiceImpl implements EcsRequestService {
     log.info("create:: Creating fake patron for mediated request {}", mediatedRequest.getId());
     String fakeUserId = createFakePatron(mediatedRequest);
 
-    log.info("create:: Creating fake patron link between real patron {} and fake patron {}",
-      mediatedRequest.getRequesterId(), fakeUserId);
+    log.info("create:: Creating fake patron link between real patron and fake patron");
     createFakePatronLink(mediatedRequest.getRequesterId(), fakeUserId);
 
-    log.info("create:: Creating ECS request for fake patron {}, mediated request {}", fakeUserId,
-      mediatedRequest.getId());
+    log.info("create:: Creating ECS request for fake patron, mediated request {}", mediatedRequest.getId());
     return createEcsTlr(mediatedRequest, fakeUserId, INTERIM_SERVICE_POINT_ID);
   }
 

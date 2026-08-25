@@ -5,16 +5,20 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.sql.Timestamp;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.folio.mr.config.BatchRequestExecutionProperties;
 import org.folio.mr.domain.BatchRequestStatus;
 import org.folio.mr.domain.dto.MediatedBatchRequestDto;
 import org.folio.mr.domain.dto.MediatedBatchRequestDto.MediatedRequestStatusEnum;
@@ -43,6 +47,7 @@ class MediatedBatchRequestsServiceTest {
   @InjectMocks private MediatedBatchRequestsServiceImpl service;
   @Mock private MediatedBatchRequestMapper mapper;
   @Mock private MediatedBatchRequestRepository repository;
+  @Mock private BatchRequestExecutionProperties requestExecutionProperties;
   @Mock private MediatedBatchRequestSplitRepository batchRequestSplitRepository;
 
   @Test
@@ -212,5 +217,34 @@ class MediatedBatchRequestsServiceTest {
 
 
     verify(repository, never()).save(any());
+  }
+
+  @Test
+  void getStaleBatchRequests_positive() {
+    var entity = mock(MediatedBatchRequest.class);
+    var batchRequestDto = mock(MediatedBatchRequestDto.class);
+    var captor = ArgumentCaptor.<Timestamp>captor();
+    var threshold = Duration.ofSeconds(30);
+    when(requestExecutionProperties.getStaleRequestsQueryLimit()).thenReturn(10);
+    when(requestExecutionProperties.getStaleRequestThreshold()).thenReturn(threshold);
+    when(repository.getStaleRequests(captor.capture(), anyInt())).thenReturn(List.of(entity));
+    when(mapper.toDto(entity)).thenReturn(batchRequestDto);
+
+    var staleRequests = service.getStaleBatchRequests();
+
+    assertEquals(1, staleRequests.size());
+    assertEquals(staleRequests, List.of(batchRequestDto));
+  }
+
+  @Test
+  void updateLastProcessedDateById_positive() {
+    var batchId = UUID.randomUUID();
+    var entity = mock(MediatedBatchRequest.class);
+    when(repository.findById(batchId)).thenReturn(Optional.of(entity));
+
+    service.updateLastProcessedDateById(batchId);
+
+    verify(repository).save(entity);
+    verify(entity).setLastProcessedDate(any(Timestamp.class));
   }
 }

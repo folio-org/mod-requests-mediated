@@ -50,7 +50,7 @@ public class BatchRequestsServiceDelegate {
   }
 
   public MediatedBatchRequestDto createBatchRequest(MediatedBatchRequestPostDto batchRequestDto) {
-    log.debug("createBatchRequest:: parameters batchRequestDto: {}", batchRequestDto);
+    log.debug("createBatchRequest:: creating batch request");
 
     validateRequestItems(batchRequestDto.getItemRequests());
     var createdRequest = batchRequestsService.create(batchRequestDto);
@@ -74,6 +74,18 @@ public class BatchRequestsServiceDelegate {
       .failed(stats.getFailed()));
 
     return dto;
+  }
+
+  public void recoverStaleBatchRequests() {
+    log.debug("recoverBatchRequests:: Starting recovery of stuck batch requests");
+    var pendingRequests = batchRequestsService.getStaleBatchRequests();
+    log.debug("recoverBatchRequests:: Found stale requests: {}", pendingRequests.size());
+    for (var request : pendingRequests) {
+      var batchRequestId = UUID.fromString(request.getBatchId());
+      log.info("recoverBatchRequests:: Recovering batch request: {}", batchRequestId);
+      var previuoslyStuckFlow = flowProvider.createFlow(batchRequestId);
+      flowEngine.executeAsync(previuoslyStuckFlow);
+    }
   }
 
   public MediatedBatchRequestDetailsDto getBatchRequestDetailsByBatchId(UUID batchId, Integer offset, Integer limit) {

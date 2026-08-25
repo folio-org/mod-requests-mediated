@@ -72,11 +72,11 @@ public class SearchServiceImpl implements SearchService {
 
   @Override
   public Optional<ConsortiumItem> searchItemByBarcode(String itemBarcode) {
-    log.info("searchItem:: searching item by barcode: {}", itemBarcode);
+    log.info("searchItem:: searching item by barcode");
 
     ConsortiumItems result = searchItems(new BatchIds(BARCODE, List.of(itemBarcode)));
     if (result == null || result.getItems() == null) {
-      log.warn("searchItem:: item with barcode {} was not found", itemBarcode);
+      log.warn("searchItem:: item with barcode was not found");
       return Optional.empty();
     }
 
@@ -86,7 +86,7 @@ public class SearchServiceImpl implements SearchService {
 
     consortiumItem.ifPresentOrElse(
       item -> log.info("searchItem:: item found: id={}, tenantId={}", item.getId(), item.getTenantId()),
-      () -> log.warn("searchItem:: item with barcode {} was not found", itemBarcode));
+      () -> log.warn("searchItem:: item with barcode was not found"));
 
     return consortiumItem;
   }

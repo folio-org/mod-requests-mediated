@@ -161,7 +161,9 @@
             "circulation-storage.loans.collection.get",
             "circulation-storage.requests.item.get",
             "circulation-storage.requests.collection.get",
-            "tlr.loans.declare-item-lost.execute"
+            "tlr.loans.declare-item-lost.execute",
+            "inventory-storage.items.item.get",
+            "inventory-storage.items.collection.get"
           ]
         },
         {
@@ -176,7 +178,9 @@
             "circulation-storage.loans.collection.get",
             "circulation-storage.requests.item.get",
             "circulation-storage.requests.collection.get",
-            "tlr.loans.claim-item-returned.execute"
+            "tlr.loans.claim-item-returned.execute",
+            "inventory-storage.items.item.get",
+            "inventory-storage.items.collection.get"
           ]
         },
         {
@@ -190,7 +194,9 @@
             "circulation-storage.loans.collection.get",
             "circulation-storage.loans.item.get",
             "circulation-storage.requests.item.get",
-            "circulation-storage.requests.collection.get"
+            "circulation-storage.requests.collection.get",
+            "inventory-storage.items.item.get",
+            "inventory-storage.items.collection.get"
           ]
         }
       ]
@@ -255,6 +261,30 @@
           "modulePermissions": [
 
           ]
+        }
+      ]
+    },
+    {
+      "id": "_timer",
+      "version": "1.0",
+      "interfaceType": "system",
+      "handlers": [
+        {
+          "methods": [ "POST" ],
+          "pathPattern": "/batch-mediated-requests-recovery",
+          "modulePermissions": [
+            "pubsub.publish.post",
+            "user-tenants.collection.get",
+            "consortium-search.items.item.get",
+            "tlr.ecs-request-external.post",
+            "circulation.requests.item.get",
+            "circulation.requests.item.post",
+            "circulation.requests.allowed-service-points.get",
+            "mod-settings.entries.collection.get",
+            "mod-settings.global.read.mod-requests-mediated.batch-config.manage"
+          ],
+          "unit": "minute",
+          "delay": "5"
         }
       ]
     },
@@ -442,8 +472,24 @@
       "version": "10.0 11.0"
     },
     {
+      "id": "holdings-storage",
+      "version": "8.2"
+    },
+    {
       "id": "circulation",
       "version": "14.2"
+    },
+    {
+      "id": "allowed-service-points",
+      "version": "1.2"
+    },
+    {
+      "id": "declare-item-lost",
+      "version": "0.3"
+    },
+    {
+      "id": "claim-item-returned",
+      "version": "0.2"
     },
     {
       "id": "location-units",
@@ -456,6 +502,22 @@
     {
       "id": "service-points",
       "version": "3.4"
+    },
+    {
+      "id": "loan-storage",
+      "version": "7.4"
+    },
+    {
+      "id": "loan-policy-storage",
+      "version": "2.4"
+    },
+    {
+      "id": "loan-types",
+      "version": "2.4"
+    },
+    {
+      "id": "material-types",
+      "version": "2.2"
     },
     {
       "id": "search-inventory",
@@ -481,6 +543,10 @@
   "optional": [
     {
       "id": "ecs-tlr",
+      "version": "1.0"
+    },
+    {
+      "id": "ecs-request-external",
       "version": "1.0"
     },
     {
@@ -559,7 +625,9 @@
       { "name": "BATCH_REQUEST_THREADS_NUM", "value": "4" },
       { "name": "BATCH_REQUEST_EXECUTION_TIMEOUT", "value": "10" },
       { "name": "BATCH_REQUEST_LAST_EXECUTIONS_CACHE_SIZE", "value": "25" },
-      { "name": "BATCH_REQUEST_PRINT_RESULTS", "value": "false" }
+      { "name": "BATCH_REQUEST_PRINT_RESULTS", "value": "false" },
+      { "name": "BATCH_REQUEST_STALE_THRESHOLD", "value": "1h" },
+      { "name": "BATCH_REQUEST_STALE_QUERY_LIMIT", "value": "10" }
     ]
   }
 }

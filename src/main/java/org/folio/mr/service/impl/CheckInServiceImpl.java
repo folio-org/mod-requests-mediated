@@ -20,7 +20,7 @@ public class CheckInServiceImpl implements CheckInService {
 
   @Override
   public CheckInResponse checkIn(CheckInRequest request) {
-    log.info("checkIn:: itemBarcode={}", request::getItemBarcode);
+    log.info("checkIn:: processing check-in request");
 
     CheckInResponse response = checkInClient.checkIn(request);
     removePersonalDataFromResponse(response);

@@ -25,7 +25,6 @@ import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.stereotype.Component;
 
 import tools.jackson.core.JacksonException;
-import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.ObjectMapper;
 
@@ -36,9 +35,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @RequiredArgsConstructor
 public class KafkaEventListener {
-  private static final ObjectMapper objectMapper = new ObjectMapper().rebuild()
-    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    .build();
+  private final ObjectMapper objectMapper;
   private final RequestEventHandler requestEventHandler;
   private final ItemEventHandler itemEventHandler;
   private final SystemUserScopedExecutionService systemUserScopedExecutionService;
@@ -64,7 +61,7 @@ public class KafkaEventListener {
   private <E, T> void handleEvent(String eventString, KafkaEventHandler<T> handler,
     Map<String, Object> messageHeaders, Class<E> kafkaEventClass, Class<T> payloadType) {
 
-    log.debug("handleEvent:: event: {}", () -> eventString);
+    log.debug("handleEvent:: event received");
     KafkaEvent<T> event = deserialize(eventString, messageHeaders, kafkaEventClass, payloadType);
     log.info("handleEvent:: event received: {}", event::getId);
 
@@ -80,7 +77,7 @@ public class KafkaEventListener {
     log.info("handleEvent:: event consumed: {}", event::getId);
   }
 
-  private static <E, T> KafkaEvent<T> deserialize(String eventString, Map<String, Object> messageHeaders,
+  private <E, T> KafkaEvent<T> deserialize(String eventString, Map<String, Object> messageHeaders,
     Class<E> kafkaEventClass, Class<T> dataType) {
 
     try {
@@ -109,11 +106,11 @@ public class KafkaEventListener {
     }
     if (headerValue instanceof byte[] headerBytes) {
       var value = new String(headerBytes, StandardCharsets.UTF_8);
-      log.info("getHeaderValue:: header {} value is {}", headerName, value);
+      log.debug("getHeaderValue:: header {} is present", headerName);
       return value;
     }
     var value = String.valueOf(headerValue);
-    log.info("getHeaderValue:: header {} value is {}", headerName, value);
+    log.debug("getHeaderValue:: header {} is present", headerName);
     return value;
   }
 }

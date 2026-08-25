@@ -25,7 +25,7 @@ public class ValidatorServiceImpl implements ValidatorService {
 
   @Override
   public void validateRequesterForSave(MediatedRequest mediatedRequest) {
-    log.info("validateRequesterForSave:: validating requester {}", mediatedRequest::getRequesterId);
+    log.info("validateRequesterForSave:: validating requester");
 
     String requesterId = mediatedRequest.getRequesterId();
 
@@ -45,8 +45,7 @@ public class ValidatorServiceImpl implements ValidatorService {
 
   @Override
   public void validateRequesterForConfirm(MediatedRequestEntity mediatedRequest) {
-    log.info("validateRequesterForConfirm:: validating requester {}",
-      mediatedRequest::getRequesterId);
+    log.info("validateRequesterForConfirm:: validating requester");
 
     UUID requesterIdUUID = mediatedRequest.getRequesterId();
     if (requesterIdUUID == null) {

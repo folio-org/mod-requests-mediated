@@ -43,7 +43,7 @@ public class ItemEventHandler implements KafkaEventHandler<Item> {
     }
 
     if (StringUtils.isBlank(oldItem.getBarcode()) && !StringUtils.isBlank(newItem.getBarcode())) {
-      log.info("handleUpdateEvent:: item without a barcode updated, new barcode: {}", newItem.getBarcode());
+      log.info("handleUpdateEvent:: item without a barcode updated, barcode was added");
       handleAddedBarcodeEvent(event.getNewVersion());
     }
 
@@ -58,8 +58,8 @@ public class ItemEventHandler implements KafkaEventHandler<Item> {
     }
 
     mediatedRequests.ifPresent(list -> {
-      log.info("handleAddedBarcodeEvent:: {} mediated requests found, updating with barcode {}",
-        list.size(), item.getBarcode());
+      log.info("handleAddedBarcodeEvent:: {} mediated requests found, updating with new barcode",
+        list.size());
       list.forEach(mr -> mr.setItemBarcode(item.getBarcode()));
       mediatedRequestsRepository.saveAll(list);
     });

@@ -44,7 +44,7 @@ public class CheckOutServiceImpl implements CheckOutService {
 
   @Override
   public CheckOutResponse checkOut(CheckOutRequest request) {
-    log.info("checkOut:: userBarcode={}, itemBarcode={}", request::getUserBarcode, request::getItemBarcode);
+    log.info("checkOut:: processing check-out request");
     Optional<MediatedRequestEntity> mediatedRequest = findMediatedRequest(request);
     if (mediatedRequest.isPresent()) {
       log.info("checkOut:: mediated request is found");
@@ -77,8 +77,7 @@ public class CheckOutServiceImpl implements CheckOutService {
   private String resolveLoanPolicyId(CheckOutRequest request, String lendingTenantId,
     MediatedRequestEntity mediatedRequest) {
 
-    log.info("resolveLoanPolicy:: resolving loan policy for user {} and item {} in tenant {}",
-      request::getUserBarcode, request::getItemBarcode, () -> lendingTenantId);
+    log.info("resolveLoanPolicy:: resolving loan policy for lending tenant {}", () -> lendingTenantId);
     String fakeUserBarcode = resolveFakeRequesterBarcode(mediatedRequest, lendingTenantId);
     CheckOutDryRunRequest dryRunRequest = circulationMapper.toDryRunRequest(request)
       .userBarcode(fakeUserBarcode);
@@ -113,7 +112,7 @@ public class CheckOutServiceImpl implements CheckOutService {
   }
 
   public CheckOutDryRunResponse checkOutDryRun(CheckOutDryRunRequest request) {
-    log.info("checkOutDryRun:: check-out dry run for item {}", request::getItemBarcode);
+    log.info("checkOutDryRun:: processing check-out dry run");
     return checkOutClient.checkOutDryRun(request);
   }
 
@@ -135,8 +134,7 @@ public class CheckOutServiceImpl implements CheckOutService {
   }
 
   private CheckOutResponse doCheckOut(CheckOutRequest request) {
-    log.info("checkOut: checking out item {} to user {}", request::getItemBarcode,
-      request::getUserBarcode);
+    log.info("checkOut: processing check-out");
     return checkOutClient.checkOut(request);
   }
 
