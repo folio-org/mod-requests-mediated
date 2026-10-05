@@ -31,7 +31,7 @@
       src/main/java/org/folio/mr/domain/mapper/MediatedRequestMapper.java
     </sonar.exclusions>
     <argLine />
-    <mockito.version>5.23.0</mockito.version>
+    <mockito.version>5.24.0</mockito.version>
 
     <!--Folio dependencies properties-->
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
