@@ -1,3 +1,6 @@
+## 1.3.3 2026-10-20
+* Upgrade to Spring Boot 4.1.1 and folio-spring-support 10.0.1 (MODREQMED-253)
+
 ## 1.3.2 2026-08-20
 * Add missing interface dependencies (MODREQMED-236)
 
