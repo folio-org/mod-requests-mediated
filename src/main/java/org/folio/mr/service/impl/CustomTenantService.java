@@ -1,5 +1,6 @@
 package org.folio.mr.service.impl;
 
+import org.folio.mr.service.InterimServicePointService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.liquibase.FolioSpringLiquibase;
 import org.folio.spring.service.PrepareSystemUserService;
@@ -17,17 +18,21 @@ import lombok.extern.log4j.Log4j2;
 public class CustomTenantService extends TenantService {
 
   private final PrepareSystemUserService prepareSystemUserService;
+  private final InterimServicePointService interimServicePointService;
 
   public CustomTenantService(JdbcTemplate jdbcTemplate, FolioExecutionContext context,
-    FolioSpringLiquibase folioSpringLiquibase, PrepareSystemUserService prepareSystemUserService) {
+    FolioSpringLiquibase folioSpringLiquibase, PrepareSystemUserService prepareSystemUserService,
+    InterimServicePointService interimServicePointService) {
 
     super(jdbcTemplate, context, folioSpringLiquibase);
     this.prepareSystemUserService = prepareSystemUserService;
+    this.interimServicePointService = interimServicePointService;
   }
 
   @Override
   protected void afterTenantUpdate(TenantAttributes tenantAttributes) {
     log.info("afterTenantUpdate:: tenantAttributes={}", tenantAttributes);
     prepareSystemUserService.setupSystemUser();
+    interimServicePointService.createInterimServicePoint();
   }
 }

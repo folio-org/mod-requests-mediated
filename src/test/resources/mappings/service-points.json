@@ -114,6 +114,23 @@
           "totalRecords": 1
         }
       }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/service-points"
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "id": "32c6f0c7-26e4-4350-8c29-1e11c2e3efc4",
+          "name": "Interim service point",
+          "code": "interimsp"
+        }
+      }
     }
   ]
 }
