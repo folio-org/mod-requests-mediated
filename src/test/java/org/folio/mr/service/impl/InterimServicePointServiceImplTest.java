@@ -1,5 +1,6 @@
 package org.folio.mr.service.impl;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -65,7 +66,8 @@ class InterimServicePointServiceImplTest {
     doThrow(error(HttpStatus.UNPROCESSABLE_ENTITY, "id value already exists in table service_point"))
       .when(servicePointClient).create(any());
 
-    service.createInterimServicePoint();
+    assertDoesNotThrow(() -> service.createInterimServicePoint());
+    verify(servicePointClient).create(any());
   }
 
   @Test
